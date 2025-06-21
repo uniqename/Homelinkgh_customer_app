@@ -1,6 +1,7 @@
 name: homelink_gh
-description: HomeLinkGH - Connecting Ghana's diaspora with trusted home services. Book before you land, we'll prep your house.
+description: HomeLinkGH - Ghana's premier food delivery and home services app. Connecting diaspora with trusted local services across Greater Accra.
 version: 1.0.0+1
+publish_to: none
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
