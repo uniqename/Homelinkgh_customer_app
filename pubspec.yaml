@@ -1,0 +1,38 @@
+name: homelink_gh
+description: HomeLinkGH - Connecting Ghana's diaspora with trusted home services. Book before you land, we'll prep your house.
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.2
+  
+  # Firebase & Backend
+  firebase_core: ^2.24.2
+  cloud_firestore: ^4.13.6
+  firebase_auth: ^4.15.3
+  firebase_messaging: ^14.7.10
+  
+  # Payment Integration (using HTTP for custom implementation)
+  http: ^0.13.5
+  
+  # State Management & Utils
+  provider: ^6.1.2
+  shared_preferences: ^2.2.2
+  
+  # UI & Location
+  image_picker: ^1.0.7
+  
+  # International & Localization
+  intl: ^0.17.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
