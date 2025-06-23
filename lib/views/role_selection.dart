@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'login.dart';
 import 'provider_onboarding.dart';
+import 'provider_dashboard.dart';
+import 'admin_dashboard.dart';
 import 'job_seeker_onboarding.dart';
 import 'admin_login.dart';
 import 'job_portal.dart';
@@ -137,7 +139,7 @@ class RoleSelectionScreen extends StatelessWidget {
                         onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const ProviderOnboardingScreen(),
+                            builder: (context) => const ProviderDashboard(),
                           ),
                         ),
                       ),
@@ -165,7 +167,7 @@ class RoleSelectionScreen extends StatelessWidget {
                         onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const AdminLoginScreen(),
+                            builder: (context) => const AdminDashboard(),
                           ),
                         ),
                       ),

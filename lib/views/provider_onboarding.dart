@@ -549,7 +549,7 @@ class _ProviderOnboardingScreenState extends State<ProviderOnboardingScreen> {
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const ProviderDashboardScreen(),
+                  builder: (context) => const ProviderDashboard(),
                 ),
               );
             },
