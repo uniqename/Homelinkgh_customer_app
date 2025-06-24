@@ -99,7 +99,13 @@ class _UserVerificationScreenState extends State<UserVerificationScreen> {
                   children: [
                     if (details.stepIndex < _getSteps().length - 1)
                       ElevatedButton(
-                        onPressed: details.onStepNext,
+                        onPressed: () {
+                          if (currentStep < _getSteps().length - 1) {
+                            setState(() {
+                              currentStep++;
+                            });
+                          }
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF006B3C),
                           foregroundColor: Colors.white,
@@ -109,7 +115,13 @@ class _UserVerificationScreenState extends State<UserVerificationScreen> {
                     const SizedBox(width: 8),
                     if (details.stepIndex > 0)
                       TextButton(
-                        onPressed: details.onStepPrevious,
+                        onPressed: () {
+                          if (currentStep > 0) {
+                            setState(() {
+                              currentStep--;
+                            });
+                          }
+                        },
                         child: const Text('Previous'),
                       ),
                     if (details.stepIndex == _getSteps().length - 1)
@@ -123,20 +135,6 @@ class _UserVerificationScreenState extends State<UserVerificationScreen> {
                       ),
                   ],
                 );
-              },
-              onStepNext: () {
-                if (currentStep < _getSteps().length - 1) {
-                  setState(() {
-                    currentStep++;
-                  });
-                }
-              },
-              onStepPrevious: () {
-                if (currentStep > 0) {
-                  setState(() {
-                    currentStep--;
-                  });
-                }
               },
               steps: _getSteps(),
             ),

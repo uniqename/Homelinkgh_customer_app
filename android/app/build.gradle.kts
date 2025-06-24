@@ -51,8 +51,7 @@ android {
 
     buildTypes {
         release {
-            // Using debug keys for initial testing - Google Play Console will handle production signing
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             isShrinkResources = false
         }
