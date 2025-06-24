@@ -1,5 +1,24 @@
 import 'package:flutter/material.dart';
-import 'simple_login.dart';
+
+void main() {
+  runApp(const HomeLinkGHApp());
+}
+
+class HomeLinkGHApp extends StatelessWidget {
+  const HomeLinkGHApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'HomeLink Ghana',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF006B3C)),
+        useMaterial3: true,
+      ),
+      home: const RoleSelectionScreen(),
+    );
+  }
+}
 
 class RoleSelectionScreen extends StatelessWidget {
   const RoleSelectionScreen({super.key});
@@ -15,7 +34,6 @@ class RoleSelectionScreen extends StatelessWidget {
             colors: [
               Color(0xFF006B3C), // Ghana Green
               Color(0xFF228B22), // Forest Green
-              Color(0xFF32CD32), // Lime Green
             ],
           ),
         ),
@@ -25,11 +43,11 @@ class RoleSelectionScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const SizedBox(height: 40),
-                // Logo and App Name
+                const SizedBox(height: 80),
+                // Logo
                 Container(
-                  width: 80,
-                  height: 80,
+                  width: 100,
+                  height: 100,
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(20),
@@ -43,15 +61,15 @@ class RoleSelectionScreen extends StatelessWidget {
                   ),
                   child: const Icon(
                     Icons.home,
-                    size: 40,
+                    size: 50,
                     color: Color(0xFF006B3C),
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 24),
                 const Text(
-                  'HomeLinkGH',
+                  'HomeLink Ghana',
                   style: TextStyle(
-                    fontSize: 32,
+                    fontSize: 36,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
@@ -59,7 +77,7 @@ class RoleSelectionScreen extends StatelessWidget {
                 const Text(
                   'Connecting Ghana\'s Diaspora',
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 18,
                     color: Colors.white70,
                   ),
                 ),
@@ -73,13 +91,13 @@ class RoleSelectionScreen extends StatelessWidget {
                   child: const Text(
                     '🇬🇭 Akwaba! Welcome Home',
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: Color(0xFF006B3C),
                     ),
                   ),
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 60),
                 const Text(
                   'How can we help you today?',
                   style: TextStyle(
@@ -89,7 +107,6 @@ class RoleSelectionScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 40),
-                // Role Selection Cards
                 Expanded(
                   child: ListView(
                     children: [
@@ -97,99 +114,35 @@ class RoleSelectionScreen extends StatelessWidget {
                         context,
                         icon: Icons.flight_land,
                         title: 'I\'m Visiting Ghana',
-                        subtitle: 'Book before you land - we\'ll prep your house',
+                        subtitle: 'Book services before you land',
                         color: const Color(0xFF1E88E5),
-                        badge: 'DIASPORA MODE',
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const SimpleLoginScreen(userType: 'diaspora_customer'),
-                          ),
-                        ),
                       ),
                       const SizedBox(height: 16),
                       _buildRoleCard(
                         context,
                         icon: Icons.family_restroom,
                         title: 'I\'m Helping Family',
-                        subtitle: 'Book services for loved ones from abroad',
-                        color: const Color(0xFFCE1126), // Ghana Red
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const SimpleLoginScreen(userType: 'family_helper'),
-                          ),
-                        ),
+                        subtitle: 'Book services for loved ones',
+                        color: const Color(0xFFCE1126),
                       ),
                       const SizedBox(height: 16),
                       _buildRoleCard(
                         context,
                         icon: Icons.verified,
-                        title: 'I\'m a Trusted Provider',
-                        subtitle: 'Serving Ghana\'s diaspora with excellence',
+                        title: 'I\'m a Provider',
+                        subtitle: 'Serve Ghana\'s diaspora',
                         color: const Color(0xFF2E7D32),
-                        badge: 'DIASPORA FRIENDLY',
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const SimpleLoginScreen(userType: 'provider'),
-                          ),
-                        ),
                       ),
                       const SizedBox(height: 16),
                       _buildRoleCard(
                         context,
                         icon: Icons.work_outline,
                         title: 'I Want to Work',
-                        subtitle: 'Join our team or provider network',
+                        subtitle: 'Join our team',
                         color: const Color(0xFFF57C00),
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const SimpleLoginScreen(userType: 'job_seeker'),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      _buildRoleCard(
-                        context,
-                        icon: Icons.admin_panel_settings,
-                        title: 'I am an Admin',
-                        subtitle: 'Managing the platform',
-                        color: Colors.red,
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const SimpleLoginScreen(userType: 'admin'),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      _buildRoleCard(
-                        context,
-                        icon: Icons.business_center,
-                        title: 'I am HomeLinkGH Staff',
-                        subtitle: 'Access employee dashboard',
-                        color: const Color(0xFF006B3C),
-                        badge: 'STAFF PORTAL',
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const SimpleLoginScreen(userType: 'staff'),
-                          ),
-                        ),
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 20),
-                const Text(
-                  'Connecting communities through trusted services',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white70,
-                  ),
-                  textAlign: TextAlign.center,
                 ),
               ],
             ),
@@ -205,14 +158,16 @@ class RoleSelectionScreen extends StatelessWidget {
     required String title,
     required String subtitle,
     required Color color,
-    required VoidCallback onTap,
-    String? badge,
   }) {
     return Card(
       elevation: 8,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
-        onTap: onTap,
+        onTap: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Selected: $title')),
+          );
+        },
         borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.all(20.0),
@@ -236,34 +191,12 @@ class RoleSelectionScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            title,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        if (badge != null)
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFCD116), // Ghana Gold
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              badge!,
-                              style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF006B3C),
-                              ),
-                            ),
-                          ),
-                      ],
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'service_booking.dart';
 import 'food_delivery_tracking.dart';
 import 'restaurant_dashboard.dart';
+import 'food_delivery_screen.dart';
 
 class CustomerHomeScreen extends StatefulWidget {
   const CustomerHomeScreen({super.key});
@@ -602,11 +603,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => ServiceBookingScreen(
-                      serviceName: 'Food Delivery',
-                      serviceIcon: Icons.delivery_dining,
-                      serviceColor: Colors.red,
-                    ),
+                    builder: (context) => const FoodDeliveryScreen(),
                   ),
                 );
               },

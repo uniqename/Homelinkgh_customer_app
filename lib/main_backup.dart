@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'views/role_selection.dart';
+import 'views/dynamic_home.dart';
 
 void main() {
   runApp(const HomeLinkGHApp());

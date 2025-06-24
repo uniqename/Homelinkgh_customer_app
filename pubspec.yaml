@@ -1,6 +1,6 @@
-name: homelink_gh
+name: homelink_ghana
 description: HomeLinkGH - Ghana's premier food delivery and home services app. Connecting diaspora with trusted local services across Greater Accra.
-version: 1.0.0+1
+version: 2.0.0+4
 publish_to: none
 
 environment:
@@ -13,10 +13,10 @@ dependencies:
   cupertino_icons: ^1.0.2
   
   # Firebase & Backend
-  firebase_core: ^2.24.2
-  cloud_firestore: ^4.13.6
-  firebase_auth: ^4.15.3
-  firebase_messaging: ^14.7.10
+  firebase_core: ^2.20.0
+  cloud_firestore: ^4.12.0
+  firebase_auth: ^4.12.0
+  firebase_messaging: ^14.6.0
   
   # Payment Integration (using HTTP for custom implementation)
   http: ^0.13.5
@@ -25,11 +25,19 @@ dependencies:
   provider: ^6.1.2
   shared_preferences: ^2.2.2
   
-  # UI & Location
+  # Location & Maps
+  geolocator: ^14.0.1
+  google_maps_flutter: ^2.6.1
+  geocoding: ^4.0.0
+  
+  # UI & Media
   image_picker: ^1.0.7
   
   # International & Localization
   intl: ^0.17.0
+  
+  # Real-time features
+  uuid: ^4.5.1
 
 dev_dependencies:
   flutter_test:
