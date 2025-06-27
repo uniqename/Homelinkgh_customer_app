@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'customer_home.dart';
-import 'provider_dashboard.dart';
-import 'admin_monitoring_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../main.dart';
 
 class SimpleLoginScreen extends StatefulWidget {
   final String userType;
@@ -26,6 +25,8 @@ class _SimpleLoginScreenState extends State<SimpleLoginScreen> {
         ? 'Diaspora Mode - Login'
         : widget.userType == 'family_helper'
         ? 'Family Helper - Login'
+        : widget.userType == 'job_seeker'
+        ? 'Job Seeker - Get Started'
         : 'Login';
     
     return Scaffold(
@@ -100,35 +101,38 @@ class _SimpleLoginScreenState extends State<SimpleLoginScreen> {
     );
   }
 
-  void _navigateToUserScreen() {
-    Widget destinationScreen;
+  void _navigateToUserScreen() async {
+    // Store user role and navigate to the appropriate full-featured screen
+    final prefs = await SharedPreferences.getInstance();
+    String role;
     
     switch (widget.userType) {
       case 'diaspora_customer':
       case 'family_helper':
-        destinationScreen = const CustomerHomeScreen();
+      case 'customer':
+        role = 'customer';
         break;
       case 'provider':
-        destinationScreen = const ProviderDashboard();
+        role = 'provider';
         break;
       case 'admin':
-        destinationScreen = const AdminMonitoringScreen();
+        role = 'admin';
         break;
       case 'staff':
-        // For now, redirect staff to admin monitoring
-        destinationScreen = const AdminMonitoringScreen();
+        role = 'staff';
         break;
       case 'job_seeker':
-        // For now, redirect job seekers to customer portal
-        destinationScreen = const CustomerHomeScreen();
+        role = 'job_seeker';
         break;
       default:
-        destinationScreen = const CustomerHomeScreen();
+        role = 'customer';
     }
+    
+    await prefs.setString('userRole', role);
     
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => destinationScreen),
+      MaterialPageRoute(builder: (context) => const HomeLinkGHApp()),
     );
   }
 

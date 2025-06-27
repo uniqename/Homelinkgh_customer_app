@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'service_booking.dart';
-import 'food_delivery_tracking.dart';
-import 'restaurant_dashboard.dart';
-import 'food_delivery_screen.dart';
+import 'smart_booking_flow.dart';
+import '../services/local_data_service.dart';
 
 class CustomerHomeScreen extends StatefulWidget {
   const CustomerHomeScreen({super.key});
@@ -114,21 +112,21 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
       'provider': 'QuickBites Restaurant',
       'date': 'Today, 1:30 PM',
       'status': 'Delivered',
-      'amount': '\$24.50',
+      'amount': 'GH₵145',
     },
     {
       'service': 'Cleaning',
       'provider': 'CleanPro Services',
       'date': 'Yesterday',
       'status': 'Completed',
-      'amount': '\$85.00',
+      'amount': 'GH₵250',
     },
     {
       'service': 'Grocery',
       'provider': 'FreshMart Express',
       'date': '2 days ago',
       'status': 'Delivered',
-      'amount': '\$67.30',
+      'amount': 'GH₵189',
     },
   ];
 
@@ -306,20 +304,15 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: () {
-          if (service['name'] == 'Food Delivery') {
-            _showFoodDeliveryOptions();
-          } else {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ServiceBookingScreen(
-                  serviceName: service['name'],
-                  serviceIcon: service['icon'],
-                  serviceColor: service['color'],
-                ),
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => SmartBookingFlowScreen(
+                serviceType: service['name'],
+                isGuestUser: false,
               ),
-            );
-          }
+            ),
+          );
         },
         borderRadius: BorderRadius.circular(12),
         child: Container(
@@ -603,7 +596,10 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const FoodDeliveryScreen(),
+                    builder: (context) => const SmartBookingFlowScreen(
+                      serviceType: 'Food Delivery',
+                      isGuestUser: false,
+                    ),
                   ),
                 );
               },
@@ -614,14 +610,10 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
               subtitle: const Text('Track your current delivery'),
               onTap: () {
                 Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const FoodDeliveryTrackingScreen(
-                      orderId: 'FD001',
-                      restaurantName: 'KFC Restaurant',
-                      driverName: 'Samuel Owusu',
-                    ),
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Order tracking feature coming soon!'),
+                    backgroundColor: Colors.blue,
                   ),
                 );
               },
@@ -635,7 +627,10 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const RestaurantDashboard(),
+                    builder: (context) => const SmartBookingFlowScreen(
+                      serviceType: 'Restaurant Partnership',
+                      isGuestUser: false,
+                    ),
                   ),
                 );
               },
@@ -676,14 +671,10 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const FoodDeliveryTrackingScreen(
-                      orderId: 'FD001',
-                      restaurantName: 'KFC Restaurant',
-                      driverName: 'Samuel Owusu',
-                    ),
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Order tracking feature coming soon!'),
+                    backgroundColor: Colors.blue,
                   ),
                 );
               },

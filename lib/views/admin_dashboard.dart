@@ -10,516 +10,266 @@ class AdminDashboard extends StatefulWidget {
 class _AdminDashboardState extends State<AdminDashboard> {
   int _selectedIndex = 0;
 
-  final List<Map<String, dynamic>> _bookings = [
-    {
-      'id': 'BK001',
-      'service': 'Food Delivery',
-      'customer': 'Kwame Asante',
-      'provider': 'QuickRider Express',
-      'date': '2024-06-22',
-      'time': '10:00 AM',
-      'status': 'completed',
-      'amount': 'GH₵45.50'
-    },
-    {
-      'id': 'BK002',
-      'service': 'House Cleaning',
-      'customer': 'Akosua Mensah',
-      'provider': 'CleanPro Services',
-      'date': '2024-06-23',
-      'time': '2:00 PM',
-      'status': 'in_progress',
-      'amount': 'GH₵120.00'
-    },
-    {
-      'id': 'BK003',
-      'service': 'Nail Tech',
-      'customer': 'Kofi Boateng',
-      'provider': 'Lisa Beauty',
-      'date': '2024-06-21',
-      'time': '9:00 AM',
-      'status': 'pending',
-      'amount': 'GH₵80.00'
-    },
-    {
-      'id': 'BK004',
-      'service': 'Plumbing',
-      'customer': 'Alice Osei',
-      'provider': 'Mike Johnson',
-      'date': '2024-06-24',
-      'time': '11:00 AM',
-      'status': 'completed',
-      'amount': 'GH₵200.00'
-    },
-    {
-      'id': 'BK005',
-      'service': 'Babysitting',
-      'customer': 'Emma Adjei',
-      'provider': 'Mary Caregiver',
-      'date': '2024-06-25',
-      'time': '6:00 PM',
-      'status': 'confirmed',
-      'amount': 'GH₵150.00'
-    },
-  ];
-
-  final List<Map<String, dynamic>> _providers = [
-    {
-      'id': 'P001',
-      'name': 'Mike Johnson',
-      'services': ['Plumbing', 'HVAC'],
-      'rating': 4.8,
-      'jobs_completed': 156,
-      'status': 'active',
-      'verification': 'verified',
-      'joined': '2024-01-15'
-    },
-    {
-      'id': 'P002',
-      'name': 'Lisa Beauty',
-      'services': ['Nail Tech', 'Makeup'],
-      'rating': 4.9,
-      'jobs_completed': 89,
-      'status': 'active',
-      'verification': 'verified',
-      'joined': '2024-02-20'
-    },
-    {
-      'id': 'P003',
-      'name': 'CleanPro Services',
-      'services': ['House Cleaning', 'Laundry'],
-      'rating': 4.7,
-      'jobs_completed': 234,
-      'status': 'active',
-      'verification': 'verified',
-      'joined': '2024-01-08'
-    },
-    {
-      'id': 'P004',
-      'name': 'QuickRider Express',
-      'services': ['Food Delivery', 'Grocery'],
-      'rating': 4.6,
-      'jobs_completed': 456,
-      'status': 'active',
-      'verification': 'verified',
-      'joined': '2024-03-01'
-    },
-    {
-      'id': 'P005',
-      'name': 'Mary Caregiver',
-      'services': ['Babysitting', 'Elder Care'],
-      'rating': 4.9,
-      'jobs_completed': 67,
-      'status': 'pending',
-      'verification': 'pending',
-      'joined': '2024-06-15'
-    },
-  ];
-
-  final List<Map<String, dynamic>> _jobSeekers = [
-    {
-      'id': 'JS001',
-      'name': 'Samuel Owusu',
-      'interests': ['Food Delivery', 'Grocery'],
-      'experience': 'No Experience',
-      'location': 'Accra',
-      'status': 'reviewing',
-      'applied': '2024-06-20'
-    },
-    {
-      'id': 'JS002',
-      'name': 'Grace Mensah',
-      'interests': ['House Cleaning', 'Laundry'],
-      'experience': 'Some Experience',
-      'location': 'Kumasi',
-      'status': 'interview_scheduled',
-      'applied': '2024-06-19'
-    },
-    {
-      'id': 'JS003',
-      'name': 'Kwame Asante',
-      'interests': ['Plumbing', 'Electrical'],
-      'experience': 'Experienced',
-      'location': 'Takoradi',
-      'status': 'training',
-      'applied': '2024-06-10'
-    },
-  ];
+  // Mock admin data
+  final Map<String, dynamic> _adminStats = {
+    'totalUsers': 15420,
+    'activeProviders': 892,
+    'totalBookings': 8765,
+    'revenue': 45678.90,
+    'pendingApprovals': 23,
+    'supportTickets': 12,
+  };
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('HomeLinkGH Admin Dashboard'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: const Text('Admin Dashboard'),
+        backgroundColor: const Color(0xFF006B3C),
+        foregroundColor: Colors.white,
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('3 new notifications')),
-              );
-            },
+            onPressed: () => _showNotifications(),
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () => _logout(),
           ),
         ],
       ),
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: [
-          _buildOverview(),
-          _buildBookingsTab(),
-          _buildProvidersTab(),
-          _buildJobSeekersTab(),
-          _buildReportsTab(),
-        ],
-      ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _selectedIndex,
-        onDestinationSelected: (index) {
+      body: _getSelectedWidget(),
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        currentIndex: _selectedIndex,
+        selectedItemColor: const Color(0xFF006B3C),
+        onTap: (index) {
           setState(() {
             _selectedIndex = index;
           });
         },
-        destinations: const [
-          NavigationDestination(
+        items: const [
+          BottomNavigationBarItem(
             icon: Icon(Icons.dashboard),
             label: 'Overview',
           ),
-          NavigationDestination(
-            icon: Icon(Icons.book_online),
-            label: 'Bookings',
-          ),
-          NavigationDestination(
+          BottomNavigationBarItem(
             icon: Icon(Icons.people),
+            label: 'Users',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.verified),
             label: 'Providers',
           ),
-          NavigationDestination(
-            icon: Icon(Icons.work),
-            label: 'Job Seekers',
-          ),
-          NavigationDestination(
+          BottomNavigationBarItem(
             icon: Icon(Icons.analytics),
-            label: 'Reports',
+            label: 'Analytics',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Settings',
           ),
         ],
       ),
     );
+  }
+
+  Widget _getSelectedWidget() {
+    switch (_selectedIndex) {
+      case 0:
+        return _buildOverview();
+      case 1:
+        return _buildUsersTab();
+      case 2:
+        return _buildProvidersTab();
+      case 3:
+        return _buildAnalyticsTab();
+      case 4:
+        return _buildSettingsTab();
+      default:
+        return _buildOverview();
+    }
   }
 
   Widget _buildOverview() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Business Overview',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 16),
-          Row(
+          // Quick Stats Grid
+          GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: 2,
+            childAspectRatio: 1.5,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
             children: [
-              Expanded(child: _buildStatCard('Total Bookings', '1,247', Colors.blue)),
-              const SizedBox(width: 8),
-              Expanded(child: _buildStatCard('Active Providers', '42', Colors.green)),
+              _buildStatCard(
+                'Total Users',
+                _adminStats['totalUsers'].toString(),
+                Icons.people,
+                Colors.blue,
+              ),
+              _buildStatCard(
+                'Active Providers',
+                _adminStats['activeProviders'].toString(),
+                Icons.verified,
+                Colors.green,
+              ),
+              _buildStatCard(
+                'Total Bookings',
+                _adminStats['totalBookings'].toString(),
+                Icons.book_online,
+                Colors.orange,
+              ),
+              _buildStatCard(
+                'Revenue',
+                'GH₵${_adminStats['revenue'].toStringAsFixed(0)}',
+                Icons.monetization_on,
+                const Color(0xFF006B3C),
+              ),
             ],
           ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(child: _buildStatCard('Job Seekers', '18', Colors.orange)),
-              const SizedBox(width: 8),
-              Expanded(child: _buildStatCard('Revenue', 'GH₵45,820', Colors.purple)),
-            ],
-          ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
+
+          // Recent Activity
           const Text(
             'Recent Activity',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: ListView.builder(
-              itemCount: _bookings.length,
-              itemBuilder: (context, index) {
-                final booking = _bookings[index];
-                return Card(
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: _getStatusColor(booking['status']),
-                      child: Text(booking['id'].substring(2)),
-                    ),
-                    title: Text('${booking['service']} - ${booking['customer']}'),
-                    subtitle: Text('Provider: ${booking['provider']}'),
-                    trailing: Text(booking['amount']),
-                  ),
-                );
-              },
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
             ),
+          ),
+          const SizedBox(height: 16),
+          _buildActivityCard(
+            'New Provider Registration',
+            'Kwame Asante registered as a plumber',
+            '2 minutes ago',
+            Icons.person_add,
+            Colors.green,
+          ),
+          _buildActivityCard(
+            'High Value Booking',
+            'Wedding package booked for GH₵2,500',
+            '15 minutes ago',
+            Icons.star,
+            Colors.amber,
+          ),
+          _buildActivityCard(
+            'Support Ticket',
+            'Payment issue reported by customer',
+            '1 hour ago',
+            Icons.support_agent,
+            Colors.red,
+          ),
+
+          const SizedBox(height: 24),
+
+          // Quick Actions
+          const Text(
+            'Quick Actions',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _buildActionButton(
+                  'Pending Approvals',
+                  '${_adminStats['pendingApprovals']}',
+                  Icons.approval,
+                  Colors.orange,
+                  () => _showPendingApprovals(),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildActionButton(
+                  'Support Tickets',
+                  '${_adminStats['supportTickets']}',
+                  Icons.support,
+                  Colors.red,
+                  () => _showSupportTickets(),
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildBookingsTab() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
+  Widget _buildUsersTab() {
+    return const Center(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Text(
-            'All Bookings',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: ListView.builder(
-              itemCount: _bookings.length,
-              itemBuilder: (context, index) {
-                final booking = _bookings[index];
-                return Card(
-                  child: ExpansionTile(
-                    leading: CircleAvatar(
-                      backgroundColor: _getStatusColor(booking['status']),
-                      child: Text(booking['id'].substring(2)),
-                    ),
-                    title: Text('${booking['service']} - ${booking['customer']}'),
-                    subtitle: Text('${booking['date']} at ${booking['time']}'),
-                    trailing: Text(booking['amount']),
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Provider: ${booking['provider']}'),
-                            Text('Status: ${booking['status']}'),
-                            const SizedBox(height: 8),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                ElevatedButton(
-                                  onPressed: () {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('Contacting ${booking['customer']}')),
-                                    );
-                                  },
-                                  child: const Text('Contact Customer'),
-                                ),
-                                ElevatedButton(
-                                  onPressed: () {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('Contacting ${booking['provider']}')),
-                                    );
-                                  },
-                                  child: const Text('Contact Provider'),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
+          Icon(Icons.people, size: 64, color: Colors.grey),
+          SizedBox(height: 16),
+          Text('User Management'),
+          Text('Manage customers, providers, and staff'),
         ],
       ),
     );
   }
 
   Widget _buildProvidersTab() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
+    return const Center(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Text(
-            'Service Providers',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: ListView.builder(
-              itemCount: _providers.length,
-              itemBuilder: (context, index) {
-                final provider = _providers[index];
-                return Card(
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: provider['status'] == 'active' ? Colors.green : Colors.grey,
-                      child: Text(provider['name'][0]),
-                    ),
-                    title: Text(provider['name']),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Services: ${(provider['services'] as List<String>).join(', ')}'),
-                        Text('Rating: ${provider['rating']} ⭐'),
-                        Text('Jobs Completed: ${provider['jobs_completed']}'),
-                        Text('Joined: ${provider['joined']}'),
-                      ],
-                    ),
-                    trailing: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: provider['status'] == 'active' ? Colors.green : Colors.grey,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        provider['status'].toUpperCase(),
-                        style: const TextStyle(color: Colors.white, fontSize: 10),
-                      ),
-                    ),
-                    onTap: () {
-                      _showProviderDetails(provider);
-                    },
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildJobSeekersTab() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Job Seeker Applications',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: ListView.builder(
-              itemCount: _jobSeekers.length,
-              itemBuilder: (context, index) {
-                final jobSeeker = _jobSeekers[index];
-                return Card(
-                  child: ExpansionTile(
-                    leading: CircleAvatar(
-                      backgroundColor: _getJobSeekerStatusColor(jobSeeker['status']),
-                      child: Text(jobSeeker['name'][0]),
-                    ),
-                    title: Text(jobSeeker['name']),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Interests: ${(jobSeeker['interests'] as List<String>).join(', ')}'),
-                        Text('Experience: ${jobSeeker['experience']}'),
-                        Text('Location: ${jobSeeker['location']}'),
-                        Text('Applied: ${jobSeeker['applied']}'),
-                      ],
-                    ),
-                    trailing: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: _getJobSeekerStatusColor(jobSeeker['status']),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        jobSeeker['status'].toUpperCase(),
-                        style: const TextStyle(color: Colors.white, fontSize: 10),
-                      ),
-                    ),
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('ID: ${jobSeeker['id']}'),
-                            const SizedBox(height: 8),
-                            const Text('Application Status:', style: TextStyle(fontWeight: FontWeight.bold)),
-                            Text(_getJobSeekerStatusText(jobSeeker['status'])),
-                            const SizedBox(height: 16),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                ElevatedButton(
-                                  onPressed: () {
-                                    _updateJobSeekerStatus(jobSeeker, 'interview_scheduled');
-                                  },
-                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-                                  child: const Text('Schedule Interview', style: TextStyle(color: Colors.white)),
-                                ),
-                                ElevatedButton(
-                                  onPressed: () {
-                                    _updateJobSeekerStatus(jobSeeker, 'training');
-                                  },
-                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-                                  child: const Text('Start Training', style: TextStyle(color: Colors.white)),
-                                ),
-                                ElevatedButton(
-                                  onPressed: () {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('Contacting ${jobSeeker['name']}')),
-                                    );
-                                  },
-                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                                  child: const Text('Contact', style: TextStyle(color: Colors.white)),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildReportsTab() {
-    return const Padding(
-      padding: EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Analytics & Reports',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
+          Icon(Icons.verified, size: 64, color: Colors.grey),
           SizedBox(height: 16),
-          Card(
-            child: Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  Text('📊 Detailed analytics coming soon!'),
-                  SizedBox(height: 8),
-                  Text('• Revenue trends'),
-                  Text('• Service popularity'),
-                  Text('• Provider performance'),
-                  Text('• Customer satisfaction'),
-                ],
-              ),
-            ),
-          ),
+          Text('Provider Management'),
+          Text('Approve, monitor, and manage service providers'),
         ],
       ),
     );
   }
 
-  Widget _buildStatCard(String title, String value, Color color) {
+  Widget _buildAnalyticsTab() {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.analytics, size: 64, color: Colors.grey),
+          SizedBox(height: 16),
+          Text('Analytics & Reports'),
+          Text('View platform performance metrics'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSettingsTab() {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.settings, size: 64, color: Colors.grey),
+          SizedBox(height: 16),
+          Text('Admin Settings'),
+          Text('Configure app settings and policies'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
     return Card(
+      elevation: 4,
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Icon(icon, size: 32, color: color),
+            const SizedBox(height: 8),
             Text(
               value,
               style: TextStyle(
@@ -528,10 +278,12 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 color: color,
               ),
             ),
-            const SizedBox(height: 4),
             Text(
               title,
-              style: const TextStyle(fontSize: 12),
+              style: const TextStyle(
+                fontSize: 12,
+                color: Colors.grey,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -540,95 +292,93 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case 'completed':
-        return Colors.green;
-      case 'in_progress':
-        return Colors.orange;
-      case 'pending':
-        return Colors.blue;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  Color _getJobSeekerStatusColor(String status) {
-    switch (status) {
-      case 'reviewing':
-        return Colors.blue;
-      case 'interview_scheduled':
-        return Colors.orange;
-      case 'training':
-        return Colors.purple;
-      case 'completed':
-        return Colors.green;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  String _getJobSeekerStatusText(String status) {
-    switch (status) {
-      case 'reviewing':
-        return 'Application under review by our team';
-      case 'interview_scheduled':
-        return 'Interview scheduled - candidate will be contacted soon';
-      case 'training':
-        return 'Currently in training program';
-      case 'completed':
-        return 'Training completed - ready to become provider';
-      default:
-        return 'Unknown status';
-    }
-  }
-
-  void _updateJobSeekerStatus(Map<String, dynamic> jobSeeker, String newStatus) {
-    setState(() {
-      jobSeeker['status'] = newStatus;
-    });
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Updated ${jobSeeker['name']} status to $newStatus'),
-        backgroundColor: Colors.green,
-      ),
-    );
-  }
-
-  void _showProviderDetails(Map<String, dynamic> provider) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(provider['name']),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Services: ${(provider['services'] as List<String>).join(', ')}'),
-            Text('Rating: ${provider['rating']} ⭐'),
-            Text('Jobs Completed: ${provider['jobs_completed']}'),
-            Text('Status: ${provider['status']}'),
-            Text('Verification: ${provider['verification']}'),
-            Text('Joined: ${provider['joined']}'),
-          ],
+  Widget _buildActivityCard(String title, String description, String time, IconData icon, Color color) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: color.withValues(alpha: 0.1),
+          child: Icon(icon, color: color),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Contacting ${provider['name']}')),
-              );
-            },
-            child: const Text('Contact'),
-          ),
-        ],
+        title: Text(title),
+        subtitle: Text(description),
+        trailing: Text(
+          time,
+          style: const TextStyle(fontSize: 12, color: Colors.grey),
+        ),
       ),
     );
+  }
+
+  Widget _buildActionButton(String title, String badge, IconData icon, Color color, VoidCallback onTap) {
+    return Card(
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              Stack(
+                children: [
+                  Icon(icon, size: 32, color: color),
+                  if (badge != '0')
+                    Positioned(
+                      top: 0,
+                      right: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          badge,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showNotifications() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('5 new notifications')),
+    );
+  }
+
+  void _showPendingApprovals() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Opening pending approvals...')),
+    );
+  }
+
+  void _showSupportTickets() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Opening support tickets...')),
+    );
+  }
+
+  void _logout() {
+    // Local logout - just navigate back
+    Navigator.of(context).popUntil((route) => route.isFirst);
   }
 }

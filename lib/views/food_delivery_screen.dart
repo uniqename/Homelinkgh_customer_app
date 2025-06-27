@@ -278,13 +278,10 @@ class _FoodDeliveryScreenState extends State<FoodDeliveryScreen> {
     
     final serviceRequest = ServiceRequest(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
-      customerId: 'user_123',
       serviceType: 'Food Delivery',
       description: 'Food delivery from ${restaurant['name']}',
-      customerLocation: _customerLocation,
-      customerAddress: _deliveryAddress.isEmpty ? _addressController.text : _deliveryAddress,
-      requestedDateTime: DateTime.now(),
-      priority: ServicePriority.normal,
+      scheduledDate: DateTime.now(),
+      budget: 50.0, // Default budget for food delivery
       isUrgent: false,
     );
     

@@ -1,17 +1,40 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'views/guest_home.dart';
 import 'views/role_selection.dart';
 
-void main() {
-  runApp(const HomeLinkGHApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Check if user has a saved session
+  final prefs = await SharedPreferences.getInstance();
+  final savedRole = prefs.getString('user_role');
+  final isLoggedIn = prefs.getBool('is_logged_in') ?? false;
+  
+  print('HomeLinkGH starting with local data...');
+  print('Saved role: $savedRole, Logged in: $isLoggedIn');
+  
+  runApp(HomeLinkGHApp(
+    initialRoute: isLoggedIn && savedRole != null ? '/role_selection' : '/guest',
+    savedRole: savedRole,
+  ));
 }
 
 class HomeLinkGHApp extends StatelessWidget {
-  const HomeLinkGHApp({super.key});
+  final String initialRoute;
+  final String? savedRole;
+  
+  const HomeLinkGHApp({
+    super.key,
+    required this.initialRoute,
+    this.savedRole,
+  });
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'HomeLinkGH - Connecting Ghana\'s Diaspora',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF2E8B57), // Warmer sea green
@@ -23,13 +46,15 @@ class HomeLinkGHApp extends StatelessWidget {
           onSecondary: Colors.white,
         ),
         useMaterial3: true,
-        fontFamily: 'Inter', // Modern, clean font
+        fontFamily: 'Inter',
         appBarTheme: const AppBarTheme(
           centerTitle: true,
           elevation: 0,
         ),
       ),
-      home: const RoleSelectionScreen(),
+      home: initialRoute == '/guest' 
+          ? const GuestHomeScreen() 
+          : RoleSelectionScreen(savedRole: savedRole),
     );
   }
 }

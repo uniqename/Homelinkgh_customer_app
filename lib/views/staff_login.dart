@@ -390,11 +390,7 @@ class _StaffLoginScreenState extends State<StaffLoginScreen> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => StaffDashboardScreen(
-              staffRole: selectedRole!,
-              staffName: staffName,
-              staffId: 'staff_${DateTime.now().millisecondsSinceEpoch}',
-            ),
+            builder: (context) => const StaffDashboard(),
           ),
         );
       } else {

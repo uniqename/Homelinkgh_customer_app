@@ -2,14 +2,22 @@ import 'dart:math';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../models/provider.dart';
 import '../models/service_request.dart';
+import 'local_data_service.dart';
 
 class SmartSelectionService {
   static final SmartSelectionService _instance = SmartSelectionService._internal();
   factory SmartSelectionService() => _instance;
   SmartSelectionService._internal();
 
-  // Mock provider data for Ghana
-  final List<Provider> _providers = [
+  final LocalDataService _localData = LocalDataService();
+
+  // Get providers from local data service
+  Future<List<Provider>> _getProviders() async {
+    return await _localData.getAllProviders();
+  }
+
+  // Original provider data as fallback
+  final List<Provider> _fallbackProviders = [
     Provider(
       id: '1',
       name: 'Kwame Asante',
@@ -67,8 +75,11 @@ class SmartSelectionService {
     required LatLng customerLocation,
     int maxResults = 5,
   }) async {
+    // Get providers from local data service
+    final allProviders = await _getProviders();
+    
     // Filter providers by service type
-    final eligibleProviders = _providers.where((provider) =>
+    final eligibleProviders = allProviders.where((provider) =>
       provider.specialties.contains(request.serviceType) && 
       provider.isAvailable
     ).toList();
@@ -199,8 +210,9 @@ class SmartSelectionService {
     double radiusKm = 10.0,
   }) async {
     final nearbyProviders = <Provider>[];
+    final allProviders = await _getProviders();
 
-    for (final provider in _providers) {
+    for (final provider in allProviders) {
       if (!provider.specialties.contains(serviceType)) continue;
       if (!provider.isAvailable) continue;
 

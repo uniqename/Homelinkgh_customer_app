@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
-import 'provider_calendar.dart';
+import 'package:intl/intl.dart';
+import '../constants/service_types.dart';
+import 'calendar.dart';
+import 'available_jobs.dart';
+import 'earnings_dashboard.dart';
+import 'provider_profile.dart';
 
 class ProviderDashboard extends StatefulWidget {
   const ProviderDashboard({super.key});
@@ -9,40 +14,14 @@ class ProviderDashboard extends StatefulWidget {
 }
 
 class _ProviderDashboardState extends State<ProviderDashboard> {
-  final List<Map<String, dynamic>> jobRequests = [
-    {
-      'id': '001',
-      'service': 'Plumbing',
-      'customer': 'Kwame Asante',
-      'location': 'East Legon, Accra',
-      'date': '2024-06-22',
-      'time': '10:00 AM',
-      'description': 'Fix leaky kitchen faucet',
-      'price': 'GH₵450',
-      'status': 'pending'
-    },
-    {
-      'id': '002',
-      'service': 'Electrical',
-      'customer': 'Akosua Mensah',
-      'location': 'Tema, Greater Accra',
-      'date': '2024-06-23',
-      'time': '2:00 PM',
-      'description': 'Install ceiling fan',
-      'price': 'GH₵720',
-      'status': 'pending'
-    },
-    {
-      'id': '003',
-      'service': 'Cleaning',
-      'customer': 'Kofi Boateng',
-      'location': 'Kumasi, Ashanti Region',
-      'date': '2024-06-21',
-      'time': '9:00 AM',
-      'description': 'Deep clean 3-bedroom house',
-      'price': 'GH₵1200',
-      'status': 'accepted'
-    },
+  int _selectedIndex = 0;
+  bool isLoading = false;
+  
+  // Mock provider service types - in real app, get from provider profile
+  final List<String> providerServices = [
+    'House Cleaning',
+    'Plumbing',
+    'Electrical Services'
   ];
 
   @override
@@ -65,85 +44,244 @@ class _ProviderDashboardState extends State<ProviderDashboard> {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildStatCard('Pending', '2', Colors.orange),
-                    _buildStatCard('Accepted', '1', Colors.green),
-                    _buildStatCard('Completed', '5', Colors.blue),
-                  ],
-                ),
+      body: _getSelectedWidget(),
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        currentIndex: _selectedIndex,
+        onTap: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard),
+            label: 'Dashboard',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.work),
+            label: 'Available Jobs',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.calendar_today),
+            label: 'Calendar',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.account_balance_wallet),
+            label: 'Earnings',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _getSelectedWidget() {
+    switch (_selectedIndex) {
+      case 0:
+        return _buildDashboard();
+      case 1:
+        return AvailableJobsScreen(providerServices: providerServices);
+      case 2:
+        return const ProviderCalendar();
+      case 3:
+        return const EarningsDashboard();
+      case 4:
+        return const ProviderProfile();
+      default:
+        return _buildDashboard();
+    }
+  }
+
+  Widget _buildDashboard() {
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    final pendingJobs = 3;
+    final acceptedJobs = 2;
+    final completedJobs = 15;
+    final totalEarnings = 2400.0;
+
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Quick Stats
+          Card(
+            elevation: 4,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _buildStatCard('Pending', pendingJobs.toString(), Colors.orange, Icons.pending),
+                      _buildStatCard('Active', acceptedJobs.toString(), Colors.green, Icons.work),
+                      _buildStatCard('Completed', completedJobs.toString(), Colors.blue, Icons.check_circle),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          'Total Earnings',
+                          style: TextStyle(color: Colors.green.shade700),
+                        ),
+                        Text(
+                          'GH₵${totalEarnings.toStringAsFixed(2)}',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green.shade700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 16),
-            const Text(
-              'Job Requests',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+          
+          // Service Specialties
+          const Text(
+            'Your Service Specialties',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            height: 60,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: providerServices.length,
+              itemBuilder: (context, index) {
+                final service = providerServices[index];
+                return Container(
+                  margin: const EdgeInsets.only(right: 8),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(ServiceTypes.getIconForService(service)),
+                      const SizedBox(width: 4),
+                      Text(service),
+                    ],
+                  ),
+                );
+              },
             ),
-            const SizedBox(height: 8),
-            Expanded(
-              child: ListView.builder(
-                itemCount: jobRequests.length,
-                itemBuilder: (context, index) {
-                  final job = jobRequests[index];
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    child: ListTile(
-                      title: Text('${job['service']} - ${job['customer']}'),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(job['description']),
-                          Text('📍 ${job['location']}'),
-                          Text('📅 ${job['date']} at ${job['time']}'),
-                        ],
-                      ),
-                      trailing: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            job['price'],
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: job['status'] == 'pending'
-                                  ? Colors.orange
-                                  : job['status'] == 'accepted'
-                                      ? Colors.green
-                                      : Colors.blue,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              job['status'].toUpperCase(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      onTap: () {
-                        _showJobDetails(job);
-                      },
-                    ),
-                  );
+          ),
+          const SizedBox(height: 16),
+          
+          // Recent Jobs
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Recent Jobs',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    _selectedIndex = 1; // Switch to Available Jobs tab
+                  });
                 },
+                child: const Text('View All'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: ListView(
+              children: [
+                _buildJobCard('House Cleaning - East Legon'),
+                _buildJobCard('Food Delivery - Osu'),
+                _buildJobCard('Plumbing Service - Airport'),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatCard(String title, String count, Color color, IconData icon) {
+    return Column(
+      children: [
+        Icon(icon, color: color, size: 24),
+        const SizedBox(height: 4),
+        Text(
+          count,
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+        Text(
+          title,
+          style: const TextStyle(fontSize: 12),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildJobCard(String title) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: const CircleAvatar(
+          backgroundColor: Colors.green,
+          child: Icon(Icons.work, color: Colors.white),
+        ),
+        title: Text(title),
+        subtitle: const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Sample job description',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            Text('📍 East Legon, Accra'),
+            Text('📅 Dec 25, 2024'),
+          ],
+        ),
+        trailing: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'GH₵150',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+            SizedBox(height: 4),
+            Text(
+              'ACTIVE',
+              style: TextStyle(
+                color: Colors.green,
+                fontSize: 10,
               ),
             ),
           ],
@@ -152,67 +290,52 @@ class _ProviderDashboardState extends State<ProviderDashboard> {
     );
   }
 
-  Widget _buildStatCard(String title, String count, Color color) {
-    return Column(
-      children: [
-        Text(
-          count,
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
-        ),
-        Text(title),
-      ],
-    );
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'pending':
+        return Colors.orange;
+      case 'accepted':
+      case 'in_progress':
+        return Colors.green;
+      case 'completed':
+        return Colors.blue;
+      case 'cancelled':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
   }
 
-  void _showJobDetails(Map<String, dynamic> job) {
+  void _showJobDetails() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('${job['service']} Request'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Customer: ${job['customer']}'),
-            Text('Location: ${job['location']}'),
-            Text('Date: ${job['date']}'),
-            Text('Time: ${job['time']}'),
-            Text('Description: ${job['description']}'),
-            Text('Price: ${job['price']}'),
-          ],
-        ),
+        title: const Text('Job Details'),
+        content: const Text('Local job details will be shown here'),
         actions: [
-          if (job['status'] == 'pending') ...[
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  job['status'] = 'accepted';
-                });
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Job accepted!')),
-                );
-              },
-              child: const Text('Accept'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Job declined')),
-                );
-              },
-              child: const Text('Decline'),
-            ),
-          ],
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Close'),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 80,
+            child: Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+          Expanded(child: Text(value)),
         ],
       ),
     );
