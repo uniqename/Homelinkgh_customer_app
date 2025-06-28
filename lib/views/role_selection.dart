@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'customer_home.dart';
 import 'provider_dashboard.dart';
+import 'provider_onboarding_screen.dart';
 import 'admin_dashboard.dart';
 import 'dynamic_home.dart';
 import 'staff_login.dart';
@@ -233,7 +234,7 @@ class RoleSelectionScreen extends StatelessWidget {
                         onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const ProviderDashboard(),
+                            builder: (context) => const ProviderOnboardingScreen(),
                           ),
                         ),
                       ),
@@ -389,7 +390,7 @@ class RoleSelectionScreen extends StatelessWidget {
     );
   }
 
-  void _navigateToRole(BuildContext context, String role) {
+  void _navigateToRole(BuildContext context, String role) async {
     switch (role) {
       case 'customer':
         Navigator.pushReplacement(
@@ -411,12 +412,27 @@ class RoleSelectionScreen extends StatelessWidget {
         );
         break;
       case 'provider':
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const ProviderDashboard(),
-          ),
-        );
+        // Check if provider is verified
+        final prefs = await SharedPreferences.getInstance();
+        final isVerified = prefs.getBool('provider_verified') ?? false;
+        
+        if (isVerified) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const ProviderDashboard(),
+            ),
+          );
+        } else {
+          // Provider not verified yet, show pending verification message
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Your provider application is under review. You\'ll receive confirmation once approved.'),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 4),
+            ),
+          );
+        }
         break;
       case 'admin':
         Navigator.pushReplacement(

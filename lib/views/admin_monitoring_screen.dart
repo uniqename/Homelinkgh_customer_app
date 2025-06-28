@@ -354,7 +354,7 @@ class _AdminMonitoringScreenState extends State<AdminMonitoringScreen>
           children: [
             Text('Rating: ${provider.rating} ⭐'),
             Text('Completed: ${provider.completedJobs} jobs'),
-            Text('Specialties: ${provider.specialties.join(', ')}'),
+            Text('Services: ${provider.services.join(', ')}'),
           ],
         ),
         trailing: Column(
@@ -785,7 +785,7 @@ class _AdminMonitoringScreenState extends State<AdminMonitoringScreen>
             Text('Rating: ${provider.rating} ⭐'),
             Text('Completed Jobs: ${provider.completedJobs}'),
             Text('Response Time: ${provider.averageResponseTime} min'),
-            Text('Specialties: ${provider.specialties.join(', ')}'),
+            Text('Services: ${provider.services.join(', ')}'),
             Text('Status: ${provider.isAvailable ? 'Available' : 'Busy'}'),
           ],
         ),

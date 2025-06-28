@@ -15,7 +15,7 @@ class SmartSelectionService {
       name: 'Kwame Asante',
       rating: 4.8,
       completedJobs: 145,
-      specialties: ['Food Delivery', 'Grocery Shopping'],
+      services: ['Food Delivery', 'Grocery Shopping'],
       location: const LatLng(5.6037, -0.1870), // East Legon, Accra
       isAvailable: true,
       averageResponseTime: 15, // minutes
@@ -25,7 +25,7 @@ class SmartSelectionService {
       name: 'Ama Serwaa',
       rating: 4.9,
       completedJobs: 203,
-      specialties: ['House Cleaning', 'Laundry Service'],
+      services: ['House Cleaning', 'Laundry Service'],
       location: const LatLng(5.5502, -0.2174), // Osu, Accra
       isAvailable: true,
       averageResponseTime: 12,
@@ -35,7 +35,7 @@ class SmartSelectionService {
       name: 'Kofi Mensah', 
       rating: 4.7,
       completedJobs: 89,
-      specialties: ['Food Delivery', 'Transportation'],
+      services: ['Food Delivery', 'Transportation'],
       location: const LatLng(5.6205, -0.1731), // Airport Residential, Accra
       isAvailable: true,
       averageResponseTime: 8,
@@ -45,7 +45,7 @@ class SmartSelectionService {
       name: 'Akosua Boateng',
       rating: 4.9,
       completedJobs: 167,
-      specialties: ['Nail Tech', 'Makeup Artist'],
+      services: ['Nail Tech', 'Makeup Artist'],
       location: const LatLng(5.5557, -0.1963), // Cantonments, Accra
       isAvailable: true,
       averageResponseTime: 20,
@@ -55,7 +55,7 @@ class SmartSelectionService {
       name: 'Yaw Opoku',
       rating: 4.6,
       completedJobs: 134,
-      specialties: ['Plumbing', 'Electrical Work'],
+      services: ['Plumbing', 'Electrical Work'],
       location: const LatLng(5.6434, -0.1776), // Dzorwulu, Accra
       isAvailable: true,
       averageResponseTime: 25,
@@ -69,7 +69,7 @@ class SmartSelectionService {
   }) async {
     // Filter providers by service type
     final eligibleProviders = _providers.where((provider) =>
-      provider.specialties.contains(request.serviceType) && 
+      provider.services.contains(request.serviceType) && 
       provider.isAvailable
     ).toList();
 
@@ -201,7 +201,7 @@ class SmartSelectionService {
     final nearbyProviders = <Provider>[];
 
     for (final provider in _providers) {
-      if (!provider.specialties.contains(serviceType)) continue;
+      if (!provider.services.contains(serviceType)) continue;
       if (!provider.isAvailable) continue;
 
       final distance = _calculateDistance(

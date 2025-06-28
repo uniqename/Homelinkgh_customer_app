@@ -165,7 +165,7 @@ class TestDataService {
         'rating': 4.9,
         'totalJobs': 67,
         'priceRange': {'min': 80, 'max': 350, 'currency': 'GHS'},
-        'specialties': ['Bridal makeup', 'Traditional styling', 'Gel nails'],
+        'services': ['Bridal makeup', 'Traditional styling', 'Gel nails'],
         'isVerified': true,
         'portfolio': ['image1.jpg', 'image2.jpg', 'image3.jpg'],
         'createdAt': FieldValue.serverTimestamp(),

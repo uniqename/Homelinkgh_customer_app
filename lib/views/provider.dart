@@ -5,7 +5,7 @@ class Provider {
   final String name;
   final double rating;
   final int completedJobs;
-  final List<String> specialties;
+  final List<String> services;
   final LatLng location;
   final bool isAvailable;
   final int averageResponseTime;
@@ -15,7 +15,7 @@ class Provider {
     required this.name,
     required this.rating,
     required this.completedJobs,
-    required this.specialties,
+    required this.services,
     required this.location,
     required this.isAvailable,
     required this.averageResponseTime,
@@ -27,7 +27,7 @@ class Provider {
       name: map['name'] ?? '',
       rating: (map['rating'] ?? 0.0).toDouble(),
       completedJobs: map['completedJobs'] ?? 0,
-      specialties: List<String>.from(map['specialties'] ?? []),
+      services: List<String>.from(map['services'] ?? []),
       location: LatLng(
         (map['location']['latitude'] ?? 0.0).toDouble(),
         (map['location']['longitude'] ?? 0.0).toDouble(),
@@ -42,7 +42,7 @@ class Provider {
       'name': name,
       'rating': rating,
       'completedJobs': completedJobs,
-      'specialties': specialties,
+      'services': services,
       'location': {
         'latitude': location.latitude,
         'longitude': location.longitude,

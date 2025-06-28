@@ -539,7 +539,7 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  provider.specialties.join(', '),
+                  provider.services.join(', '),
                   style: const TextStyle(
                     fontSize: 10,
                     color: Colors.grey,
@@ -947,7 +947,7 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
-                    children: provider.specialties.map((service) {
+                    children: provider.services.map((service) {
                       return Chip(
                         label: Text(service),
                         backgroundColor: const Color(0xFF006B3C).withOpacity(0.1),
@@ -964,7 +964,7 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
                           context,
                           MaterialPageRoute(
                             builder: (context) => SmartBookingFlowScreen(
-                              serviceType: provider.specialties.first,
+                              serviceType: provider.services.first,
                               isGuestUser: true,
                               selectedProvider: provider,
                             ),

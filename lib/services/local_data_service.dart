@@ -15,71 +15,71 @@ class LocalDataService {
       id: '1',
       name: 'Kwame Asante',
       email: 'kwame.asante@homelink.gh',
-      phone: '+233 24 123 4567',
+      phoneNumber: '+233 24 123 4567',
       rating: 4.8,
       completedJobs: 145,
-      specialties: ['Food Delivery', 'Grocery Shopping'],
+      services: ['Food Delivery', 'Grocery Shopping'],
       location: const LatLng(5.6037, -0.1870), // East Legon, Accra
       isAvailable: true,
       averageResponseTime: 15,
-      profileImage: 'https://via.placeholder.com/150',
-      description: 'Experienced food delivery specialist in Greater Accra. Fast, reliable service.',
+      profileImageUrl: 'https://via.placeholder.com/150',
+      bio: 'Experienced food delivery specialist in Greater Accra. Fast, reliable service.',
     ),
     Provider(
       id: '2', 
       name: 'Ama Serwaa',
       email: 'ama.serwaa@homelink.gh',
-      phone: '+233 20 987 6543',
+      phoneNumber: '+233 20 987 6543',
       rating: 4.9,
       completedJobs: 203,
-      specialties: ['House Cleaning', 'Laundry Service'],
+      services: ['House Cleaning', 'Laundry Service'],
       location: const LatLng(5.5502, -0.2174), // Osu, Accra
       isAvailable: true,
       averageResponseTime: 12,
-      profileImage: 'https://via.placeholder.com/150',
-      description: 'Professional house cleaning with eco-friendly products. Trusted by families.',
+      profileImageUrl: 'https://via.placeholder.com/150',
+      bio: 'Professional house cleaning with eco-friendly products. Trusted by families.',
     ),
     Provider(
       id: '3',
       name: 'Kofi Mensah', 
       email: 'kofi.mensah@homelink.gh',
-      phone: '+233 26 555 7890',
+      phoneNumber: '+233 26 555 7890',
       rating: 4.7,
       completedJobs: 89,
-      specialties: ['Food Delivery', 'Transportation'],
+      services: ['Food Delivery', 'Transportation'],
       location: const LatLng(5.6205, -0.1731), // Airport Residential, Accra
       isAvailable: true,
       averageResponseTime: 8,
-      profileImage: 'https://via.placeholder.com/150',
-      description: 'Quick food delivery and ride services. Available 24/7 in Accra.',
+      profileImageUrl: 'https://via.placeholder.com/150',
+      bio: 'Quick food delivery and ride services. Available 24/7 in Accra.',
     ),
     Provider(
       id: '4',
       name: 'Akosua Boateng',
       email: 'akosua.boateng@homelink.gh',
-      phone: '+233 23 456 7890',
+      phoneNumber: '+233 23 456 7890',
       rating: 4.9,
       completedJobs: 167,
-      specialties: ['Nail Tech', 'Makeup Artist'],
+      services: ['Nail Tech', 'Makeup Artist'],
       location: const LatLng(5.5557, -0.1963), // Cantonments, Accra
       isAvailable: true,
       averageResponseTime: 20,
-      profileImage: 'https://via.placeholder.com/150',
-      description: 'Professional beauty services. Specializing in bridal and event makeup.',
+      profileImageUrl: 'https://via.placeholder.com/150',
+      bio: 'Professional beauty services. Specializing in bridal and event makeup.',
     ),
     Provider(
       id: '5',
       name: 'Yaw Opoku',
       email: 'yaw.opoku@homelink.gh',
-      phone: '+233 27 123 9876',
+      phoneNumber: '+233 27 123 9876',
       rating: 4.6,
       completedJobs: 134,
-      specialties: ['Plumbing', 'Electrical Work'],
+      services: ['Plumbing', 'Electrical Work'],
       location: const LatLng(5.6434, -0.1776), // Dzorwulu, Accra
       isAvailable: true,
       averageResponseTime: 25,
-      profileImage: 'https://via.placeholder.com/150',
-      description: 'Licensed electrician and plumber. Emergency services available.',
+      profileImageUrl: 'https://via.placeholder.com/150',
+      bio: 'Licensed electrician and plumber. Emergency services available.',
     ),
   ];
 
@@ -152,10 +152,10 @@ class LocalDataService {
     
     // Find providers that have any of the matching services
     return _providers.where((provider) => 
-      provider.specialties.any((specialty) => 
-        matchingServices.any((service) => 
-          specialty.toLowerCase().contains(service.toLowerCase()) ||
-          service.toLowerCase().contains(specialty.toLowerCase())
+      provider.services.any((service) => 
+        matchingServices.any((matchingService) => 
+          service.toLowerCase().contains(matchingService.toLowerCase()) ||
+          matchingService.toLowerCase().contains(service.toLowerCase())
         )
       )
     ).toList();
@@ -210,7 +210,7 @@ class LocalDataService {
     // Filter by service type
     if (serviceType != null) {
       results = results.where((provider) => 
-        provider.specialties.contains(serviceType)
+        provider.services.contains(serviceType)
       ).toList();
     }
     
@@ -219,8 +219,8 @@ class LocalDataService {
       final lowerQuery = query.toLowerCase();
       results = results.where((provider) => 
         provider.name.toLowerCase().contains(lowerQuery) ||
-        provider.specialties.any((specialty) => 
-          specialty.toLowerCase().contains(lowerQuery)
+        provider.services.any((service) => 
+          service.toLowerCase().contains(lowerQuery)
         )
       ).toList();
     }

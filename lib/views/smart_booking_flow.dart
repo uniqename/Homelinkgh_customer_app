@@ -7,18 +7,24 @@ import '../services/smart_selection_service.dart';
 import '../services/smart_personalization_service.dart';
 import '../services/gamification_service.dart';
 import '../services/smart_notifications_service.dart';
+import '../services/paystack_service.dart';
+import '../widgets/payment_widget.dart';
 import 'role_selection.dart';
 
 class SmartBookingFlowScreen extends StatefulWidget {
   final String serviceType;
   final bool isGuestUser;
   final Provider? selectedProvider;
+  final Map<String, dynamic>? bundleDetails;
+  final Map<String, dynamic>? recommendationData;
 
   const SmartBookingFlowScreen({
     super.key,
     required this.serviceType,
     this.isGuestUser = false,
     this.selectedProvider,
+    this.bundleDetails,
+    this.recommendationData,
   });
 
   @override
@@ -31,6 +37,7 @@ class _SmartBookingFlowScreenState extends State<SmartBookingFlowScreen> {
   final SmartPersonalizationService _personalization = SmartPersonalizationService();
   final GamificationService _gamification = GamificationService();
   final SmartNotificationsService _notifications = SmartNotificationsService();
+  final PayStackService _payStackService = PayStackService();
   
   int _currentStep = 0;
   final _formKey = GlobalKey<FormState>();
@@ -168,6 +175,7 @@ class _SmartBookingFlowScreenState extends State<SmartBookingFlowScreen> {
                 _buildProviderSelectionStep(),
                 _buildUserDetailsStep(),
                 _buildConfirmationStep(),
+                _buildPaymentStep(),
               ],
             ),
           ),
@@ -178,7 +186,7 @@ class _SmartBookingFlowScreenState extends State<SmartBookingFlowScreen> {
   }
 
   Widget _buildStepIndicator() {
-    final steps = ['Details', 'Provider', 'Your Info', 'Confirm'];
+    final steps = ['Details', 'Provider', 'Your Info', 'Confirm', 'Payment'];
     
     return Container(
       padding: const EdgeInsets.all(16),
@@ -762,7 +770,9 @@ class _SmartBookingFlowScreenState extends State<SmartBookingFlowScreen> {
       case 2:
         return 'Continue';
       case 3:
-        return 'Confirm Booking';
+        return 'Continue to Payment';
+      case 4:
+        return 'Complete Booking';
       default:
         return 'Next';
     }
@@ -796,7 +806,14 @@ class _SmartBookingFlowScreenState extends State<SmartBookingFlowScreen> {
         );
       }
     } else if (_currentStep == 3) {
-      _confirmBooking();
+      if (_validateUserForm()) {
+        _pageController.nextPage(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.ease,
+        );
+      }
+    } else if (_currentStep == 4) {
+      _processPaymentAndBooking();
     }
   }
 
@@ -817,7 +834,44 @@ class _SmartBookingFlowScreenState extends State<SmartBookingFlowScreen> {
     return true;
   }
 
-  Future<void> _confirmBooking() async {
+  Widget _buildPaymentStep() {
+    return PaymentWidget(
+      amount: _estimatedPrice,
+      serviceType: widget.serviceType,
+      bookingId: DateTime.now().millisecondsSinceEpoch.toString(),
+      providerId: _selectedProvider?.id ?? '',
+      customerName: _userName,
+      customerEmail: _userEmail,
+      customerPhone: _userPhone,
+      onPaymentSuccess: () {
+        _completeBookingAfterPayment();
+      },
+      onPaymentFailure: (String error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Payment failed: $error'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      },
+      onPaymentCancelled: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Payment cancelled'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _processPaymentAndBooking() async {
+    // This will be called from the payment widget
+    // For now, we'll show the payment interface
+    print('Processing payment for booking...');
+  }
+
+  Future<void> _completeBookingAfterPayment() async {
     try {
       // Save user session
       final prefs = await SharedPreferences.getInstance();
@@ -827,7 +881,7 @@ class _SmartBookingFlowScreenState extends State<SmartBookingFlowScreen> {
       await prefs.setString('user_phone', _userPhone);
       await prefs.setString('user_email', _userEmail);
 
-      // Create booking
+      // Create booking with paid status
       final booking = Booking(
         customerId: 'user_${DateTime.now().millisecondsSinceEpoch}',
         providerId: _selectedProvider!.id,
@@ -836,21 +890,22 @@ class _SmartBookingFlowScreenState extends State<SmartBookingFlowScreen> {
         scheduledDate: _scheduledDate,
         address: _address,
         price: _estimatedPrice,
-        status: 'pending',
+        status: 'paid', // Mark as paid since payment is complete
       );
 
       final bookingId = await _localData.createBooking(booking);
 
       // Track booking for personalization
-      await _personalization.trackUserAction('service_booked', {
+      await _personalization.trackUserAction('service_booked_paid', {
         'serviceType': widget.serviceType,
         'providerId': _selectedProvider!.id,
         'price': _estimatedPrice,
         'address': _address,
+        'paymentMethod': 'paystack',
         'isGuestUser': widget.isGuestUser,
       });
 
-      // Record booking for gamification
+      // Record booking for gamification (with payment bonus)
       await _gamification.recordBooking(
         serviceType: widget.serviceType,
         amount: _estimatedPrice,
@@ -860,7 +915,7 @@ class _SmartBookingFlowScreenState extends State<SmartBookingFlowScreen> {
 
       // Get updated user stats for celebration
       final userStats = _gamification.getUserStats();
-      final pointsEarned = 50 + (_estimatedPrice > 300 ? 30 : 0); // Base + premium bonus
+      final pointsEarned = 50 + (_estimatedPrice > 300 ? 30 : 0) + 20; // Base + premium + payment bonus
       
       // Show success and navigate
       if (mounted) {
@@ -868,7 +923,7 @@ class _SmartBookingFlowScreenState extends State<SmartBookingFlowScreen> {
           context: context,
           barrierDismissible: false,
           builder: (context) => AlertDialog(
-            title: const Text('Booking Confirmed! 🎉'),
+            title: const Text('🎉 Booking & Payment Complete!'),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -880,6 +935,7 @@ class _SmartBookingFlowScreenState extends State<SmartBookingFlowScreen> {
                 const SizedBox(height: 16),
                 Text(
                   'Booking ID: ${bookingId.substring(0, 8)}\\n\\n'
+                  'Payment processed successfully!\\n'
                   'Your account has been created and you\'re now logged in!\\n\\n'
                   '${_selectedProvider!.name} will contact you soon.',
                   textAlign: TextAlign.center,
@@ -888,7 +944,7 @@ class _SmartBookingFlowScreenState extends State<SmartBookingFlowScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF006B3C).withOpacity(0.1),
+                    color: const Color(0xFF006B3C).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Column(
@@ -911,6 +967,14 @@ class _SmartBookingFlowScreenState extends State<SmartBookingFlowScreen> {
                       Text(
                         'Level ${userStats['level']} ${userStats['levelTitle']} • ${userStats['points']} total points',
                         style: const TextStyle(fontSize: 12, color: Colors.grey),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        '✅ Payment Complete ✅',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green,
+                        ),
                       ),
                     ],
                   ),
@@ -940,7 +1004,7 @@ class _SmartBookingFlowScreenState extends State<SmartBookingFlowScreen> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Booking failed: $e')),
+        SnackBar(content: Text('Booking completion failed: $e')),
       );
     }
   }

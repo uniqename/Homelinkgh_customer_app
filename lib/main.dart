@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'views/guest_home.dart';
 import 'views/role_selection.dart';
+import 'services/firebase_initialization_service.dart';
+import 'config/firebase_config.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -11,23 +13,45 @@ void main() async {
   final savedRole = prefs.getString('user_role');
   final isLoggedIn = prefs.getBool('is_logged_in') ?? false;
   
-  print('HomeLinkGH starting with local data...');
+  print('HomeLinkGH starting...');
   print('Saved role: $savedRole, Logged in: $isLoggedIn');
+  
+  // Initialize Firebase for production use
+  final firebaseInit = FirebaseInitializationService();
+  bool isFirebaseReady = false;
+  
+  try {
+    print('Attempting Firebase initialization...');
+    isFirebaseReady = await firebaseInit.initializeForProduction();
+    
+    if (isFirebaseReady) {
+      print('✅ Firebase initialized - Running in PRODUCTION mode');
+      await firebaseInit.setupInitialData();
+    } else {
+      print('⚠️ Firebase not available - Running in LOCAL mode');
+    }
+  } catch (e) {
+    print('❌ Firebase initialization failed: $e');
+    print('Falling back to local mode...');
+  }
   
   runApp(HomeLinkGHApp(
     initialRoute: isLoggedIn && savedRole != null ? '/role_selection' : '/guest',
     savedRole: savedRole,
+    isFirebaseReady: isFirebaseReady,
   ));
 }
 
 class HomeLinkGHApp extends StatelessWidget {
   final String initialRoute;
   final String? savedRole;
+  final bool isFirebaseReady;
   
   const HomeLinkGHApp({
     super.key,
     required this.initialRoute,
     this.savedRole,
+    this.isFirebaseReady = false,
   });
 
   @override
