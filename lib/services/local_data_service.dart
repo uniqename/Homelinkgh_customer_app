@@ -133,8 +133,31 @@ class LocalDataService {
   // Get providers by service type
   Future<List<Provider>> getProvidersByService(String serviceType) async {
     await Future.delayed(const Duration(milliseconds: 300));
+    
+    // Create service mapping to match different naming conventions
+    final serviceMapping = {
+      'Food Delivery': ['Food Delivery', 'Restaurant', 'Delivery'],
+      'House Cleaning': ['House Cleaning', 'Cleaning', 'Laundry Service'],
+      'Transportation': ['Transportation', 'Driver', 'Ride'],
+      'Beauty Services': ['Nail Tech', 'Makeup Artist', 'Beauty', 'Hair'],
+      'Jollof Delivery': ['Food Delivery', 'Restaurant'],
+      'Banku & Fish': ['Food Delivery', 'Restaurant'],
+      'Airport Transfer': ['Transportation', 'Driver'],
+      'Braiding Hair': ['Nail Tech', 'Makeup Artist', 'Beauty'],
+      'House Help': ['House Cleaning', 'Cleaning'],
+    };
+    
+    // Get matching service types for the requested service
+    final matchingServices = serviceMapping[serviceType] ?? [serviceType];
+    
+    // Find providers that have any of the matching services
     return _providers.where((provider) => 
-      provider.specialties.contains(serviceType)
+      provider.specialties.any((specialty) => 
+        matchingServices.any((service) => 
+          specialty.toLowerCase().contains(service.toLowerCase()) ||
+          service.toLowerCase().contains(specialty.toLowerCase())
+        )
+      )
     ).toList();
   }
 

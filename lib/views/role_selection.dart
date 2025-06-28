@@ -5,6 +5,7 @@ import 'provider_dashboard.dart';
 import 'admin_dashboard.dart';
 import 'dynamic_home.dart';
 import 'staff_login.dart';
+import 'jobs_careers.dart';
 
 class RoleSelectionScreen extends StatelessWidget {
   final String? savedRole;
@@ -184,15 +185,25 @@ class RoleSelectionScreen extends StatelessWidget {
                         subtitle: 'Book before you land - we\'ll prep your house',
                         color: const Color(0xFF1E88E5),
                         badge: 'DIASPORA MODE',
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const DynamicHomeScreen(
-                              userId: 'diaspora_user_001',
-                              userType: 'diaspora_customer',
-                            ),
-                          ),
-                        ),
+                        onTap: () {
+                          print('Navigating to Diaspora mode');
+                          try {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const DynamicHomeScreen(
+                                  userId: 'diaspora_user_001',
+                                  userType: 'diaspora_customer',
+                                ),
+                              ),
+                            );
+                          } catch (e) {
+                            print('Diaspora navigation error: $e');
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Navigation error: $e')),
+                            );
+                          }
+                        },
                       ),
                       const SizedBox(height: 16),
                       _buildRoleCard(
@@ -236,7 +247,7 @@ class RoleSelectionScreen extends StatelessWidget {
                         onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const CustomerHomeScreen(),
+                            builder: (context) => const JobsCareersScreen(),
                           ),
                         ),
                       ),

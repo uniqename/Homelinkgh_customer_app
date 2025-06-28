@@ -48,4 +48,3 @@ class Job {
     };
   }
 }
-EOF < /dev/null

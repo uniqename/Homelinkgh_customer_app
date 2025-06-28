@@ -1,6 +1,6 @@
 name: homelink_ghana
 description: HomeLinkGH - Ghana's unified platform for customers, providers, and admins. Complete home services ecosystem.
-version: 3.1.0+11
+version: 3.1.1+13
 publish_to: none
 
 environment:

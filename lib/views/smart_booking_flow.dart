@@ -4,6 +4,9 @@ import '../models/provider.dart';
 import '../models/booking.dart';
 import '../services/local_data_service.dart';
 import '../services/smart_selection_service.dart';
+import '../services/smart_personalization_service.dart';
+import '../services/gamification_service.dart';
+import '../services/smart_notifications_service.dart';
 import 'role_selection.dart';
 
 class SmartBookingFlowScreen extends StatefulWidget {
@@ -25,6 +28,9 @@ class SmartBookingFlowScreen extends StatefulWidget {
 class _SmartBookingFlowScreenState extends State<SmartBookingFlowScreen> {
   final PageController _pageController = PageController();
   final LocalDataService _localData = LocalDataService();
+  final SmartPersonalizationService _personalization = SmartPersonalizationService();
+  final GamificationService _gamification = GamificationService();
+  final SmartNotificationsService _notifications = SmartNotificationsService();
   
   int _currentStep = 0;
   final _formKey = GlobalKey<FormState>();
@@ -58,13 +64,35 @@ class _SmartBookingFlowScreenState extends State<SmartBookingFlowScreen> {
     setState(() => _isLoadingProviders = true);
     
     try {
+      print('Loading providers for service: ${widget.serviceType}');
       final providers = await _localData.getProvidersByService(widget.serviceType);
+      print('Found ${providers.length} providers for ${widget.serviceType}');
+      
       setState(() {
         _recommendedProviders = providers;
         _isLoadingProviders = false;
       });
+      
+      // If no providers found, show a helpful message
+      if (providers.isEmpty && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('No providers available for ${widget.serviceType} yet. We\'re working on it!'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
     } catch (e) {
+      print('Error loading providers: $e');
       setState(() => _isLoadingProviders = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading providers: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -76,6 +104,55 @@ class _SmartBookingFlowScreenState extends State<SmartBookingFlowScreen> {
         backgroundColor: const Color(0xFF006B3C),
         foregroundColor: Colors.white,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.home),
+            onPressed: () {
+              Navigator.popUntil(context, (route) => route.isFirst);
+            },
+            tooltip: 'Back to Home',
+          ),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            onSelected: (value) {
+              switch (value) {
+                case 'switch_role':
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const RoleSelectionScreen(),
+                    ),
+                  );
+                  break;
+                case 'home':
+                  Navigator.popUntil(context, (route) => route.isFirst);
+                  break;
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'switch_role',
+                child: Row(
+                  children: [
+                    Icon(Icons.swap_horiz),
+                    SizedBox(width: 8),
+                    Text('Switch Role'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'home',
+                child: Row(
+                  children: [
+                    Icon(Icons.home),
+                    SizedBox(width: 8),
+                    Text('Back to Home'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -764,6 +841,27 @@ class _SmartBookingFlowScreenState extends State<SmartBookingFlowScreen> {
 
       final bookingId = await _localData.createBooking(booking);
 
+      // Track booking for personalization
+      await _personalization.trackUserAction('service_booked', {
+        'serviceType': widget.serviceType,
+        'providerId': _selectedProvider!.id,
+        'price': _estimatedPrice,
+        'address': _address,
+        'isGuestUser': widget.isGuestUser,
+      });
+
+      // Record booking for gamification
+      await _gamification.recordBooking(
+        serviceType: widget.serviceType,
+        amount: _estimatedPrice,
+        isPremium: _estimatedPrice > 300,
+        bookingTime: DateTime.now(),
+      );
+
+      // Get updated user stats for celebration
+      final userStats = _gamification.getUserStats();
+      final pointsEarned = 50 + (_estimatedPrice > 300 ? 30 : 0); // Base + premium bonus
+      
       // Show success and navigate
       if (mounted) {
         showDialog(
@@ -785,6 +883,37 @@ class _SmartBookingFlowScreenState extends State<SmartBookingFlowScreen> {
                   'Your account has been created and you\'re now logged in!\\n\\n'
                   '${_selectedProvider!.name} will contact you soon.',
                   textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF006B3C).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.stars, color: Color(0xFF006B3C)),
+                          const SizedBox(width: 8),
+                          Text(
+                            '+$pointsEarned Points Earned!',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF006B3C),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Level ${userStats['level']} ${userStats['levelTitle']} • ${userStats['points']} total points',
+                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),

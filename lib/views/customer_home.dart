@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'smart_booking_flow.dart';
 import '../services/local_data_service.dart';
+import '../services/ai_recommendations_service.dart';
+import '../services/smart_personalization_service.dart';
+import 'role_selection.dart';
+import 'guest_home.dart';
 
 class CustomerHomeScreen extends StatefulWidget {
   const CustomerHomeScreen({super.key});
@@ -11,6 +16,10 @@ class CustomerHomeScreen extends StatefulWidget {
 
 class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
   int _selectedIndex = 0;
+  final AIRecommendationsService _aiRecommendations = AIRecommendationsService();
+  final SmartPersonalizationService _personalization = SmartPersonalizationService();
+  List<Map<String, dynamic>> _personalizedRecommendations = [];
+  bool _isLoadingRecommendations = true;
 
   final List<Map<String, dynamic>> _serviceCategories = [
     {
@@ -131,6 +140,31 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _initializePersonalization();
+  }
+
+  Future<void> _initializePersonalization() async {
+    await _personalization.initializePersonalization();
+    await _loadPersonalizedRecommendations();
+  }
+
+  Future<void> _loadPersonalizedRecommendations() async {
+    try {
+      final recommendations = _personalization.getPersonalizedRecommendations();
+      setState(() {
+        _personalizedRecommendations = recommendations;
+        _isLoadingRecommendations = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoadingRecommendations = false;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(
@@ -200,6 +234,46 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                 );
               },
             ),
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert),
+              onSelected: (value) {
+                switch (value) {
+                  case 'switch_role':
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const RoleSelectionScreen(),
+                      ),
+                    );
+                    break;
+                  case 'logout':
+                    _logout();
+                    break;
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'switch_role',
+                  child: Row(
+                    children: [
+                      Icon(Icons.swap_horiz),
+                      SizedBox(width: 8),
+                      Text('Switch Role'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'logout',
+                  child: Row(
+                    children: [
+                      Icon(Icons.logout),
+                      SizedBox(width: 8),
+                      Text('Logout'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
         SliverToBoxAdapter(
@@ -228,6 +302,52 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
+                
+                // Personalized Recommendations
+                if (_personalizedRecommendations.isNotEmpty) ...[
+                  Row(
+                    children: [
+                      const Icon(Icons.auto_awesome, color: Color(0xFF006B3C)),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Just for You',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF006B3C).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '${_personalization.userPersonalityType.replaceAll('_', ' ').toUpperCase()}',
+                          style: const TextStyle(
+                            color: Color(0xFF006B3C),
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 140,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _personalizedRecommendations.take(3).length,
+                      itemBuilder: (context, index) {
+                        final rec = _personalizedRecommendations[index];
+                        return _buildPersonalizedCard(rec);
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
                 
                 // Popular Services
                 const Text(
@@ -304,6 +424,11 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: () {
+          // Track service usage for personalization
+          _personalization.trackUserAction('service_browsed', {
+            'serviceType': service['name'],
+          });
+          
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -693,5 +818,145 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildPersonalizedCard(Map<String, dynamic> recommendation) {
+    return Container(
+      width: 200,
+      margin: const EdgeInsets.only(right: 12),
+      child: Card(
+        elevation: 3,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            _personalization.trackUserAction('personalized_recommendation_clicked', {
+              'type': recommendation['type'],
+              'title': recommendation['title'],
+            });
+            
+            final services = recommendation['services'] as List<dynamic>?;
+            if (services != null && services.isNotEmpty) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SmartBookingFlowScreen(
+                    serviceType: services.first.toString(),
+                    isGuestUser: false,
+                  ),
+                ),
+              );
+            }
+          },
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  const Color(0xFF006B3C).withOpacity(0.1),
+                  const Color(0xFF006B3C).withOpacity(0.05),
+                ],
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF006B3C).withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.auto_awesome,
+                        color: Color(0xFF006B3C),
+                        size: 16,
+                      ),
+                    ),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF006B3C),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '${((recommendation['priority'] ?? 0.5) * 100).round()}%',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  recommendation['title'] ?? 'Smart Suggestion',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  recommendation['subtitle'] ?? 'Personalized for you',
+                  style: const TextStyle(
+                    color: Colors.grey,
+                    fontSize: 12,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const Spacer(),
+                if (recommendation['services'] != null)
+                  Wrap(
+                    spacing: 4,
+                    children: (recommendation['services'] as List).take(2).map<Widget>((service) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF006B3C).withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          service.toString(),
+                          style: const TextStyle(
+                            color: Color(0xFF006B3C),
+                            fontSize: 10,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+    
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const GuestHomeScreen(),
+        ),
+      );
+    }
   }
 }

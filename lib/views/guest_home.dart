@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../services/smart_selection_service.dart';
 import '../services/local_data_service.dart';
+import '../services/ai_recommendations_service.dart';
+import '../services/smart_personalization_service.dart';
 import '../models/provider.dart';
 import 'smart_booking_flow.dart';
-import 'role_selection.dart';
+import 'working_login.dart';
+import 'test_food_delivery.dart';
 
 class GuestHomeScreen extends StatefulWidget {
   const GuestHomeScreen({super.key});
@@ -16,15 +19,25 @@ class GuestHomeScreen extends StatefulWidget {
 class _GuestHomeScreenState extends State<GuestHomeScreen> {
   final LocalDataService _localData = LocalDataService();
   final SmartSelectionService _smartSelection = SmartSelectionService();
+  final AIRecommendationsService _aiRecommendations = AIRecommendationsService();
+  final SmartPersonalizationService _personalization = SmartPersonalizationService();
   
   List<Provider> _nearbyProviders = [];
+  List<Map<String, dynamic>> _smartRecommendations = [];
   bool _isLoading = true;
+  bool _isLoadingRecommendations = true;
   String _selectedCity = 'Accra';
 
   @override
   void initState() {
     super.initState();
-    _loadNearbyProviders();
+    _initializeSmartFeatures();
+  }
+
+  Future<void> _initializeSmartFeatures() async {
+    await _personalization.initializePersonalization();
+    await _loadNearbyProviders();
+    await _loadSmartRecommendations();
   }
 
   Future<void> _loadNearbyProviders() async {
@@ -41,6 +54,33 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
     }
   }
 
+  Future<void> _loadSmartRecommendations() async {
+    try {
+      final recommendations = await _aiRecommendations.getSmartRecommendations(
+        currentLocation: _selectedCity,
+        timeContext: _getTimeContext(),
+      );
+      setState(() {
+        _smartRecommendations = recommendations;
+        _isLoadingRecommendations = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoadingRecommendations = false;
+      });
+    }
+  }
+
+  String _getTimeContext() {
+    final hour = DateTime.now().hour;
+    final dayOfWeek = DateTime.now().weekday;
+    
+    if (dayOfWeek == 6 || dayOfWeek == 7) return 'weekend';
+    if (hour >= 6 && hour < 12) return 'morning';
+    if (hour >= 12 && hour < 17) return 'afternoon';
+    return 'evening';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -48,6 +88,7 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
         slivers: [
           _buildAppBar(),
           _buildWelcomeSection(),
+          _buildSmartRecommendations(),
           _buildQuickActions(),
           _buildPopularServices(),
           _buildNearbyProviders(),
@@ -59,7 +100,7 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => const RoleSelectionScreen(),
+              builder: (context) => const WorkingLoginScreen(),
             ),
           );
         },
@@ -161,6 +202,9 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
                     setState(() {
                       _selectedCity = city!;
                     });
+                    // Track location usage for personalization
+                    _personalization.trackUserAction('location_used', {'location': city});
+                    _loadSmartRecommendations();
                   },
                 ),
               ],
@@ -243,15 +287,23 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => SmartBookingFlowScreen(
-                serviceType: action['title'],
-                isGuestUser: true,
+          print('Tapping service: ${action['title']}');
+          try {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => SmartBookingFlowScreen(
+                  serviceType: action['title'],
+                  isGuestUser: true,
+                ),
               ),
-            ),
-          );
+            );
+          } catch (e) {
+            print('Navigation error: $e');
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Navigation error: $e')),
+            );
+          }
         },
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -328,15 +380,23 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
       margin: const EdgeInsets.only(right: 12),
       child: InkWell(
         onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => SmartBookingFlowScreen(
-                serviceType: title,
-                isGuestUser: true,
+          print('Tapping service chip: $title');
+          try {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => SmartBookingFlowScreen(
+                  serviceType: title,
+                  isGuestUser: true,
+                ),
               ),
-            ),
-          );
+            );
+          } catch (e) {
+            print('Service chip navigation error: $e');
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Navigation error: $e')),
+            );
+          }
         },
         borderRadius: BorderRadius.circular(20),
         child: Container(
@@ -576,6 +636,244 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildSmartRecommendations() {
+    return SliverToBoxAdapter(
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.auto_awesome, color: Color(0xFF006B3C)),
+                const SizedBox(width: 8),
+                const Text(
+                  'Smart for You',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF006B3C).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Text(
+                    'AI Powered',
+                    style: TextStyle(
+                      color: Color(0xFF006B3C),
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (_isLoadingRecommendations)
+              const Center(child: CircularProgressIndicator())
+            else if (_smartRecommendations.isNotEmpty)
+              SizedBox(
+                height: 160,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _smartRecommendations.length,
+                  itemBuilder: (context, index) {
+                    final recommendation = _smartRecommendations[index];
+                    return _buildSmartRecommendationCard(recommendation);
+                  },
+                ),
+              )
+            else
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text(
+                  '🤖 Learning your preferences...\nUse the app to get personalized recommendations!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSmartRecommendationCard(Map<String, dynamic> recommendation) {
+    final color = Color(recommendation['color'] ?? 0xFF006B3C);
+    
+    return Container(
+      width: 280,
+      margin: const EdgeInsets.only(right: 16),
+      child: Card(
+        elevation: 3,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            _handleRecommendationTap(recommendation);
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  color.withOpacity(0.1),
+                  color.withOpacity(0.05),
+                ],
+              ),
+            ),
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      recommendation['icon'] ?? '🤖',
+                      style: const TextStyle(fontSize: 24),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        recommendation['title'] ?? 'Smart Suggestion',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: color,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '${((recommendation['aiConfidence'] ?? 0.5) * 100).round()}%',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  recommendation['subtitle'] ?? 'Personalized for you',
+                  style: const TextStyle(
+                    color: Colors.grey,
+                    fontSize: 14,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 12),
+                if (recommendation['services'] != null)
+                  Wrap(
+                    spacing: 4,
+                    children: (recommendation['services'] as List).take(2).map<Widget>((service) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: color.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          service.toString(),
+                          style: TextStyle(
+                            color: color,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                const Spacer(),
+                Row(
+                  children: [
+                    if (recommendation['urgency'] == 'high')
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.red[100],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text(
+                          '🔥 Hot',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    if (recommendation['savings'] != null)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.green[100],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          'Save ${recommendation['savings']}',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    const Spacer(),
+                    const Icon(
+                      Icons.arrow_forward_ios,
+                      size: 14,
+                      color: Colors.grey,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _handleRecommendationTap(Map<String, dynamic> recommendation) {
+    // Track the recommendation interaction
+    _personalization.trackUserAction('recommendation_clicked', {
+      'type': recommendation['type'].toString(),
+      'title': recommendation['title'],
+    });
+
+    final services = recommendation['services'] as List<dynamic>?;
+    if (services != null && services.isNotEmpty) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SmartBookingFlowScreen(
+            serviceType: services.first.toString(),
+            isGuestUser: true,
+          ),
+        ),
+      );
+    }
   }
 
   void _showProviderDetails(Provider provider) {

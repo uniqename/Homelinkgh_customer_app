@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'views/role_selection.dart';
-import 'views/customer_home.dart';
-import 'views/provider_dashboard.dart';
-import 'views/admin_dashboard.dart';
-import 'views/staff_dashboard.dart';
-import 'views/job_portal.dart';
+// Removed unused imports
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
