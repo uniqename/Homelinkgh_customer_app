@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>HomeLinkGH iPad Screenshot - Services</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+            width: 2048px;
+            height: 2732px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            padding: 60px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 80px;
+            background: linear-gradient(135deg, #006B3C 0%, #008a4a 100%);
+            color: white;
+            padding: 60px;
+            border-radius: 30px;
+            box-shadow: 0 20px 50px rgba(0,107,60,0.3);
+        }
+        
+        .logo {
+            font-size: 80px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        
+        .header-subtitle {
+            font-size: 48px;
+            font-weight: 300;
+            opacity: 0.95;
+        }
+        
+        .section-title {
+            font-size: 64px;
+            color: #006B3C;
+            text-align: center;
+            margin: 60px 0 50px 0;
+            font-weight: 700;
+        }
+        
+        .services-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 60px;
+        }
+        
+        .services-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 40px;
+        }
+        
+        .service-card {
+            background: white;
+            border-radius: 25px;
+            padding: 40px 25px;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            border: 3px solid transparent;
+            background-clip: padding-box;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .service-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 25px;
+            border: 3px solid;
+            border-image: linear-gradient(135deg, #006B3C, #FCD116) 1;
+            z-index: -1;
+        }
+        
+        .service-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+        }
+        
+        .service-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            display: block;
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.1));
+        }
+        
+        .service-name {
+            font-size: 32px;
+            font-weight: 700;
+            color: #006B3C;
+            line-height: 1.2;
+            margin-bottom: 10px;
+        }
+        
+        .service-desc {
+            font-size: 22px;
+            color: #666;
+            font-weight: 400;
+            line-height: 1.3;
+        }
+        
+        .popular-tag {
+            position: absolute;
+            top: -15px;
+            right: -15px;
+            background: #FCD116;
+            color: #333;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(252,209,22,0.3);
+        }
+        
+        .bottom-info {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 50px;
+            border-radius: 25px;
+            text-align: center;
+            margin-top: 40px;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .bottom-title {
+            font-size: 48px;
+            color: #006B3C;
+            font-weight: bold;
+            margin-bottom: 30px;
+        }
+        
+        .bottom-features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            font-size: 28px;
+            color: #333;
+        }
+        
+        .feature {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            font-weight: 600;
+        }
+        
+        .flag {
+            color: #FCD116;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+        
+        .watermark {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            font-size: 20px;
+            color: #999;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">HomeLinkGH <span class="flag">🇬🇭</span></div>
+        <div class="header-subtitle">Professional Home Services at Your Fingertips</div>
+    </div>
+    
+    <div class="section-title">15+ Service Categories Available</div>
+    
+    <div class="services-container">
+        <div class="services-row">
+            <div class="service-card">
+                <div class="popular-tag">Popular</div>
+                <div class="service-icon">🏠</div>
+                <div class="service-name">House Cleaning</div>
+                <div class="service-desc">Deep cleaning & maintenance</div>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">💄</div>
+                <div class="service-name">Beauty Services</div>
+                <div class="service-desc">Hair, makeup & spa</div>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">🚗</div>
+                <div class="service-name">Transportation</div>
+                <div class="service-desc">Rides & delivery</div>
+            </div>
+            <div class="service-card">
+                <div class="popular-tag">Popular</div>
+                <div class="service-icon">🍽️</div>
+                <div class="service-name">Food Delivery</div>
+                <div class="service-desc">Meals & groceries</div>
+            </div>
+        </div>
+        
+        <div class="services-row">
+            <div class="service-card">
+                <div class="service-icon">🔧</div>
+                <div class="service-name">Home Repair</div>
+                <div class="service-desc">Plumbing & electrical</div>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">🌱</div>
+                <div class="service-name">Landscaping</div>
+                <div class="service-desc">Garden & lawn care</div>
+            </div>
+            <div class="service-card">
+                <div class="popular-tag">Popular</div>
+                <div class="service-icon">👶</div>
+                <div class="service-name">Childcare</div>
+                <div class="service-desc">Babysitting & tutoring</div>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">👵</div>
+                <div class="service-name">Elderly Care</div>
+                <div class="service-desc">Companionship & assistance</div>
+            </div>
+        </div>
+        
+        <div class="services-row">
+            <div class="service-card">
+                <div class="service-icon">👕</div>
+                <div class="service-name">Laundry</div>
+                <div class="service-desc">Washing & dry cleaning</div>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">📚</div>
+                <div class="service-name">Tutoring</div>
+                <div class="service-desc">Academic support</div>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">📷</div>
+                <div class="service-name">Photography</div>
+                <div class="service-desc">Events & portraits</div>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">🎉</div>
+                <div class="service-name">Event Planning</div>
+                <div class="service-desc">Parties & celebrations</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="bottom-info">
+        <div class="bottom-title">Trusted by Ghana's Diaspora Community</div>
+        <div class="bottom-features">
+            <div class="feature">🛡️ Ghana Card Verified Providers</div>
+            <div class="feature">💳 Secure PayStack Integration</div>
+            <div class="feature">🌍 Book from Anywhere in the World</div>
+        </div>
+    </div>
+    
+    <div class="watermark">2048 x 2732 - iPad Pro 12.9"</div>
+</body>
+</html>

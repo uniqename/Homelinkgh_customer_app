@@ -1,0 +1,116 @@
+APP STORE REVIEW INFORMATION FOR HOMELINKGH
+
+App Name: HomeLinkGH
+Version: 3.1.1
+Build: 13
+Bundle ID: com.homelinkgh.customerapp
+
+REVIEWER CONTACT INFORMATION:
+First Name: HomeLinkGH
+Last Name: Development Team
+Phone Number: +233 XX XXX XXXX
+Email: developer@homelinkgh.com
+
+DEMO ACCOUNT INFORMATION:
+
+Customer Demo Account:
+Email: demo@homelinkgh.com
+Password: Demo123!
+Role: Customer
+Note: This account can browse services, view providers, and test the booking flow
+
+Provider Demo Account:
+Email: provider@homelinkgh.com  
+Password: Provider123!
+Role: Service Provider
+Note: This account shows the provider onboarding and dashboard experience
+
+TESTING INSTRUCTIONS:
+
+1. SERVICE BROWSING:
+   - Open the app and select "Customer" role
+   - Browse available service categories
+   - View provider listings with ratings and availability
+   - Test location-based provider discovery
+
+2. BOOKING FLOW:
+   - Select a service (e.g., "House Cleaning")
+   - Choose a provider from the list
+   - Fill in booking details and schedule
+   - Proceed to payment screen (PayStack integration)
+   - Note: Payment is in TEST MODE - use test cards
+
+3. PROVIDER ONBOARDING:
+   - Select "Become a Provider" 
+   - Complete 4-step onboarding process:
+     * Personal Information
+     * Services Offered
+     * Experience & Portfolio
+     * Document Verification
+   - Test Ghana Card validation workflow
+
+4. LOCATION SERVICES:
+   - App requests location permission for provider discovery
+   - GPS tracking simulates service delivery
+   - Location is used for nearby provider matching
+
+5. NOTIFICATIONS:
+   - Test push notifications for booking confirmations
+   - Service reminders and status updates
+   - Provider availability notifications
+
+KEY FEATURES TO REVIEW:
+
+GHANA MARKET FOCUS:
+- Ghana Cedis (GHS) currency throughout app
+- Ghana phone number validation (+233 format)
+- Ghana Card/ID verification system
+- PayStack payment integration (Ghana's leading payment processor)
+- Mobile Money support (MTN, Vodafone)
+
+DIASPORA CONNECTIVITY:
+- International booking capability
+- "Book from anywhere to Ghana" functionality
+- Multi-timezone support
+- Family service management
+
+TECHNICAL HIGHLIGHTS:
+- Real-time GPS tracking
+- Push notifications via Firebase
+- Secure payment processing
+- Provider verification system
+- Offline functionality
+
+PAYMENT TESTING:
+- App uses PayStack test environment
+- Test cards: 4084084084084081 (Visa)
+- No real money will be charged
+- Payment flow demonstrates full integration
+
+LOCATION USAGE:
+- Required for provider discovery
+- GPS tracking during service delivery
+- Address validation for booking
+- All location usage is clearly explained to users
+
+PRIVACY & SECURITY:
+- Privacy Policy accessible in app settings
+- Terms of Service available during onboarding
+- User data is handled according to Ghana Data Protection Act
+- No sensitive data exposed in the app
+
+NOTES FOR REVIEWERS:
+- This is a Ghana-focused home services platform
+- Diaspora features allow overseas Ghanaians to book services for family
+- All payment processing uses PayStack (approved payment processor)
+- Location services are essential for the app's core functionality
+- Provider verification ensures service quality and user safety
+
+KNOWN LIMITATIONS IN V1.0:
+- Real-time chat will be added in future update
+- Some debug output present (no impact on functionality)
+- Limited to Ghana market initially
+
+The app is production-ready and provides real value to Ghana's home services market with innovative diaspora support.
+
+Contact developer@homelinkgh.com for any questions during review process.

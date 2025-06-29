@@ -24,6 +24,21 @@ class AIRecommendationsService {
   final LocalDataService _localData = LocalDataService();
   final SmartPersonalizationService _personalization = SmartPersonalizationService();
 
+  /// Initialize recommendations service
+  Future<void> initializeRecommendations() async {
+    // Initialize any required data or connections
+    await _personalization.initializePersonalization();
+  }
+
+  /// Get recommendations (alias for getSmartRecommendations)
+  Future<List<Map<String, dynamic>>> getRecommendations(Map<String, dynamic> context) async {
+    return getSmartRecommendations(
+      currentLocation: context['location'],
+      currentBudget: context['budget']?.toDouble(),
+      timeContext: context['timeContext'],
+    );
+  }
+
   Future<List<Map<String, dynamic>>> getSmartRecommendations({
     String? currentLocation,
     double? currentBudget,

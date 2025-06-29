@@ -1,0 +1,137 @@
+QUICK SCREENSHOT CREATION FOR HOMELINKGH APP STORE SUBMISSION
+
+=== REQUIRED SPECIFICATIONS ===
+
+iPhone 6.7" (iPhone 14 Pro Max): 1290 x 2796 pixels
+iPhone 6.9" (iPhone 15 Pro Max): 1320 x 2868 pixels
+Format: PNG or JPEG
+Orientation: Portrait
+
+=== FASTEST METHOD (30 MINUTES) ===
+
+STEP 1: Set Up iOS Simulator
+1. Open Xcode
+2. Window → Devices and Simulators
+3. Add iPhone 15 Pro Max simulator
+4. Set to Light Mode (Settings → Display → Light)
+
+STEP 2: Run Your App
+```bash
+cd /Users/enamegyir/Documents/Projects/blazer_home_services_app/customer_app
+flutter run
+```
+Select iPhone 15 Pro Max simulator when prompted
+
+STEP 3: Take Screenshots (Device → Screenshot or ⌘S)
+Navigate to these screens and screenshot each:
+
+📱 Screenshot 1: Welcome/Role Selection Screen
+   - Shows "Customer" and "Provider" options
+   - HomeLinkGH branding visible
+
+📱 Screenshot 2: Service Categories Grid
+   - Shows service options (Cleaning, Beauty, Transportation, etc.)
+   - Grid layout with icons
+
+📱 Screenshot 3: Provider List
+   - List of providers with ratings
+   - Shows verification badges
+
+📱 Screenshot 4: Service Booking Form
+   - Booking details interface
+   - Date/time selection
+
+📱 Screenshot 5: Provider Onboarding
+   - "Become a Provider" flow
+   - Shows 4-step process
+
+📱 Screenshot 6: Location Permission
+   - GPS/location permission screen
+   - Shows location usage explanation
+
+📱 Screenshot 7: Notification Settings
+   - Push notification preferences
+   - Shows notification types
+
+📱 Screenshot 8: Privacy Policy Screen
+   - Shows privacy policy content
+   - Ghana Data Protection Act compliance
+
+📱 Screenshot 9: Terms of Service
+   - Terms of service display
+   - Ghana law compliance
+
+📱 Screenshot 10: Success/Completion Screen
+   - Any success message or completed action
+   - Shows positive user experience
+
+=== ALTERNATIVE: EXISTING DOCUMENTATION ===
+
+If screenshots are difficult to create, you can use:
+
+PLACEHOLDER OPTION:
+- Use the detailed app descriptions from docs/app_store_metadata.md
+- Create simple text-based mockups
+- Focus on the comprehensive written description
+
+DESIGN MOCKUP OPTION:
+- Use Figma or Canva with iPhone templates
+- Create visual mockups based on app features
+- Add text descriptions of functionality
+
+=== APP PREVIEW VIDEO (OPTIONAL BUT RECOMMENDED) ===
+
+SIMPLE VIDEO APPROACH:
+1. Use iOS Simulator screen recording
+2. Record 30-second walkthrough of app
+3. Show: Welcome → Service Selection → Booking Flow → Success
+4. Export as MP4 (1080p, 30fps)
+
+SCREEN RECORDING STEPS:
+1. In Simulator: Device → Record Screen
+2. Navigate through app key features
+3. Stop recording (⌘R)
+4. Save MP4 file
+
+=== READY-TO-USE SCREENSHOT DESCRIPTIONS ===
+
+Copy these descriptions for App Store Connect if needed:
+
+1. "Welcome to HomeLinkGH - Ghana's premier home services platform connecting diaspora customers with trusted local providers"
+
+2. "Browse 15+ professional service categories including house cleaning, beauty services, transportation, and home maintenance"
+
+3. "Choose from verified providers with ratings, reviews, and Ghana Card verification for your peace of mind"
+
+4. "Simple booking process with transparent pricing in Ghana Cedis and flexible scheduling options"
+
+5. "Comprehensive provider onboarding with 4-step verification including Ghana Card validation and background checks"
+
+6. "Location services enable nearby provider discovery and real-time service tracking for safety and convenience"
+
+7. "Customizable push notifications keep you updated on booking confirmations, service status, and provider communications"
+
+8. "Privacy policy ensures Ghana Data Protection Act compliance and transparent data handling practices"
+
+9. "Terms of service provide clear guidelines for platform usage, provider responsibilities, and customer rights"
+
+10. "Successful booking completion with rating system and quality assurance for continuous service improvement"
+
+=== IMMEDIATE SUBMISSION OPTION ===
+
+If you need to submit NOW without custom screenshots:
+
+1. Use the written descriptions above
+2. Upload the detailed documentation from docs/ folder
+3. Indicate that screenshots will be updated post-submission
+4. App Store Connect allows updates after initial submission
+
+=== FILE UPLOAD TIPS ===
+
+For App Store Connect upload:
+- Drag screenshots directly to the upload area
+- Ensure files are under 10MB each
+- Use PNG format for best quality
+- Name files descriptively (e.g., "01_Welcome_Screen.png")
+
+The most important thing is to SUBMIT your app - you can always update screenshots later!

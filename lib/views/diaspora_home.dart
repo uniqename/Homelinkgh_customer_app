@@ -411,7 +411,7 @@ class _DiasporaHomeScreenState extends State<DiasporaHomeScreen> {
                 const SizedBox(height: 32),
                 
                 // Smart Picks Section
-                if (!_isLoadingSmartFeatures && _smartPicks.isNotEmpty) ..[
+                if (!_isLoadingSmartFeatures && _smartPicks.isNotEmpty) ...[
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [

@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import '../services/smart_selection_service.dart';
-import '../services/local_data_service.dart';
-import '../services/ai_recommendations_service.dart';
-import '../services/smart_personalization_service.dart';
+import '../services/real_firebase_service.dart';
 import '../models/provider.dart';
-import 'smart_booking_flow.dart';
-import 'working_login.dart';
-import 'test_food_delivery.dart';
+import 'real_login_screen.dart';
+import 'signup_screen.dart';
 
+/// Real guest home screen without demo data
 class GuestHomeScreen extends StatefulWidget {
   const GuestHomeScreen({super.key});
 
@@ -17,324 +13,55 @@ class GuestHomeScreen extends StatefulWidget {
 }
 
 class _GuestHomeScreenState extends State<GuestHomeScreen> {
-  final LocalDataService _localData = LocalDataService();
-  final SmartSelectionService _smartSelection = SmartSelectionService();
-  final AIRecommendationsService _aiRecommendations = AIRecommendationsService();
-  final SmartPersonalizationService _personalization = SmartPersonalizationService();
-  
-  List<Provider> _nearbyProviders = [];
-  List<Map<String, dynamic>> _smartRecommendations = [];
+  final RealFirebaseService _firebaseService = RealFirebaseService();
+  List<Provider> _featuredProviders = [];
+  List<Map<String, dynamic>> _serviceCategories = [];
   bool _isLoading = true;
-  bool _isLoadingRecommendations = true;
-  String _selectedCity = 'Accra';
 
   @override
   void initState() {
     super.initState();
-    _initializeSmartFeatures();
+    _loadData();
   }
 
-  Future<void> _initializeSmartFeatures() async {
-    await _personalization.initializePersonalization();
-    await _loadNearbyProviders();
-    await _loadSmartRecommendations();
-  }
-
-  Future<void> _loadNearbyProviders() async {
+  Future<void> _loadData() async {
     try {
-      final providers = await _localData.getAllProviders();
+      final categories = await _firebaseService.getServiceCategories();
+      
       setState(() {
-        _nearbyProviders = providers;
+        _serviceCategories = categories;
         _isLoading = false;
+      });
+
+      // Load some featured providers in the background
+      _firebaseService.getAllProvidersStream().listen((providers) {
+        if (mounted) {
+          setState(() {
+            _featuredProviders = providers.take(6).toList();
+          });
+        }
       });
     } catch (e) {
       setState(() {
         _isLoading = false;
       });
     }
-  }
-
-  Future<void> _loadSmartRecommendations() async {
-    try {
-      final recommendations = await _aiRecommendations.getSmartRecommendations(
-        currentLocation: _selectedCity,
-        timeContext: _getTimeContext(),
-      );
-      setState(() {
-        _smartRecommendations = recommendations;
-        _isLoadingRecommendations = false;
-      });
-    } catch (e) {
-      setState(() {
-        _isLoadingRecommendations = false;
-      });
-    }
-  }
-
-  String _getTimeContext() {
-    final hour = DateTime.now().hour;
-    final dayOfWeek = DateTime.now().weekday;
-    
-    if (dayOfWeek == 6 || dayOfWeek == 7) return 'weekend';
-    if (hour >= 6 && hour < 12) return 'morning';
-    if (hour >= 12 && hour < 17) return 'afternoon';
-    return 'evening';
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          _buildAppBar(),
-          _buildWelcomeSection(),
-          _buildSmartRecommendations(),
-          _buildQuickActions(),
-          _buildPopularServices(),
-          _buildNearbyProviders(),
-          _buildGhanaSpecialFeatures(),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const WorkingLoginScreen(),
-            ),
-          );
-        },
-        icon: const Icon(Icons.person),
-        label: const Text('Login / Switch Role'),
-        backgroundColor: const Color(0xFF006B3C),
-        foregroundColor: Colors.white,
-      ),
-    );
-  }
-
-  Widget _buildAppBar() {
-    return SliverAppBar(
-      expandedHeight: 120,
-      floating: false,
-      pinned: true,
-      backgroundColor: const Color(0xFF006B3C),
-      flexibleSpace: FlexibleSpaceBar(
-        title: const Text(
-          'HomeLinkGH',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        background: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Color(0xFF006B3C),
-                Color(0xFF228B22),
-              ],
-            ),
-          ),
-          child: const Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(height: 20),
-                Icon(
-                  Icons.home,
-                  size: 40,
-                  color: Colors.white,
-                ),
-                Text(
-                  'Ghana\'s Home Services Platform',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildWelcomeSection() {
-    return SliverToBoxAdapter(
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Welcome to Ghana! 🇬🇭',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF006B3C),
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Browse and book services without creating an account. You\'ll create your profile during your first booking.',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                const Icon(Icons.location_on, color: Color(0xFF006B3C)),
-                const SizedBox(width: 8),
-                DropdownButton<String>(
-                  value: _selectedCity,
-                  items: _localData.getGhanaCities().map((city) {
-                    return DropdownMenuItem(
-                      value: city,
-                      child: Text(city),
-                    );
-                  }).toList(),
-                  onChanged: (city) {
-                    setState(() {
-                      _selectedCity = city!;
-                    });
-                    // Track location usage for personalization
-                    _personalization.trackUserAction('location_used', {'location': city});
-                    _loadSmartRecommendations();
-                  },
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuickActions() {
-    final quickActions = [
-      {
-        'title': 'Food Delivery',
-        'icon': Icons.delivery_dining,
-        'color': Colors.orange,
-        'subtitle': 'Jollof, Banku, Waakye & More',
-      },
-      {
-        'title': 'House Cleaning',
-        'icon': Icons.cleaning_services,
-        'color': Colors.blue,
-        'subtitle': 'Professional Home Cleaning',
-      },
-      {
-        'title': 'Transportation',
-        'icon': Icons.directions_car,
-        'color': Colors.green,
-        'subtitle': 'Airport, City & Shopping Trips',
-      },
-      {
-        'title': 'Beauty Services',
-        'icon': Icons.face,
-        'color': Colors.pink,
-        'subtitle': 'Hair, Makeup & Nail Services',
-      },
-    ];
-
-    return SliverToBoxAdapter(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Quick Book',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 12),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 1.2,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-              ),
-              itemCount: quickActions.length,
-              itemBuilder: (context, index) {
-                final action = quickActions[index];
-                return _buildQuickActionCard(action);
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuickActionCard(Map<String, dynamic> action) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () {
-          print('Tapping service: ${action['title']}');
-          try {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => SmartBookingFlowScreen(
-                  serviceType: action['title'],
-                  isGuestUser: true,
-                ),
-              ),
-            );
-          } catch (e) {
-            print('Navigation error: $e');
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Navigation error: $e')),
-            );
-          }
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(16),
+      body: SafeArea(
+        child: SingleChildScrollView(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(
-                action['icon'],
-                size: 32,
-                color: action['color'],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                action['title'],
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                action['subtitle'],
-                style: const TextStyle(
-                  fontSize: 10,
-                  color: Colors.grey,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
+              _buildHeader(),
+              _buildWelcomeSection(),
+              _buildQuickActions(),
+              _buildServiceCategories(),
+              _buildFeaturedProviders(),
+              _buildFooter(),
             ],
           ),
         ),
@@ -342,657 +69,449 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
     );
   }
 
-  Widget _buildPopularServices() {
-    return SliverToBoxAdapter(
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Popular in Ghana 🇬🇭',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 12),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _buildServiceChip('Jollof Delivery', Icons.rice_bowl, Colors.orange),
-                  _buildServiceChip('Banku & Fish', Icons.set_meal, Colors.blue),
-                  _buildServiceChip('Airport Transfer', Icons.flight, Colors.green),
-                  _buildServiceChip('Braiding Hair', Icons.face, Colors.purple),
-                  _buildServiceChip('House Help', Icons.home, Colors.teal),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildServiceChip(String title, IconData icon, Color color) {
+  Widget _buildHeader() {
     return Container(
-      margin: const EdgeInsets.only(right: 12),
-      child: InkWell(
-        onTap: () {
-          print('Tapping service chip: $title');
-          try {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => SmartBookingFlowScreen(
-                  serviceType: title,
-                  isGuestUser: true,
-                ),
-              ),
-            );
-          } catch (e) {
-            print('Service chip navigation error: $e');
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Navigation error: $e')),
-            );
-          }
-        },
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            border: Border.all(color: color),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 16, color: color),
-              const SizedBox(width: 6),
-              Text(
-                title,
-                style: TextStyle(
-                  color: color,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
+      padding: const EdgeInsets.all(16),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF006B3C), Color(0xFF008A4A)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
       ),
-    );
-  }
-
-  Widget _buildNearbyProviders() {
-    return SliverToBoxAdapter(
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Top Providers Near You',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                TextButton(
-                  onPressed: () {
-                    // Navigate to all providers
-                  },
-                  child: const Text('View All'),
-                ),
-              ],
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
             ),
-            const SizedBox(height: 12),
-            if (_isLoading)
-              const Center(child: CircularProgressIndicator())
-            else
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: _nearbyProviders.take(5).map((provider) {
-                    return _buildProviderCard(provider);
-                  }).toList(),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildProviderCard(Provider provider) {
-    return Container(
-      width: 160,
-      margin: const EdgeInsets.only(right: 12),
-      child: Card(
-        elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: () {
-            _showProviderDetails(provider);
-          },
-          child: Padding(
-            padding: const EdgeInsets.all(12),
+            child: const Icon(
+              Icons.home,
+              color: Color(0xFF006B3C),
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 12),
+          const Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CircleAvatar(
-                  backgroundColor: const Color(0xFF006B3C),
-                  child: Text(
-                    provider.name[0],
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                ),
-                const SizedBox(height: 8),
                 Text(
-                  provider.name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.star,
-                      size: 14,
-                      color: Colors.orange[400],
-                    ),
-                    const SizedBox(width: 2),
-                    Text(
-                      provider.rating.toString(),
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: provider.isAvailable ? Colors.green : Colors.grey,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        provider.isAvailable ? 'Available' : 'Busy',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 8,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  provider.services.join(', '),
-                  style: const TextStyle(
-                    fontSize: 10,
-                    color: Colors.grey,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGhanaSpecialFeatures() {
-    return SliverToBoxAdapter(
-      child: Container(
-        margin: const EdgeInsets.all(20),
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF006B3C),
-              Color(0xFF228B22),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Row(
-              children: [
-                Icon(Icons.flag, color: Colors.white),
-                SizedBox(width: 8),
-                Text(
-                  'Made for Ghana',
+                  'HomeLinkGH',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+                Text(
+                  'Connecting Ghana\'s Diaspora',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                  ),
+                ),
               ],
             ),
-            const SizedBox(height: 12),
-            const Text(
-              '• Payments in Ghana Cedis (GH₵)\n'
-              '• Local phone numbers & addresses\n'
-              '• Supports all major Ghanaian cities\n'
-              '• Diaspora-friendly booking system\n'
-              '• Smart Ghana location detection',
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const RealLoginScreen()),
+              );
+            },
+            child: const Text(
+              'Sign In',
               style: TextStyle(
-                color: Colors.white70,
-                fontSize: 14,
-                height: 1.5,
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const SmartBookingFlowScreen(
-                        serviceType: 'Any Service',
-                        isGuestUser: true,
-                      ),
-                    ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: const Color(0xFF006B3C),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: const Text(
-                  'Start Booking Now',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildSmartRecommendations() {
-    return SliverToBoxAdapter(
-      child: Container(
-        padding: const EdgeInsets.all(20),
+  Widget _buildWelcomeSection() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Welcome to HomeLinkGH',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF006B3C),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Your trusted platform for home services in Ghana. Book verified service providers for yourself or your family back home.',
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey.shade600,
+              height: 1.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickActions() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Row(
+        children: [
+          Expanded(
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SignUpScreen()),
+                );
+              },
+              icon: const Icon(Icons.person_add),
+              label: const Text('Get Started'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF006B3C),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: OutlinedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const RealLoginScreen()),
+                );
+              },
+              icon: const Icon(Icons.login),
+              label: const Text('Sign In'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFF006B3C),
+                side: const BorderSide(color: Color(0xFF006B3C)),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildServiceCategories() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Our Services',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF006B3C),
+            ),
+          ),
+          const SizedBox(height: 16),
+          if (_isLoading)
+            const Center(child: CircularProgressIndicator())
+          else
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 1.2,
+              ),
+              itemCount: _serviceCategories.length,
+              itemBuilder: (context, index) {
+                final category = _serviceCategories[index];
+                return _buildServiceCard(category);
+              },
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildServiceCard(Map<String, dynamic> category) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withValues(alpha: 0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: const Color(0xFF006B3C).withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Center(
+              child: Text(
+                category['icon'] ?? '🏠',
+                style: const TextStyle(fontSize: 24),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            category['name'] ?? 'Service',
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF006B3C),
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'From GH₵${category['basePrice'] ?? 50}',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey.shade600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFeaturedProviders() {
+    if (_featuredProviders.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Featured Providers',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF006B3C),
+            ),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 120,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: _featuredProviders.length,
+              itemBuilder: (context, index) {
+                final provider = _featuredProviders[index];
+                return _buildProviderCard(provider);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProviderCard(Provider provider) {
+    return Container(
+      width: 200,
+      margin: const EdgeInsets.only(right: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withValues(alpha: 0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                const Icon(Icons.auto_awesome, color: Color(0xFF006B3C)),
-                const SizedBox(width: 8),
-                const Text(
-                  'Smart for You',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+                CircleAvatar(
+                  radius: 16,
+                  backgroundColor: const Color(0xFF006B3C),
+                  child: Text(
+                    provider.name.isNotEmpty ? provider.name[0].toUpperCase() : 'P',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
                   ),
                 ),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF006B3C).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Text(
-                    'AI Powered',
-                    style: TextStyle(
-                      color: Color(0xFF006B3C),
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        provider.name,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Row(
+                        children: [
+                          const Icon(Icons.star, color: Colors.amber, size: 12),
+                          const SizedBox(width: 2),
+                          Text(
+                            provider.rating.toStringAsFixed(1),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            if (_isLoadingRecommendations)
-              const Center(child: CircularProgressIndicator())
-            else if (_smartRecommendations.isNotEmpty)
-              SizedBox(
-                height: 160,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _smartRecommendations.length,
-                  itemBuilder: (context, index) {
-                    final recommendation = _smartRecommendations[index];
-                    return _buildSmartRecommendationCard(recommendation);
-                  },
-                ),
-              )
-            else
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Text(
-                  '🤖 Learning your preferences...\nUse the app to get personalized recommendations!',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey),
-                ),
+            const SizedBox(height: 8),
+            Text(
+              provider.services.join(', '),
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey.shade600,
               ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSmartRecommendationCard(Map<String, dynamic> recommendation) {
-    final color = Color(recommendation['color'] ?? 0xFF006B3C);
-    
+  Widget _buildFooter() {
     return Container(
-      width: 280,
-      margin: const EdgeInsets.only(right: 16),
-      child: Card(
-        elevation: 3,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: () {
-            _handleRecommendationTap(recommendation);
-          },
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  color.withOpacity(0.1),
-                  color.withOpacity(0.05),
-                ],
-              ),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        border: Border(top: BorderSide(color: Colors.grey.shade200)),
+      ),
+      child: Column(
+        children: [
+          const Text(
+            'Why Choose HomeLinkGH?',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF006B3C),
             ),
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+          ),
+          const SizedBox(height: 16),
+          const Row(
+            children: [
+              Expanded(
+                child: Column(
                   children: [
+                    Icon(Icons.verified_user, color: Color(0xFF006B3C), size: 32),
+                    SizedBox(height: 8),
                     Text(
-                      recommendation['icon'] ?? '🤖',
-                      style: const TextStyle(fontSize: 24),
+                      'Verified Providers',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                      textAlign: TextAlign.center,
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        recommendation['title'] ?? 'Smart Suggestion',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: color,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        '${((recommendation['aiConfidence'] ?? 0.5) * 100).round()}%',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                    SizedBox(height: 4),
+                    Text(
+                      'All providers verified with Ghana Card',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 12),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  recommendation['subtitle'] ?? 'Personalized for you',
-                  style: const TextStyle(
-                    color: Colors.grey,
-                    fontSize: 14,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 12),
-                if (recommendation['services'] != null)
-                  Wrap(
-                    spacing: 4,
-                    children: (recommendation['services'] as List).take(2).map<Widget>((service) {
-                      return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: color.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          service.toString(),
-                          style: TextStyle(
-                            color: color,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                const Spacer(),
-                Row(
-                  children: [
-                    if (recommendation['urgency'] == 'high')
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Colors.red[100],
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Text(
-                          '🔥 Hot',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    if (recommendation['savings'] != null)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Colors.green[100],
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          'Save ${recommendation['savings']}',
-                          style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    const Spacer(),
-                    const Icon(
-                      Icons.arrow_forward_ios,
-                      size: 14,
-                      color: Colors.grey,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _handleRecommendationTap(Map<String, dynamic> recommendation) {
-    // Track the recommendation interaction
-    _personalization.trackUserAction('recommendation_clicked', {
-      'type': recommendation['type'].toString(),
-      'title': recommendation['title'],
-    });
-
-    final services = recommendation['services'] as List<dynamic>?;
-    if (services != null && services.isNotEmpty) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => SmartBookingFlowScreen(
-            serviceType: services.first.toString(),
-            isGuestUser: true,
-          ),
-        ),
-      );
-    }
-  }
-
-  void _showProviderDetails(Provider provider) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.7,
-        maxChildSize: 0.9,
-        minChildSize: 0.5,
-        builder: (context, scrollController) {
-          return Container(
-            padding: const EdgeInsets.all(20),
-            child: SingleChildScrollView(
-              controller: scrollController,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 30,
-                        backgroundColor: const Color(0xFF006B3C),
-                        child: Text(
-                          provider.name[0],
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              provider.name,
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.star,
-                                  size: 16,
-                                  color: Colors.orange[400],
-                                ),
-                                const SizedBox(width: 4),
-                                Text('${provider.rating} (${provider.completedJobs} jobs)'),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    'Services',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    children: provider.services.map((service) {
-                      return Chip(
-                        label: Text(service),
-                        backgroundColor: const Color(0xFF006B3C).withOpacity(0.1),
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => SmartBookingFlowScreen(
-                              serviceType: provider.services.first,
-                              isGuestUser: true,
-                              selectedProvider: provider,
-                            ),
-                          ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF006B3C),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: const Text(
-                        'Book This Provider',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
               ),
+              Expanded(
+                child: Column(
+                  children: [
+                    Icon(Icons.payment, color: Color(0xFF006B3C), size: 32),
+                    SizedBox(height: 8),
+                    Text(
+                      'Secure Payments',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'PayStack integration for safe transactions',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  children: [
+                    Icon(Icons.public, color: Color(0xFF006B3C), size: 32),
+                    SizedBox(height: 8),
+                    Text(
+                      'Diaspora Friendly',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Book services for family in Ghana',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          const Text(
+            '🇬🇭 Made in Ghana, Connecting the World',
+            style: TextStyle(
+              color: Color(0xFF006B3C),
+              fontWeight: FontWeight.w600,
             ),
-          );
-        },
+          ),
+        ],
       ),
     );
   }
