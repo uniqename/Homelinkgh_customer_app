@@ -13,7 +13,7 @@ class GuestHomeScreen extends StatefulWidget {
 }
 
 class _GuestHomeScreenState extends State<GuestHomeScreen> {
-  final RealFirebaseService _firebaseService = RealFirebaseService();
+  RealFirebaseService? _firebaseService;
   List<Provider> _featuredProviders = [];
   List<Map<String, dynamic>> _serviceCategories = [];
   bool _isLoading = true;
@@ -26,26 +26,77 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
 
   Future<void> _loadData() async {
     try {
-      final categories = await _firebaseService.getServiceCategories();
-      
-      setState(() {
-        _serviceCategories = categories;
-        _isLoading = false;
-      });
+      // Try to initialize Firebase service, but don't fail if Firebase isn't available
+      try {
+        _firebaseService = RealFirebaseService();
+        final categories = await _firebaseService!.getServiceCategories();
+        
+        setState(() {
+          _serviceCategories = categories;
+          _isLoading = false;
+        });
 
-      // Load some featured providers in the background
-      _firebaseService.getAllProvidersStream().listen((providers) {
-        if (mounted) {
-          setState(() {
-            _featuredProviders = providers.take(6).toList();
-          });
-        }
-      });
+        // Load some featured providers in the background
+        _firebaseService!.getAllProvidersStream().listen((providers) {
+          if (mounted) {
+            setState(() {
+              _featuredProviders = providers.take(6).toList();
+            });
+          }
+        });
+      } catch (e) {
+        print('Firebase not available, using demo data: $e');
+        // Use demo/fallback data when Firebase is not available
+        _loadDemoData();
+      }
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
+      print('Error loading data: $e');
+      _loadDemoData();
     }
+  }
+
+  void _loadDemoData() {
+    setState(() {
+      _serviceCategories = [
+        {
+          'name': 'Home Cleaning',
+          'icon': '🏠',
+          'description': 'Professional cleaning services',
+          'providers': 15,
+        },
+        {
+          'name': 'Food Delivery',
+          'icon': '🍛',
+          'description': 'Fresh meals delivered',
+          'providers': 25,
+        },
+        {
+          'name': 'Transportation',
+          'icon': '🚗',
+          'description': 'Reliable ride services',
+          'providers': 12,
+        },
+        {
+          'name': 'Beauty Services',
+          'icon': '💄',
+          'description': 'Hair, makeup, and spa',
+          'providers': 8,
+        },
+        {
+          'name': 'Repairs & Maintenance',
+          'icon': '🔧',
+          'description': 'Fix and maintain your home',
+          'providers': 10,
+        },
+        {
+          'name': 'Personal Care',
+          'icon': '💅',
+          'description': 'Wellness and self-care',
+          'providers': 6,
+        },
+      ];
+      _isLoading = false;
+    });
   }
 
   @override
