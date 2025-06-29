@@ -409,19 +409,9 @@ class _StaffLoginScreenState extends State<StaffLoginScreen> {
   }
 
   bool _validateCredentials(String email, String password) {
-    // Demo validation - in production, validate with backend
-    final demoCredentials = {
-      'support@homelink.gh': 'support123',
-      'verification@homelink.gh': 'verify123',
-      'coordinator@homelink.gh': 'coord123',
-      'operations@homelink.gh': 'ops123',
-      'manager@homelink.gh': 'mgr123',
-      'marketing@homelink.gh': 'market123',
-      'finance@homelink.gh': 'finance123',
-      'field@homelink.gh': 'field123',
-    };
-    
-    return demoCredentials[email] == password;
+    // In production, this would validate with secure backend authentication
+    // For demo purposes only - no real credentials stored
+    return email.isNotEmpty && password.isNotEmpty && email.contains('@homelink.gh');
   }
 
   String _getStaffName(String email) {

@@ -184,11 +184,11 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
     
-    // Check for authorized admin emails
+    // In production, admin authorization would be handled by secure backend
+    // For demo purposes only
     final authorizedAdmins = [
-      'enam.a@tutamail.com',
-      'admin@blazer.com', 
-      'demo@blazer.com'
+      'admin@homelink.gh',
+      'demo@homelink.gh'
     ];
     
     showDialog(

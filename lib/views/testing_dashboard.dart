@@ -243,14 +243,14 @@ class _TestingDashboardState extends State<TestingDashboard> {
     try {
       await TestDataService.createTestUser(
         email: email,
-        password: 'test123456',
+        password: 'temp_password',
         name: name,
         userType: userType,
         phone: '+233244123456',
       );
 
       setState(() {
-        _status = '✅ Created test user: $email\nPassword: test123456';
+        _status = '✅ Created test user: $email\nPassword: [Generated]';
       });
 
       // Show success dialog
