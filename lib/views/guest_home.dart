@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import '../services/real_firebase_service.dart';
 import '../models/provider.dart';
-import 'real_login_screen.dart';
-import 'signup_screen.dart';
+import 'simple_login.dart';
+import 'role_selection.dart';
+import 'food_delivery_screen.dart';
+import 'service_booking.dart';
 
 /// Real guest home screen without demo data
 class GuestHomeScreen extends StatefulWidget {
@@ -172,7 +174,7 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const RealLoginScreen()),
+                MaterialPageRoute(builder: (context) => const SimpleLoginScreen(userType: 'customer')),
               );
             },
             child: const Text(
@@ -226,7 +228,7 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const SignUpScreen()),
+                  MaterialPageRoute(builder: (context) => const RoleSelectionScreen()),
                 );
               },
               icon: const Icon(Icons.person_add),
@@ -247,7 +249,7 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const RealLoginScreen()),
+                  MaterialPageRoute(builder: (context) => const SimpleLoginScreen(userType: 'customer')),
                 );
               },
               icon: const Icon(Icons.login),
@@ -306,20 +308,25 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
   }
 
   Widget _buildServiceCard(Map<String, dynamic> category) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
+    return InkWell(
+      onTap: () {
+        _navigateToService(category['name'] ?? 'Service');
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade200),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withValues(alpha: 0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
@@ -355,8 +362,58 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
             ),
           ),
         ],
+        ),
       ),
     );
+  }
+
+  void _navigateToService(String serviceName) {
+    // Navigate to different screens based on service type
+    if (serviceName.toLowerCase().contains('food') || serviceName.toLowerCase().contains('delivery')) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const FoodDeliveryScreen()),
+      );
+    } else {
+      // Get service details for the booking screen
+      IconData serviceIcon = Icons.home_repair_service;
+      Color serviceColor = const Color(0xFF006B3C);
+      
+      // Customize icon and color based on service
+      switch (serviceName.toLowerCase()) {
+        case 'home cleaning':
+          serviceIcon = Icons.cleaning_services;
+          serviceColor = const Color(0xFF2196F3);
+          break;
+        case 'transportation':
+          serviceIcon = Icons.directions_car;
+          serviceColor = const Color(0xFF4CAF50);
+          break;
+        case 'beauty services':
+          serviceIcon = Icons.face_retouching_natural;
+          serviceColor = const Color(0xFFE91E63);
+          break;
+        case 'repairs & maintenance':
+          serviceIcon = Icons.build;
+          serviceColor = const Color(0xFFFF9800);
+          break;
+        case 'personal care':
+          serviceIcon = Icons.spa;
+          serviceColor = const Color(0xFF9C27B0);
+          break;
+      }
+      
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ServiceBookingScreen(
+            serviceName: serviceName,
+            serviceIcon: serviceIcon,
+            serviceColor: serviceColor,
+          ),
+        ),
+      );
+    }
   }
 
   Widget _buildFeaturedProviders() {
