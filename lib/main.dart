@@ -1,14 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'firebase_options.dart';
 import 'views/guest_home.dart';
 import 'views/role_selection.dart';
+import 'services/auth_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  print('🚀 Starting HomeLinkGH in demo mode...');
+  print('🚀 Starting HomeLinkGH in production mode...');
   
-  // Skip Firebase initialization to prevent connection issues
-  // This allows the app to work without Firebase configuration
+  // Initialize Firebase for production use
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    print('✅ Firebase initialized successfully');
+  } catch (e) {
+    print('❌ Firebase initialization failed: $e');
+    print('App will run in offline mode');
+  }
+  
   runApp(const HomeLinkGHApp());
 }
 
@@ -37,7 +50,34 @@ class HomeLinkGHApp extends StatelessWidget {
           elevation: 0,
         ),
       ),
-      home: const GuestHomeScreen(),
+      home: StreamBuilder<User?>(
+        stream: AuthService().authStateChanges,
+        builder: (context, snapshot) {
+          // Show loading while checking auth state
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Scaffold(
+              body: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 16),
+                    Text('Loading HomeLinkGH...'),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          // User is signed in - redirect to role selection or user-specific home
+          if (snapshot.hasData) {
+            return const RoleSelectionScreen();
+          }
+
+          // User is not signed in - show guest home
+          return const GuestHomeScreen();
+        },
+      ),
     );
   }
 }

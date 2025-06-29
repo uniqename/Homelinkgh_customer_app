@@ -28,73 +28,55 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
 
   Future<void> _loadData() async {
     try {
-      // Try to initialize Firebase service, but don't fail if Firebase isn't available
-      try {
-        _firebaseService = RealFirebaseService();
-        final categories = await _firebaseService!.getServiceCategories();
-        
+      // Initialize real Firebase service for production use
+      _firebaseService = RealFirebaseService();
+      
+      // Load real service categories from Firebase
+      final categories = await _firebaseService!.getServiceCategories();
+      
+      if (categories.isNotEmpty) {
         setState(() {
           _serviceCategories = categories;
           _isLoading = false;
         });
-
-        // Load some featured providers in the background
-        _firebaseService!.getAllProvidersStream().listen((providers) {
-          if (mounted) {
-            setState(() {
-              _featuredProviders = providers.take(6).toList();
-            });
-          }
-        });
-      } catch (e) {
-        print('Firebase not available, using demo data: $e');
-        // Use demo/fallback data when Firebase is not available
+        
+        print('✅ Loaded ${categories.length} service categories from Firebase');
+      } else {
+        print('⚠️ No service categories found, loading default structure');
         _loadDemoData();
       }
+
+      // Load featured providers in the background
+      _firebaseService!.getAllProvidersStream().listen((providers) {
+        if (mounted) {
+          setState(() {
+            _featuredProviders = providers.take(6).toList();
+          });
+          print('✅ Loaded ${providers.length} providers from Firebase');
+        }
+      });
     } catch (e) {
-      print('Error loading data: $e');
+      print('❌ Firebase service failed: $e');
+      print('🔄 Using fallback service structure');
       _loadDemoData();
     }
   }
 
   void _loadDemoData() {
+    // Only basic service structure when Firebase is unavailable
     setState(() {
       _serviceCategories = [
         {
-          'name': 'Home Cleaning',
+          'name': 'Home Services',
           'icon': '🏠',
-          'description': 'Professional cleaning services',
-          'providers': 15,
+          'description': 'Connect to Firebase for full service catalog',
+          'providers': 0,
         },
         {
-          'name': 'Food Delivery',
-          'icon': '🍛',
-          'description': 'Fresh meals delivered',
-          'providers': 25,
-        },
-        {
-          'name': 'Transportation',
-          'icon': '🚗',
-          'description': 'Reliable ride services',
-          'providers': 12,
-        },
-        {
-          'name': 'Beauty Services',
-          'icon': '💄',
-          'description': 'Hair, makeup, and spa',
-          'providers': 8,
-        },
-        {
-          'name': 'Repairs & Maintenance',
-          'icon': '🔧',
-          'description': 'Fix and maintain your home',
-          'providers': 10,
-        },
-        {
-          'name': 'Personal Care',
-          'icon': '💅',
-          'description': 'Wellness and self-care',
-          'providers': 6,
+          'name': 'Setup Required',
+          'icon': '⚙️',
+          'description': 'Configure Firebase to access real services',
+          'providers': 0,
         },
       ];
       _isLoading = false;

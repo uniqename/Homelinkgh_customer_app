@@ -46,33 +46,32 @@ class DefaultFirebaseOptions {
     }
   }
 
-  // SECURITY NOTE: These are PLACEHOLDER/EXAMPLE values for development
-  // Replace with actual Firebase project credentials for production
+  // Production Firebase configuration - replace with your actual project
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyC6D7E8F9G0H1I2J3K4L5M6N7O8P9Q0R1S', // PLACEHOLDER - Replace with real key
-    appId: '1:234567890123:web:a1b2c3d4e5f6g7h8i9j0k1l2', // PLACEHOLDER - Replace with real app ID
-    messagingSenderId: '234567890123', // PLACEHOLDER - Replace with real sender ID
-    projectId: 'homelink-ghana-provider', // PLACEHOLDER - Replace with real project ID
-    authDomain: 'homelink-ghana-provider.firebaseapp.com',
-    storageBucket: 'homelink-ghana-provider.appspot.com',
+    apiKey: 'your-web-api-key-here',
+    appId: 'your-web-app-id-here',
+    messagingSenderId: 'your-sender-id-here',
+    projectId: 'homelink-ghana-production',
+    authDomain: 'homelink-ghana-production.firebaseapp.com',
+    storageBucket: 'homelink-ghana-production.appspot.com',
   );
 
-  // DEVELOPMENT/DEMO Firebase project configuration
+  // Production Firebase configuration - replace with your actual project
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyBXzN9QG7XKxwM2eFz5JzYqKgBvP3Q2R1S', // Demo project key
-    appId: '1:123456789012:android:abcdef123456789', // Demo app ID
-    messagingSenderId: '123456789012', // Demo sender ID
-    projectId: 'homelink-ghana-demo', // Demo project ID
-    storageBucket: 'homelink-ghana-demo.appspot.com',
+    apiKey: 'your-android-api-key-here',
+    appId: 'your-android-app-id-here',
+    messagingSenderId: 'your-sender-id-here',
+    projectId: 'homelink-ghana-production',
+    storageBucket: 'homelink-ghana-production.appspot.com',
   );
 
-  // SECURITY NOTE: These are PLACEHOLDER/EXAMPLE values for development
+  // Production Firebase configuration - replace with your actual project
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDifferentKeyForIOS123456789', // PLACEHOLDER - Replace with real iOS key
-    appId: '1:234567890123:ios:1a2b3c4d5e6f7g8h', // PLACEHOLDER - Replace with real iOS app ID
-    messagingSenderId: '234567890123', // PLACEHOLDER - Replace with real sender ID
-    projectId: 'homelink-ghana-provider', // PLACEHOLDER - Replace with real project ID
-    storageBucket: 'homelink-ghana-provider.appspot.com',
+    apiKey: 'your-ios-api-key-here',
+    appId: 'your-ios-app-id-here',
+    messagingSenderId: 'your-sender-id-here',
+    projectId: 'homelink-ghana-production',
+    storageBucket: 'homelink-ghana-production.appspot.com',
     iosBundleId: 'com.homelink.provider.app',
   );
 }

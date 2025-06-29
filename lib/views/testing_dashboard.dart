@@ -243,7 +243,7 @@ class _TestingDashboardState extends State<TestingDashboard> {
     try {
       await TestDataService.createTestUser(
         email: email,
-        password: 'temp_password',
+        password: 'securepass',
         name: name,
         userType: userType,
         phone: '+233244123456',
@@ -264,7 +264,7 @@ class _TestingDashboardState extends State<TestingDashboard> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Email: $email'),
-                const Text('Password: test123456'),
+                const Text('Password: [Auto-generated]'),
                 const SizedBox(height: 8),
                 const Text('You can now use these credentials to test the app.'),
               ],
