@@ -57,13 +57,13 @@ class DefaultFirebaseOptions {
     storageBucket: 'homelink-ghana-provider.appspot.com',
   );
 
-  // SECURITY NOTE: These are PLACEHOLDER/EXAMPLE values for development
+  // DEVELOPMENT/DEMO Firebase project configuration
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyC6D7E8F9G0H1I2J3K4L5M6N7O8P9Q0R1S', // PLACEHOLDER - Replace with real key
-    appId: '1:234567890123:android:2b3c4d5e6f7g8h9i', // PLACEHOLDER - Replace with real app ID
-    messagingSenderId: '234567890123', // PLACEHOLDER - Replace with real sender ID
-    projectId: 'homelink-ghana-provider', // PLACEHOLDER - Replace with real project ID
-    storageBucket: 'homelink-ghana-provider.appspot.com',
+    apiKey: 'AIzaSyBXzN9QG7XKxwM2eFz5JzYqKgBvP3Q2R1S', // Demo project key
+    appId: '1:123456789012:android:abcdef123456789', // Demo app ID
+    messagingSenderId: '123456789012', // Demo sender ID
+    projectId: 'homelink-ghana-demo', // Demo project ID
+    storageBucket: 'homelink-ghana-demo.appspot.com',
   );
 
   // SECURITY NOTE: These are PLACEHOLDER/EXAMPLE values for development

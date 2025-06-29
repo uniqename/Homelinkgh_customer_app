@@ -5,10 +5,7 @@ import 'views/role_selection.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  print('🚀 Starting HomeLinkGH in demo mode...');
-  
-  // Skip Firebase initialization to prevent connection issues
-  // This allows the app to work without Firebase configuration
+  // Skip Firebase initialization for demo
   runApp(const HomeLinkGHApp());
 }
 
