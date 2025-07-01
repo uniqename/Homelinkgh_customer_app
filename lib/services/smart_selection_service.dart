@@ -1,5 +1,5 @@
 import 'dart:math';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:homelinkgh_customer/models/location.dart';
 import '../models/provider.dart';
 import '../models/service_request.dart';
 import 'local_data_service.dart';
@@ -21,52 +21,92 @@ class SmartSelectionService {
     Provider(
       id: '1',
       name: 'Kwame Asante',
+      email: 'kwame@homelink.gh',
+      phone: '+233 24 123 4567',
       rating: 4.8,
+      totalRatings: 50,
       completedJobs: 145,
       services: ['Food Delivery', 'Grocery Shopping'],
       location: const LatLng(5.6037, -0.1870), // East Legon, Accra
-      isAvailable: true,
-      averageResponseTime: 15, // minutes
+      address: 'East Legon, Accra',
+      bio: 'Professional food delivery service',
+      isVerified: true,
+      isActive: true,
+      profileImageUrl: '',
+      certifications: [],
+      availability: {},
     ),
     Provider(
       id: '2', 
       name: 'Ama Serwaa',
+      email: 'ama@homelink.gh',
+      phone: '+233 20 987 6543',
       rating: 4.9,
+      totalRatings: 75,
       completedJobs: 203,
       services: ['House Cleaning', 'Laundry Service'],
       location: const LatLng(5.5502, -0.2174), // Osu, Accra
-      isAvailable: true,
-      averageResponseTime: 12,
+      address: 'Osu, Accra',
+      bio: 'Professional house cleaning service',
+      isVerified: true,
+      isActive: true,
+      profileImageUrl: '',
+      certifications: [],
+      availability: {},
     ),
     Provider(
       id: '3',
-      name: 'Kofi Mensah', 
+      name: 'Kofi Mensah',
+      email: 'kofi@homelink.gh',
+      phone: '+233 26 555 7890',
       rating: 4.7,
+      totalRatings: 30,
       completedJobs: 89,
       services: ['Food Delivery', 'Transportation'],
       location: const LatLng(5.6205, -0.1731), // Airport Residential, Accra
-      isAvailable: true,
-      averageResponseTime: 8,
+      address: 'Airport Residential, Accra',
+      bio: 'Fast delivery and ride services',
+      isVerified: true,
+      isActive: true,
+      profileImageUrl: '',
+      certifications: [],
+      availability: {},
     ),
     Provider(
       id: '4',
       name: 'Akosua Boateng',
+      email: 'akosua@homelink.gh',
+      phone: '+233 23 456 7890',
       rating: 4.9,
+      totalRatings: 60,
       completedJobs: 167,
       services: ['Nail Tech', 'Makeup Artist'],
       location: const LatLng(5.5557, -0.1963), // Cantonments, Accra
-      isAvailable: true,
-      averageResponseTime: 20,
+      address: 'Cantonments, Accra',
+      bio: 'Professional beauty services',
+      isVerified: true,
+      isActive: true,
+      profileImageUrl: '',
+      certifications: [],
+      availability: {},
     ),
     Provider(
       id: '5',
       name: 'Yaw Opoku',
+      email: 'yaw@homelink.gh',
+      phone: '+233 27 123 9876',
       rating: 4.6,
+      totalRatings: 40,
       completedJobs: 134,
       services: ['Plumbing', 'Electrical Work'],
       location: const LatLng(5.6434, -0.1776), // Dzorwulu, Accra
-      isAvailable: true,
-      averageResponseTime: 25,
+      address: 'Dzorwulu, Accra',
+      bio: 'Licensed electrician and plumber',
+      isVerified: true,
+      isActive: true,
+      profileImageUrl: '',
+      certifications: [],
+      availability: {},
     ),
   ];
 
@@ -81,7 +121,7 @@ class SmartSelectionService {
     // Filter providers by service type
     final eligibleProviders = allProviders.where((provider) =>
       provider.services.contains(request.serviceType) && 
-      provider.isAvailable
+      provider.isActive
     ).toList();
 
     // Calculate scores for each provider
@@ -135,7 +175,9 @@ class SmartSelectionService {
     final experienceScore = min(1.0, provider.completedJobs / 200.0);
 
     // Response time score (faster = better, max useful time = 60 min)
-    final responseTimeScore = max(0, (60 - provider.averageResponseTime) / 60);
+    // Using a default response time based on experience
+    final estimatedResponseTime = max(10, 30 - (provider.completedJobs / 10).round());
+    final responseTimeScore = max(0, (60 - estimatedResponseTime) / 60);
 
     // Priority boost for urgent requests
     double urgencyMultiplier = 1.0;
@@ -198,8 +240,9 @@ class SmartSelectionService {
     // Travel time in hours
     final travelTime = distance / averageSpeed;
     
-    // Convert to minutes and add provider response time
-    final etaMinutes = (travelTime * 60) + provider.averageResponseTime;
+    // Convert to minutes and add estimated provider response time
+    final estimatedResponseTime = max(10, 30 - (provider.completedJobs / 10).round());
+    final etaMinutes = (travelTime * 60) + estimatedResponseTime;
     
     return etaMinutes;
   }
@@ -214,7 +257,7 @@ class SmartSelectionService {
 
     for (final provider in allProviders) {
       if (!provider.services.contains(serviceType)) continue;
-      if (!provider.isAvailable) continue;
+      if (!provider.isActive) continue;
 
       final distance = _calculateDistance(
         location.latitude,
@@ -240,14 +283,14 @@ class SmartSelectionService {
       serviceType: serviceType,
     );
 
-    final availableCount = nearbyProviders.where((p) => p.isAvailable).length;
+    final availableCount = nearbyProviders.where((p) => p.isActive).length;
     final averageRating = nearbyProviders.isEmpty ? 0.0 :
         nearbyProviders.map((p) => p.rating).reduce((a, b) => a + b) / nearbyProviders.length;
 
     double estimatedWaitTime = 0;
     if (nearbyProviders.isNotEmpty) {
       final fastestProvider = nearbyProviders.reduce((a, b) =>
-          a.averageResponseTime < b.averageResponseTime ? a : b);
+          a.completedJobs > b.completedJobs ? a : b); // Use experience as proxy for response time
       estimatedWaitTime = await calculateETA(
         provider: fastestProvider,
         customerLocation: location,

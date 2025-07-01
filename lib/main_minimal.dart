@@ -1,83 +1,69 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'services/auth_service_minimal.dart';
+import 'views/auth_wrapper_minimal.dart';
 
-void main() {
-  runApp(const HomeLinkGHApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Running in demo mode without Firebase for production build
+  print('Running in demo mode without Firebase');
+  
+  runApp(const NGOSupportApp());
 }
 
-class HomeLinkGHApp extends StatelessWidget {
-  const HomeLinkGHApp({super.key});
+class NGOSupportApp extends StatelessWidget {
+  const NGOSupportApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'HomeLinkGH - Connecting Ghana\'s Diaspora',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF006B3C), // Ghana Green
-          primary: const Color(0xFF006B3C),
-          secondary: const Color(0xFFFCD116), // Ghana Gold
-          tertiary: const Color(0xFFCE1126), // Ghana Red
+    return MultiProvider(
+      providers: [
+        Provider<AuthService>(
+          create: (_) => AuthService(),
         ),
-        useMaterial3: true,
-        appBarTheme: const AppBarTheme(
-          centerTitle: true,
-          elevation: 0,
-          backgroundColor: Color(0xFF006B3C),
-          foregroundColor: Colors.white,
-        ),
-      ),
-      home: const HomeScreen(),
-    );
-  }
-}
-
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('HomeLinkGH'),
-      ),
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.home_work,
-              size: 100,
-              color: Color(0xFF006B3C),
+      ],
+      child: MaterialApp(
+        title: 'Beacon of New Beginnings',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          primarySwatch: Colors.teal,
+          primaryColor: const Color(0xFF00796B),
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color(0xFF00796B),
+            brightness: Brightness.light,
+          ),
+          appBarTheme: const AppBarTheme(
+            backgroundColor: Color(0xFF00796B),
+            foregroundColor: Colors.white,
+            elevation: 0,
+          ),
+          cardTheme: const CardThemeData(
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(12)),
             ),
-            SizedBox(height: 20),
-            Text(
-              'HomeLinkGH',
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF006B3C),
+          ),
+          elevatedButtonTheme: ElevatedButtonThemeData(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF00796B),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
               ),
             ),
-            SizedBox(height: 10),
-            Text(
-              'Connecting Ghana\'s Diaspora',
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.grey,
-              ),
+          ),
+          inputDecorationTheme: InputDecorationTheme(
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
             ),
-            SizedBox(height: 20),
-            Text(
-              'Ready for TestFlight Distribution',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: Color(0xFFFCD116),
-              ),
-            ),
-          ],
+            filled: true,
+            fillColor: Colors.grey[50],
+          ),
+          useMaterial3: true,
         ),
+        home: const AuthWrapperMinimal(),
       ),
     );
   }

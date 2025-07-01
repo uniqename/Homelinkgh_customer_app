@@ -7,6 +7,7 @@ import 'admin_dashboard.dart';
 import 'dynamic_home.dart';
 import 'staff_login.dart';
 import 'jobs_careers.dart';
+import 'auth_screen.dart';
 
 class RoleSelectionScreen extends StatelessWidget {
   final String? savedRole;
@@ -187,23 +188,12 @@ class RoleSelectionScreen extends StatelessWidget {
                         color: const Color(0xFF1E88E5),
                         badge: 'DIASPORA MODE',
                         onTap: () {
-                          print('Navigating to Diaspora mode');
-                          try {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const DynamicHomeScreen(
-                                  userId: 'diaspora_user_001',
-                                  userType: 'diaspora_customer',
-                                ),
-                              ),
-                            );
-                          } catch (e) {
-                            print('Diaspora navigation error: $e');
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Navigation error: $e')),
-                            );
-                          }
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const AuthScreen(userType: 'diaspora_customer'),
+                            ),
+                          );
                         },
                       ),
                       const SizedBox(height: 16),
@@ -216,10 +206,7 @@ class RoleSelectionScreen extends StatelessWidget {
                         onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const DynamicHomeScreen(
-                              userId: 'family_helper_001',
-                              userType: 'family_helper',
-                            ),
+                            builder: (context) => const AuthScreen(userType: 'family_helper'),
                           ),
                         ),
                       ),
@@ -234,7 +221,7 @@ class RoleSelectionScreen extends StatelessWidget {
                         onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const ProviderOnboardingScreen(),
+                            builder: (context) => const AuthScreen(userType: 'provider'),
                           ),
                         ),
                       ),

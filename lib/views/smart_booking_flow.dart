@@ -422,7 +422,7 @@ class _SmartBookingFlowScreenState extends State<SmartBookingFlowScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Response time: ~${provider.averageResponseTime} min',
+                      'Experience: ${provider.completedJobs} completed jobs',
                       style: const TextStyle(
                         color: Colors.grey,
                         fontSize: 12,

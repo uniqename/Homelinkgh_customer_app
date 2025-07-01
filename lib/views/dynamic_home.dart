@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../services/smart_recommendation_service.dart';
 import '../services/location_service.dart';
+import 'food_delivery_screen.dart';
+import 'category_view_screen.dart';
+import 'smart_service_booking.dart';
 
 class DynamicHomeScreen extends StatefulWidget {
   final String userId;
@@ -113,6 +116,15 @@ class _DynamicHomeScreenState extends State<DynamicHomeScreen> with TickerProvid
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text('Welcome ${widget.userType == 'diaspora_customer' ? 'Diaspora Customer' : widget.userType == 'family_helper' ? 'Family Helper' : 'Customer'}'),
+        backgroundColor: const Color(0xFF006B3C),
+        foregroundColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: isLoading
           ? _buildLoadingScreen()
           : RefreshIndicator(
@@ -359,10 +371,10 @@ class _DynamicHomeScreenState extends State<DynamicHomeScreen> with TickerProvid
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 children: [
-                  _buildFoodCategory('Ghanaian', Icons.restaurant, 'Jollof, Banku, Fufu'),
-                  _buildFoodCategory('Fast Food', Icons.fastfood, 'Pizza, Burgers, Fries'),
-                  _buildFoodCategory('Breakfast', Icons.breakfast_dining, 'Waakye, Kelewele, Tea'),
-                  _buildFoodCategory('Snacks', Icons.cookie, 'Bofrot, Koose, Plantain'),
+                  _buildFoodCategory('Ghanaian', Icons.restaurant, 'Jollof, Banku, Fufu', 'ghanaian'),
+                  _buildFoodCategory('Fast Food', Icons.fastfood, 'Pizza, Burgers, Fries', 'fast_food'),
+                  _buildFoodCategory('Breakfast', Icons.breakfast_dining, 'Waakye, Kelewele, Tea', 'breakfast'),
+                  _buildFoodCategory('Snacks', Icons.cookie, 'Bofrot, Koose, Plantain', 'snacks'),
                 ],
               ),
             ),
@@ -394,40 +406,43 @@ class _DynamicHomeScreenState extends State<DynamicHomeScreen> with TickerProvid
     );
   }
 
-  Widget _buildFoodCategory(String name, IconData icon, String subtitle) {
-    return Container(
-      width: 120,
-      margin: const EdgeInsets.only(right: 12),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: Colors.white, size: 24),
-            const SizedBox(height: 8),
-            Text(
-              name,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
+  Widget _buildFoodCategory(String name, IconData icon, String subtitle, String categoryId) {
+    return GestureDetector(
+      onTap: () => _navigateToFoodCategory(categoryId, name),
+      child: Container(
+        width: 120,
+        margin: const EdgeInsets.only(right: 12),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: Colors.white, size: 24),
+              const SizedBox(height: 8),
+              Text(
+                name,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            Text(
-              subtitle,
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 8,
+              Text(
+                subtitle,
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 8,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -1286,28 +1301,40 @@ class _DynamicHomeScreenState extends State<DynamicHomeScreen> with TickerProvid
   }
 
   void _navigateToService(Map<String, dynamic> service) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Opening ${service['name']}'),
-        backgroundColor: Color(0xFF006B3C),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SmartServiceBookingScreen(
+          serviceName: service['name'] ?? 'Service',
+          serviceIcon: service['icon'] ?? Icons.home_repair_service,
+          serviceColor: service['color'] ?? const Color(0xFF006B3C),
+        ),
       ),
     );
   }
 
   void _bookRecommendedService(Map<String, dynamic> recommendation) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Booking ${recommendation['title']}'),
-        backgroundColor: Color(0xFF006B3C),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SmartServiceBookingScreen(
+          serviceName: recommendation['title'] ?? 'Service',
+          serviceIcon: recommendation['icon'] ?? Icons.home_repair_service,
+          serviceColor: recommendation['color'] ?? const Color(0xFF006B3C),
+        ),
       ),
     );
   }
 
   void _bookService(Map<String, dynamic> service) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Booking ${service['name']}'),
-        backgroundColor: Color(0xFF006B3C),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SmartServiceBookingScreen(
+          serviceName: service['name'] ?? 'Service',
+          serviceIcon: service['icon'] ?? Icons.home_repair_service,
+          serviceColor: service['color'] ?? const Color(0xFF006B3C),
+        ),
       ),
     );
   }
@@ -1331,11 +1358,23 @@ class _DynamicHomeScreenState extends State<DynamicHomeScreen> with TickerProvid
   }
 
   void _openFoodDelivery() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('🍽️ Opening food delivery - Order from the best restaurants in Greater Accra!'),
-        backgroundColor: Color(0xFFFF6B35),
-        duration: Duration(seconds: 3),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const FoodDeliveryScreen(),
+      ),
+    );
+  }
+
+  void _navigateToFoodCategory(String categoryId, String categoryName) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CategoryViewScreen(
+          categoryId: categoryId,
+          categoryName: categoryName,
+          userType: widget.userType,
+        ),
       ),
     );
   }

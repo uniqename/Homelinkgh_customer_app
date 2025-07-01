@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:math' as math;
 import 'package:http/http.dart' as http;
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:homelinkgh_customer/models/location.dart';
 import '../models/provider.dart';
 import '../models/booking.dart';
 import '../models/service_request.dart';
@@ -57,8 +57,8 @@ class FirebaseService {
             }
           },
           'rating': {'doubleValue': provider.rating},
+          'totalRatings': {'integerValue': provider.totalRatings.toString()},
           'completedJobs': {'integerValue': provider.completedJobs.toString()},
-          'averageResponseTime': {'integerValue': provider.averageResponseTime.toString()},
           'location': {
             'mapValue': {
               'fields': {
@@ -67,26 +67,21 @@ class FirebaseService {
               }
             }
           },
-          'isAvailable': {'booleanValue': provider.isAvailable},
-          'profileImageUrl': {'stringValue': provider.profileImageUrl ?? ''},
-          'phoneNumber': {'stringValue': provider.phoneNumber ?? ''},
-          'email': {'stringValue': provider.email ?? ''},
-          'bio': {'stringValue': provider.bio ?? ''},
-          'hourlyRate': {'doubleValue': provider.hourlyRate ?? 0.0},
-          'experience': {'stringValue': provider.experience ?? ''},
-          'languages': {
-            'arrayValue': {
-              'values': (provider.languages ?? []).map((lang) => {'stringValue': lang}).toList()
-            }
-          },
+          'isActive': {'booleanValue': provider.isActive},
+          'isVerified': {'booleanValue': provider.isVerified},
+          'profileImageUrl': {'stringValue': provider.profileImageUrl},
+          'phone': {'stringValue': provider.phone},
+          'email': {'stringValue': provider.email},
+          'bio': {'stringValue': provider.bio},
+          'address': {'stringValue': provider.address},
           'certifications': {
             'arrayValue': {
-              'values': (provider.certifications ?? []).map((cert) => {'stringValue': cert}).toList()
+              'values': provider.certifications.map((cert) => {'stringValue': cert}).toList()
             }
           },
-          'portfolioImages': {
-            'arrayValue': {
-              'values': (provider.portfolioImages ?? []).map((img) => {'stringValue': img}).toList()
+          'availability': {
+            'mapValue': {
+              'fields': {}
             }
           },
           'createdAt': {'timestampValue': DateTime.now().toUtc().toIso8601String()},
@@ -463,21 +458,20 @@ class FirebaseService {
       services: _parseArrayValue(fields['services']),
       rating: _parseDoubleValue(fields['rating']) ?? 0.0,
       completedJobs: _parseIntValue(fields['completedJobs']) ?? 0,
-      averageResponseTime: _parseIntValue(fields['averageResponseTime']) ?? 0,
       location: LatLng(
         _parseDoubleValue(fields['location']['mapValue']['fields']['latitude']) ?? 0.0,
         _parseDoubleValue(fields['location']['mapValue']['fields']['longitude']) ?? 0.0,
       ),
-      isAvailable: fields['isAvailable']['booleanValue'] ?? false,
-      profileImageUrl: fields['profileImageUrl']['stringValue'] ?? '',
-      phoneNumber: fields['phoneNumber']['stringValue'] ?? '',
+      phone: fields['phone']['stringValue'] ?? '',
       email: fields['email']['stringValue'] ?? '',
       bio: fields['bio']['stringValue'] ?? '',
-      hourlyRate: _parseDoubleValue(fields['hourlyRate']) ?? 0.0,
-      experience: fields['experience']['stringValue'] ?? '',
-      languages: _parseArrayValue(fields['languages']),
+      address: fields['address']['stringValue'] ?? '',
+      isActive: fields['isActive']['booleanValue'] ?? false,
+      isVerified: fields['isVerified']['booleanValue'] ?? false,
+      profileImageUrl: fields['profileImageUrl']['stringValue'] ?? '',
       certifications: _parseArrayValue(fields['certifications']),
-      portfolioImages: _parseArrayValue(fields['portfolioImages']),
+      availability: {},
+      totalRatings: _parseIntValue(fields['totalRatings']) ?? 0,
     );
   }
 

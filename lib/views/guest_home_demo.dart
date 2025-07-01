@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:homelinkgh_customer/models/location.dart';
 import '../services/real_firebase_service.dart';
 import '../models/provider.dart';
 import 'real_login_screen.dart';

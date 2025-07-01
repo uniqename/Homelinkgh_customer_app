@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:homelinkgh_customer/models/location.dart';
 import '../models/chat_message.dart';
 import '../models/booking.dart';
 import '../services/chat_service.dart';
@@ -735,27 +735,47 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   void _showLocationOnMap(Map<String, dynamic> locationData) {
     final latitude = locationData['latitude'] as double?;
     final longitude = locationData['longitude'] as double?;
+    final address = locationData['address'] ?? 'Shared location';
     
     if (latitude == null || longitude == null) return;
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Location'),
+        title: const Text('Shared Location'),
         content: SizedBox(
           width: 300,
-          height: 300,
-          child: GoogleMap(
-            initialCameraPosition: CameraPosition(
-              target: LatLng(latitude, longitude),
-              zoom: 15,
-            ),
-            markers: {
-              Marker(
-                markerId: const MarkerId('shared_location'),
-                position: LatLng(latitude, longitude),
+          height: 200,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.location_on, size: 64, color: Color(0xFF006B3C)),
+              const SizedBox(height: 16),
+              Text(
+                address,
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
               ),
-            },
+              const SizedBox(height: 8),
+              Text(
+                'Lat: ${latitude.toStringAsFixed(6)}',
+                style: const TextStyle(fontSize: 14, color: Colors.grey),
+              ),
+              Text(
+                'Lng: ${longitude.toStringAsFixed(6)}',
+                style: const TextStyle(fontSize: 14, color: Colors.grey),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.open_in_new),
+                label: const Text('Open in Maps App'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF006B3C),
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ],
           ),
         ),
         actions: [

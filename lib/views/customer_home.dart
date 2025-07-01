@@ -602,50 +602,86 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          const Text(
-            'John Doe',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
+          FutureBuilder<String>(
+            future: _getUserName(),
+            builder: (context, snapshot) {
+              return Text(
+                snapshot.data ?? 'User',
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              );
+            },
           ),
-          const Text(
-            'john.doe@email.com',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey,
-            ),
+          FutureBuilder<String>(
+            future: _getUserEmail(),
+            builder: (context, snapshot) {
+              return Text(
+                snapshot.data ?? 'user@homelinkgh.com',
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey,
+                ),
+              );
+            },
           ),
           const SizedBox(height: 32),
           _buildProfileOption(
             icon: Icons.location_on,
             title: 'Addresses',
             subtitle: '2 saved addresses',
-            onTap: () {},
+            onTap: () {
+              _showAddressesScreen();
+            },
           ),
           _buildProfileOption(
             icon: Icons.payment,
             title: 'Payment Methods',
             subtitle: 'Credit cards, Mobile Money',
-            onTap: () {},
+            onTap: () {
+              _showPaymentMethodsScreen();
+            },
           ),
           _buildProfileOption(
             icon: Icons.history,
             title: 'Order History',
             subtitle: 'View all past bookings',
-            onTap: () {},
+            onTap: () {
+              _showOrderHistoryScreen();
+            },
           ),
           _buildProfileOption(
             icon: Icons.support_agent,
             title: 'Help & Support',
             subtitle: 'Get help with your orders',
-            onTap: () {},
+            onTap: () {
+              _showHelpSupportScreen();
+            },
           ),
           _buildProfileOption(
             icon: Icons.settings,
             title: 'Settings',
             subtitle: 'App preferences and privacy',
-            onTap: () {},
+            onTap: () {
+              _showSettingsScreen();
+            },
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _logout,
+              icon: const Icon(Icons.logout, color: Colors.red),
+              label: const Text(
+                'Sign Out',
+                style: TextStyle(color: Colors.red),
+              ),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Colors.red),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+            ),
           ),
         ],
       ),
@@ -944,6 +980,319 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
         ),
       ),
     );
+  }
+
+  void _showAddressesScreen() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Manage Addresses'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.home),
+              title: const Text('Home'),
+              subtitle: const Text('East Legon, Accra'),
+              trailing: IconButton(
+                icon: const Icon(Icons.edit),
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Edit address feature coming soon!')),
+                  );
+                },
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.work),
+              title: const Text('Office'),
+              subtitle: const Text('Airport Residential Area'),
+              trailing: IconButton(
+                icon: const Icon(Icons.edit),
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Edit address feature coming soon!')),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Add new address feature coming soon!')),
+                );
+              },
+              icon: const Icon(Icons.add),
+              label: const Text('Add New Address'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPaymentMethodsScreen() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Payment Methods'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.phone_android, color: Colors.blue),
+              title: const Text('MTN Mobile Money'),
+              subtitle: const Text('•••• •••• 1234'),
+              trailing: const Icon(Icons.check_circle, color: Colors.green),
+            ),
+            ListTile(
+              leading: const Icon(Icons.credit_card, color: Colors.orange),
+              title: const Text('Visa Card'),
+              subtitle: const Text('•••• •••• •••• 5678'),
+              trailing: IconButton(
+                icon: const Icon(Icons.edit),
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Edit payment method coming soon!')),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Add payment method feature coming soon!')),
+                );
+              },
+              icon: const Icon(Icons.add),
+              label: const Text('Add Payment Method'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showOrderHistoryScreen() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Order History'),
+        content: SizedBox(
+          width: double.maxFinite,
+          height: 300,
+          child: ListView.builder(
+            itemCount: 5,
+            itemBuilder: (context, index) {
+              final orders = [
+                {'service': 'House Cleaning', 'date': 'Dec 28, 2024', 'amount': 'GH₵150', 'status': 'Completed'},
+                {'service': 'Food Delivery', 'date': 'Dec 27, 2024', 'amount': 'GH₵45', 'status': 'Delivered'},
+                {'service': 'Transportation', 'date': 'Dec 25, 2024', 'amount': 'GH₵25', 'status': 'Completed'},
+                {'service': 'Plumbing', 'date': 'Dec 20, 2024', 'amount': 'GH₵200', 'status': 'Completed'},
+                {'service': 'Beauty Services', 'date': 'Dec 18, 2024', 'amount': 'GH₵180', 'status': 'Completed'},
+              ];
+              final order = orders[index];
+              return Card(
+                child: ListTile(
+                  title: Text(order['service']!),
+                  subtitle: Text(order['date']!),
+                  trailing: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        order['amount']!,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.green,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          order['status']!,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('View details for ${order['service']}')),
+                    );
+                  },
+                ),
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showHelpSupportScreen() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Help & Support'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.phone, color: Colors.green),
+              title: const Text('Call Support'),
+              subtitle: const Text('+233 30 123 4567'),
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Calling support...')),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.chat, color: Colors.blue),
+              title: const Text('Live Chat'),
+              subtitle: const Text('Chat with our support team'),
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Live chat feature coming soon!')),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.email, color: Colors.orange),
+              title: const Text('Email Support'),
+              subtitle: const Text('support@homelinkgh.com'),
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Opening email app...')),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.help, color: Colors.purple),
+              title: const Text('FAQ'),
+              subtitle: const Text('Frequently asked questions'),
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('FAQ section coming soon!')),
+                );
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSettingsScreen() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Settings'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SwitchListTile(
+              title: const Text('Push Notifications'),
+              subtitle: const Text('Receive order updates'),
+              value: true,
+              onChanged: (value) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Notifications ${value ? 'enabled' : 'disabled'}')),
+                );
+              },
+            ),
+            SwitchListTile(
+              title: const Text('Location Services'),
+              subtitle: const Text('Help find nearby providers'),
+              value: true,
+              onChanged: (value) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Location ${value ? 'enabled' : 'disabled'}')),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.language),
+              title: const Text('Language'),
+              subtitle: const Text('English (Ghana)'),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Language settings coming soon!')),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.privacy_tip),
+              title: const Text('Privacy Policy'),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Privacy policy coming soon!')),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.description),
+              title: const Text('Terms of Service'),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Terms of service coming soon!')),
+                );
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<String> _getUserName() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('userName') ?? 'User';
+  }
+
+  Future<String> _getUserEmail() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('userEmail') ?? 'user@homelinkgh.com';
   }
 
   Future<void> _logout() async {

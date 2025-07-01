@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/standalone_service.dart';
 import '../main.dart';
 
 class SimpleLoginScreen extends StatefulWidget {

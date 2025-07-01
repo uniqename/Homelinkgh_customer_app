@@ -1,4 +1,4 @@
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:homelinkgh_customer/models/location.dart';
 
 class Provider {
   final String id;

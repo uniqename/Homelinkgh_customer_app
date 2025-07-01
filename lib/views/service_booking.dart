@@ -22,6 +22,7 @@ class _ServiceBookingScreenState extends State<ServiceBookingScreen> {
   
   // Form controllers
   final _addressController = TextEditingController();
+  final _descriptionController = TextEditingController();
   final _notesController = TextEditingController();
   final _phoneController = TextEditingController();
   
@@ -35,32 +36,32 @@ class _ServiceBookingScreenState extends State<ServiceBookingScreen> {
 
   final List<Map<String, dynamic>> _availableProviders = [
     {
-      'name': 'John Smith',
+      'name': 'Kwame Asante',
       'rating': 4.8,
       'reviews': 156,
       'experience': '5+ years',
-      'price': '\$25/hour',
-      'avatar': 'JS',
+      'price': 'GH₵150/hour',
+      'avatar': 'KA',
       'verified': true,
       'available': true,
     },
     {
-      'name': 'Sarah Johnson',
+      'name': 'Akosua Mensah',
       'rating': 4.9,
       'reviews': 234,
       'experience': '3+ years',
-      'price': '\$30/hour',
-      'avatar': 'SJ',
+      'price': 'GH₵180/hour',
+      'avatar': 'AM',
       'verified': true,
       'available': true,
     },
     {
-      'name': 'Mike Wilson',
+      'name': 'Samuel Osei',
       'rating': 4.7,
       'reviews': 89,
       'experience': '7+ years',
-      'price': '\$35/hour',
-      'avatar': 'MW',
+      'price': 'GH₵210/hour',
+      'avatar': 'SO',
       'verified': true,
       'available': false,
     },
@@ -229,14 +230,31 @@ class _ServiceBookingScreenState extends State<ServiceBookingScreen> {
           ),
           const SizedBox(height: 16),
           TextFormField(
+            controller: _descriptionController,
+            decoration: const InputDecoration(
+              labelText: 'Service Description *',
+              hintText: 'Describe what you need in detail',
+              border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.description),
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please describe the service you need';
+              }
+              return null;
+            },
+            maxLines: 3,
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
             controller: _notesController,
             decoration: const InputDecoration(
               labelText: 'Additional Notes',
               hintText: 'Any specific requirements or instructions',
               border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.note),
+              prefixIcon: Icon(Icons.edit_note),
             ),
-            maxLines: 3,
+            maxLines: 2,
           ),
           const SizedBox(height: 16),
           if (_shouldShowRecurringOption()) ...[
@@ -538,10 +556,49 @@ class _ServiceBookingScreenState extends State<ServiceBookingScreen> {
         _buildSummaryItem('Date', selectedDate != null ? 
           '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}' : 'Not selected'),
         _buildSummaryItem('Time', selectedTime?.format(context) ?? 'Not selected'),
+        _buildSummaryItem('Description', _descriptionController.text),
         _buildSummaryItem('Address', _addressController.text),
         _buildSummaryItem('Payment', selectedPaymentMethod ?? 'Not selected'),
         if (isRecurring)
           _buildSummaryItem('Recurring', recurringFrequency ?? 'Not set'),
+        const SizedBox(height: 24),
+        
+        // Cancellation Policy Notice
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.amber.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.amber),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.info, color: Colors.amber, size: 20),
+                  SizedBox(width: 8),
+                  Text(
+                    'Cancellation Policy',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.amber,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _getCancellationPolicyText(),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[700],
+                ),
+              ),
+            ],
+          ),
+        ),
+        
         const SizedBox(height: 24),
         SizedBox(
           width: double.infinity,
@@ -664,9 +721,35 @@ class _ServiceBookingScreenState extends State<ServiceBookingScreen> {
     return recurringServices.contains(widget.serviceName);
   }
 
+  String _getCancellationPolicyText() {
+    if (selectedDate == null) return '';
+    
+    final now = DateTime.now();
+    final serviceDateTime = DateTime(
+      selectedDate!.year,
+      selectedDate!.month,
+      selectedDate!.day,
+      selectedTime?.hour ?? 0,
+      selectedTime?.minute ?? 0,
+    );
+    
+    final timeDifference = serviceDateTime.difference(now);
+    final daysUntilService = timeDifference.inDays;
+    final hoursUntilService = timeDifference.inHours;
+    
+    if (daysUntilService >= 2) {
+      return '✅ Free cancellation available until 48 hours before your scheduled service time. You can cancel or reschedule without any charges.';
+    } else if (hoursUntilService >= 48) {
+      return '✅ Free cancellation available until 48 hours before your scheduled service time. You have ${hoursUntilService} hours remaining for free cancellation.';
+    } else {
+      return '⚠️ Cancellation not available: Less than 48 hours until service. Cancellations within 48 hours may incur charges. Please contact support for assistance.';
+    }
+  }
+
   @override
   void dispose() {
     _addressController.dispose();
+    _descriptionController.dispose();
     _notesController.dispose();
     _phoneController.dispose();
     super.dispose();

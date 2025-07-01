@@ -1,66 +1,63 @@
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'location.dart';
 
 class Provider {
   final String id;
   final String name;
-  final String? email;
-  final String? phoneNumber;
+  final String email;
+  final String phone;
   final double rating;
+  final int totalRatings;
   final int completedJobs;
-  final List<String> services; // Changed from specialties to services
+  final List<String> services;
   final LatLng location;
-  bool isAvailable;
-  final int averageResponseTime;
-  final String? profileImageUrl; // Changed from profileImage
-  final String? bio; // Changed from description
-  final double? hourlyRate;
-  final String? experience;
-  final List<String>? languages;
-  final List<String>? certifications;
-  final List<String>? portfolioImages;
+  final String address;
+  final String bio;
+  final bool isVerified;
+  final bool isActive;
+  final String profileImageUrl;
+  final List<String> certifications;
+  final Map<String, dynamic> availability;
 
   Provider({
     required this.id,
     required this.name,
-    this.email,
-    this.phoneNumber,
+    required this.email,
+    required this.phone,
     required this.rating,
+    required this.totalRatings,
     required this.completedJobs,
-    required this.services, // Updated parameter name
+    required this.services,
     required this.location,
-    required this.isAvailable,
-    required this.averageResponseTime,
-    this.profileImageUrl,
-    this.bio,
-    this.hourlyRate,
-    this.experience,
-    this.languages,
-    this.certifications,
-    this.portfolioImages,
+    required this.address,
+    required this.bio,
+    required this.isVerified,
+    required this.isActive,
+    required this.profileImageUrl,
+    required this.certifications,
+    required this.availability,
   });
 
   factory Provider.fromMap(Map<String, dynamic> map, String id) {
     return Provider(
       id: id,
       name: map['name'] ?? '',
-      email: map['email'],
-      phoneNumber: map['phoneNumber'],
+      email: map['email'] ?? '',
+      phone: map['phone'] ?? '',
       rating: (map['rating'] ?? 0.0).toDouble(),
+      totalRatings: map['totalRatings'] ?? 0,
       completedJobs: map['completedJobs'] ?? 0,
       services: List<String>.from(map['services'] ?? []),
       location: LatLng(
         (map['location']['latitude'] ?? 0.0).toDouble(),
         (map['location']['longitude'] ?? 0.0).toDouble(),
       ),
-      isAvailable: map['isAvailable'] ?? false,
-      averageResponseTime: map['averageResponseTime'] ?? 0,
-      profileImageUrl: map['profileImageUrl'],
-      bio: map['bio'],
-      hourlyRate: map['hourlyRate']?.toDouble(),
-      experience: map['experience'],
-      languages: map['languages'] != null ? List<String>.from(map['languages']) : null,
-      certifications: map['certifications'] != null ? List<String>.from(map['certifications']) : null,
-      portfolioImages: map['portfolioImages'] != null ? List<String>.from(map['portfolioImages']) : null,
+      address: map['address'] ?? '',
+      bio: map['bio'] ?? '',
+      isVerified: map['isVerified'] ?? false,
+      isActive: map['isActive'] ?? false,
+      profileImageUrl: map['profileImageUrl'] ?? '',
+      certifications: List<String>.from(map['certifications'] ?? []),
+      availability: Map<String, dynamic>.from(map['availability'] ?? {}),
     );
   }
 
@@ -68,23 +65,22 @@ class Provider {
     return {
       'name': name,
       'email': email,
-      'phoneNumber': phoneNumber,
+      'phone': phone,
       'rating': rating,
+      'totalRatings': totalRatings,
       'completedJobs': completedJobs,
       'services': services,
       'location': {
         'latitude': location.latitude,
         'longitude': location.longitude,
       },
-      'isAvailable': isAvailable,
-      'averageResponseTime': averageResponseTime,
-      'profileImageUrl': profileImageUrl,
+      'address': address,
       'bio': bio,
-      'hourlyRate': hourlyRate,
-      'experience': experience,
-      'languages': languages,
+      'isVerified': isVerified,
+      'isActive': isActive,
+      'profileImageUrl': profileImageUrl,
       'certifications': certifications,
-      'portfolioImages': portfolioImages,
+      'availability': availability,
     };
   }
 }

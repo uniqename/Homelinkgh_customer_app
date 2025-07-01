@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'smart_booking_flow.dart';
+import 'job_application_screen.dart';
 
 class JobsCareersScreen extends StatefulWidget {
   const JobsCareersScreen({super.key});
@@ -518,9 +518,9 @@ class _JobsCareersScreenState extends State<JobsCareersScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => SmartBookingFlowScreen(
-                              serviceType: 'Job Application: ${job['title']}',
-                              isGuestUser: true,
+                            builder: (context) => JobApplicationScreen(
+                              jobTitle: job['title'],
+                              isProviderRole: isProvider,
                             ),
                           ),
                         );

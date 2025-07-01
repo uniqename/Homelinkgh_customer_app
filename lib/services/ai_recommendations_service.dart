@@ -514,12 +514,12 @@ class AIRecommendationsService {
           if (provider.completedJobs > 150) score += 0.2;
           break;
         case 'budget_conscious':
-          // Favor providers with good ratings but competitive pricing
-          if (provider.rating >= 4.5 && provider.averageResponseTime < 20) score += 0.3;
+          // Favor providers with good ratings and experience
+          if (provider.rating >= 4.5 && provider.completedJobs > 50) score += 0.3;
           break;
         case 'efficiency_focused':
-          if (provider.averageResponseTime < 15) score += 0.4;
-          if (provider.isAvailable) score += 0.2;
+          if (provider.completedJobs > 100) score += 0.4; // Experience as proxy for efficiency
+          if (provider.isActive) score += 0.2;
           break;
         case 'explorer':
           // Favor diverse providers or newer ones
@@ -528,8 +528,8 @@ class AIRecommendationsService {
           break;
       }
       
-      // Availability bonus
-      if (provider.isAvailable) score += 0.2;
+      // Activity bonus
+      if (provider.isActive) score += 0.2;
       
       scoredProviders.add({
         'provider': provider,
@@ -551,8 +551,8 @@ class AIRecommendationsService {
       reasons.add('Top-rated provider (${provider.rating}⭐)');
     }
     
-    if (provider.averageResponseTime < 15) {
-      reasons.add('Super fast response (${provider.averageResponseTime} min)');
+    if (provider.completedJobs > 100) {
+      reasons.add('Very experienced and efficient');
     }
     
     if (provider.completedJobs > 150) {

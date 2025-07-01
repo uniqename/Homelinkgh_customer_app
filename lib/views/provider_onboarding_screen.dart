@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:homelinkgh_customer/models/location.dart';
 import '../models/provider.dart';
 import '../services/firebase_service.dart';
 import '../services/local_data_service.dart';
@@ -898,21 +898,20 @@ class _ProviderOnboardingScreenState extends State<ProviderOnboardingScreen> {
       final provider = Provider(
         id: 'provider_${DateTime.now().millisecondsSinceEpoch}',
         name: _fullName,
-        services: _selectedServices,
-        rating: 0.0,
-        completedJobs: 0,
-        averageResponseTime: 30,
-        location: const LatLng(5.6037, -0.1870), // Default Accra location
-        isAvailable: false, // Will be set to true after verification
-        profileImageUrl: _profileImagePath ?? '',
-        phoneNumber: _phoneNumber,
         email: _email,
+        phone: _phoneNumber,
+        rating: 0.0,
+        totalRatings: 0,
+        completedJobs: 0,
+        services: _selectedServices,
+        location: const LatLng(5.6037, -0.1870), // Default Accra location
+        address: _address,
         bio: _bio,
-        hourlyRate: _hourlyRate,
-        experience: _experience,
-        languages: _languages,
+        isVerified: false, // Will be set to true after verification
+        isActive: false,
+        profileImageUrl: _profileImagePath ?? '',
         certifications: _certificationPaths,
-        portfolioImages: _portfolioImagePaths,
+        availability: {},
       );
 
       // Try to save to Firebase first, fallback to local if needed

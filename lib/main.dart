@@ -1,26 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'firebase_options.dart';
 import 'views/guest_home.dart';
-import 'views/role_selection.dart';
-import 'services/auth_service.dart';
+import 'services/tracking_service.dart';
+import 'services/supabase_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  print('🚀 Starting HomeLinkGH in production mode...');
+  print('🚀 Starting HomeLinkGH - Production Ready');
+  print('📱 Initializing Supabase backend...');
   
-  // Initialize Firebase for production use
+  // Initialize Supabase
   try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-    print('✅ Firebase initialized successfully');
+    await SupabaseService.initialize();
+    print('✅ Backend service initialized successfully');
   } catch (e) {
-    print('❌ Firebase initialization failed: $e');
-    print('App will run in offline mode');
+    print('⚠️  Backend service initialization failed, using local mode: $e');
   }
+  
+  // Request tracking permission for iOS compliance
+  TrackingService.showTrackingDialogIfNeeded();
   
   runApp(const HomeLinkGHApp());
 }
@@ -50,34 +48,7 @@ class HomeLinkGHApp extends StatelessWidget {
           elevation: 0,
         ),
       ),
-      home: StreamBuilder<User?>(
-        stream: AuthService().authStateChanges,
-        builder: (context, snapshot) {
-          // Show loading while checking auth state
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Scaffold(
-              body: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 16),
-                    Text('Loading HomeLinkGH...'),
-                  ],
-                ),
-              ),
-            );
-          }
-
-          // User is signed in - redirect to role selection or user-specific home
-          if (snapshot.hasData) {
-            return const RoleSelectionScreen();
-          }
-
-          // User is not signed in - show guest home
-          return const GuestHomeScreen();
-        },
-      ),
+      home: const GuestHomeScreen(), // Always show guest home - works without setup
     );
   }
 }

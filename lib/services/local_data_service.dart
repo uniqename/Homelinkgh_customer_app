@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:homelinkgh_customer/models/location.dart';
 import '../models/provider.dart';
 import '../models/service_request.dart';
 import '../models/booking.dart';
@@ -15,71 +15,91 @@ class LocalDataService {
       id: '1',
       name: 'Kwame Asante',
       email: 'kwame.asante@homelink.gh',
-      phoneNumber: '+233 24 123 4567',
+      phone: '+233 24 123 4567',
       rating: 4.8,
+      totalRatings: 50,
       completedJobs: 145,
       services: ['Food Delivery', 'Grocery Shopping'],
       location: const LatLng(5.6037, -0.1870), // East Legon, Accra
-      isAvailable: true,
-      averageResponseTime: 15,
-      profileImageUrl: 'https://via.placeholder.com/150',
+      address: 'East Legon, Accra',
       bio: 'Experienced food delivery specialist in Greater Accra. Fast, reliable service.',
+      isVerified: true,
+      isActive: true,
+      profileImageUrl: 'https://via.placeholder.com/150',
+      certifications: [],
+      availability: {},
     ),
     Provider(
       id: '2', 
       name: 'Ama Serwaa',
       email: 'ama.serwaa@homelink.gh',
-      phoneNumber: '+233 20 987 6543',
+      phone: '+233 20 987 6543',
       rating: 4.9,
+      totalRatings: 75,
       completedJobs: 203,
       services: ['House Cleaning', 'Laundry Service'],
       location: const LatLng(5.5502, -0.2174), // Osu, Accra
-      isAvailable: true,
-      averageResponseTime: 12,
-      profileImageUrl: 'https://via.placeholder.com/150',
+      address: 'Osu, Accra',
       bio: 'Professional house cleaning with eco-friendly products. Trusted by families.',
+      isVerified: true,
+      isActive: true,
+      profileImageUrl: 'https://via.placeholder.com/150',
+      certifications: [],
+      availability: {},
     ),
     Provider(
       id: '3',
       name: 'Kofi Mensah', 
       email: 'kofi.mensah@homelink.gh',
-      phoneNumber: '+233 26 555 7890',
+      phone: '+233 26 555 7890',
       rating: 4.7,
+      totalRatings: 30,
       completedJobs: 89,
       services: ['Food Delivery', 'Transportation'],
       location: const LatLng(5.6205, -0.1731), // Airport Residential, Accra
-      isAvailable: true,
-      averageResponseTime: 8,
-      profileImageUrl: 'https://via.placeholder.com/150',
+      address: 'Airport Residential, Accra',
       bio: 'Quick food delivery and ride services. Available 24/7 in Accra.',
+      isVerified: true,
+      isActive: true,
+      profileImageUrl: 'https://via.placeholder.com/150',
+      certifications: [],
+      availability: {},
     ),
     Provider(
       id: '4',
       name: 'Akosua Boateng',
       email: 'akosua.boateng@homelink.gh',
-      phoneNumber: '+233 23 456 7890',
+      phone: '+233 23 456 7890',
       rating: 4.9,
+      totalRatings: 60,
       completedJobs: 167,
       services: ['Nail Tech', 'Makeup Artist'],
       location: const LatLng(5.5557, -0.1963), // Cantonments, Accra
-      isAvailable: true,
-      averageResponseTime: 20,
-      profileImageUrl: 'https://via.placeholder.com/150',
+      address: 'Cantonments, Accra',
       bio: 'Professional beauty services. Specializing in bridal and event makeup.',
+      isVerified: true,
+      isActive: true,
+      profileImageUrl: 'https://via.placeholder.com/150',
+      certifications: [],
+      availability: {},
     ),
     Provider(
       id: '5',
       name: 'Yaw Opoku',
       email: 'yaw.opoku@homelink.gh',
-      phoneNumber: '+233 27 123 9876',
+      phone: '+233 27 123 9876',
       rating: 4.6,
+      totalRatings: 40,
       completedJobs: 134,
       services: ['Plumbing', 'Electrical Work'],
       location: const LatLng(5.6434, -0.1776), // Dzorwulu, Accra
-      isAvailable: true,
-      averageResponseTime: 25,
-      profileImageUrl: 'https://via.placeholder.com/150',
+      address: 'Dzorwulu, Accra',
       bio: 'Licensed electrician and plumber. Emergency services available.',
+      isVerified: true,
+      isActive: true,
+      profileImageUrl: 'https://via.placeholder.com/150',
+      certifications: [],
+      availability: {},
     ),
   ];
 
@@ -263,12 +283,7 @@ class LocalDataService {
   Stream<List<Provider>> getAvailableProvidersStream() async* {
     while (true) {
       await Future.delayed(const Duration(seconds: 30));
-      // Randomly update provider availability
-      for (var provider in _providers) {
-        if (DateTime.now().millisecond % 10 == 0) {
-          provider.isAvailable = !provider.isAvailable;
-        }
-      }
+      // Just yield the existing providers (they're all active)
       yield List.from(_providers);
     }
   }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:homelinkgh_customer/models/location.dart';
 import '../models/booking.dart';
 import '../services/booking_service.dart';
 import '../services/gps_tracking_service.dart';
@@ -28,13 +28,10 @@ class _BookingTrackingScreenState extends State<BookingTrackingScreen> {
   final GpsTrackingService _trackingService = GpsTrackingService();
   final ChatService _chatService = ChatService();
   
-  GoogleMapController? _mapController;
   Booking? _currentBooking;
   Map<String, dynamic>? _bookingDetails;
   LatLng? _providerLocation;
   LatLng? _serviceLocation;
-  Set<Marker> _markers = {};
-  Set<Polyline> _polylines = {};
   
   int _unreadMessageCount = 0;
 
@@ -48,7 +45,6 @@ class _BookingTrackingScreenState extends State<BookingTrackingScreen> {
 
   @override
   void dispose() {
-    _mapController?.dispose();
     super.dispose();
   }
 
@@ -68,7 +64,6 @@ class _BookingTrackingScreenState extends State<BookingTrackingScreen> {
           locationData['latitude'] as double,
           locationData['longitude'] as double,
         );
-        _updateMarkers();
       }
     }
   }
@@ -80,8 +75,6 @@ class _BookingTrackingScreenState extends State<BookingTrackingScreen> {
           setState(() {
             _providerLocation = LatLng(location.latitude, location.longitude);
           });
-          _updateMarkers();
-          _updatePolylines();
         }
       });
     }
@@ -96,60 +89,6 @@ class _BookingTrackingScreenState extends State<BookingTrackingScreen> {
     }
   }
 
-  void _updateMarkers() {
-    final markers = <Marker>{};
-    
-    // Service location marker
-    if (_serviceLocation != null) {
-      markers.add(
-        Marker(
-          markerId: const MarkerId('service_location'),
-          position: _serviceLocation!,
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-          infoWindow: InfoWindow(
-            title: 'Service Location',
-            snippet: _currentBooking?.address ?? 'Service address',
-          ),
-        ),
-      );
-    }
-    
-    // Provider location marker (if service is in progress)
-    if (_providerLocation != null && _currentBooking?.status == 'in_progress') {
-      markers.add(
-        Marker(
-          markerId: const MarkerId('provider_location'),
-          position: _providerLocation!,
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
-          infoWindow: InfoWindow(
-            title: 'Provider Location',
-            snippet: _bookingDetails?['provider']?['name'] ?? 'Service Provider',
-          ),
-        ),
-      );
-    }
-    
-    setState(() {
-      _markers = markers;
-    });
-  }
-
-  void _updatePolylines() {
-    if (_serviceLocation != null && _providerLocation != null) {
-      final polyline = Polyline(
-        polylineId: const PolylineId('route'),
-        points: [_providerLocation!, _serviceLocation!],
-        color: const Color(0xFF006B3C),
-        width: 3,
-        patterns: [PatternItem.dash(20), PatternItem.gap(10)],
-      );
-      
-      setState(() {
-        _polylines = {polyline};
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -159,7 +98,7 @@ class _BookingTrackingScreenState extends State<BookingTrackingScreen> {
           : Column(
               children: [
                 _buildStatusTimeline(),
-                Expanded(child: _buildMap()),
+                Expanded(child: _buildLocationTracker()),
                 _buildBottomPanel(),
               ],
             ),
@@ -293,36 +232,200 @@ class _BookingTrackingScreenState extends State<BookingTrackingScreen> {
     );
   }
 
-  Widget _buildMap() {
-    if (_serviceLocation == null) {
-      return const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text('Loading map...'),
+  Widget _buildLocationTracker() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          // Location overview card
+          Card(
+            elevation: 4,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  const Icon(
+                    Icons.location_on,
+                    size: 64,
+                    color: Color(0xFF006B3C),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Live Tracking',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _currentBooking?.status == 'in_progress'
+                        ? 'Provider is on the way!'
+                        : 'Service location confirmed',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          
+          // Location details
+          if (_serviceLocation != null) ...[
+            _buildLocationCard(
+              'Service Location',
+              _currentBooking?.address ?? 'Service address',
+              _serviceLocation!,
+              Icons.home,
+              Colors.green,
+            ),
+            const SizedBox(height: 12),
           ],
-        ),
-      );
+          
+          if (_providerLocation != null && _currentBooking?.status == 'in_progress') ...[
+            _buildLocationCard(
+              'Provider Location',
+              _bookingDetails?['provider']?['name'] ?? 'Service Provider',
+              _providerLocation!,
+              Icons.person_pin_circle,
+              Colors.blue,
+            ),
+            const SizedBox(height: 12),
+            _buildDistanceCard(),
+          ],
+          
+          const Spacer(),
+          
+          // Action button
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _openInMapsApp,
+              icon: const Icon(Icons.open_in_new),
+              label: const Text('Open in Maps App'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF006B3C),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLocationCard(String title, String subtitle, LatLng location, IconData icon, Color color) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 28),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: const TextStyle(fontSize: 16),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Lat: ${location.latitude.toStringAsFixed(4)}, Lng: ${location.longitude.toStringAsFixed(4)}',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDistanceCard() {
+    if (_serviceLocation == null || _providerLocation == null) {
+      return const SizedBox.shrink();
     }
 
-    return GoogleMap(
-      initialCameraPosition: CameraPosition(
-        target: _serviceLocation!,
-        zoom: 14,
+    // Simple distance calculation (not accurate for real use)
+    final distance = _calculateSimpleDistance(_providerLocation!, _serviceLocation!);
+    
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF006B3C).withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFF006B3C).withOpacity(0.3)),
       ),
-      markers: _markers,
-      polylines: _polylines,
-      onMapCreated: (controller) {
-        _mapController = controller;
-        _fitMarkersOnMap();
-      },
-      myLocationEnabled: true,
-      myLocationButtonEnabled: true,
-      compassEnabled: true,
-      mapToolbarEnabled: false,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          Column(
+            children: [
+              const Icon(Icons.straighten, color: Color(0xFF006B3C)),
+              const SizedBox(height: 4),
+              Text(
+                '${distance.toStringAsFixed(1)} km',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF006B3C),
+                ),
+              ),
+              const Text('Distance', style: TextStyle(fontSize: 12)),
+            ],
+          ),
+          Column(
+            children: [
+              const Icon(Icons.access_time, color: Color(0xFF006B3C)),
+              const SizedBox(height: 4),
+              Text(
+                '~${(distance * 3).round()} min',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF006B3C),
+                ),
+              ),
+              const Text('ETA', style: TextStyle(fontSize: 12)),
+            ],
+          ),
+        ],
+      ),
     );
+  }
+
+  double _calculateSimpleDistance(LatLng point1, LatLng point2) {
+    // Simple Euclidean distance (not accurate for real GPS coordinates)
+    final latDiff = point1.latitude - point2.latitude;
+    final lngDiff = point1.longitude - point2.longitude;
+    return (latDiff * latDiff + lngDiff * lngDiff) * 111; // Rough km conversion
   }
 
   Widget _buildBottomPanel() {
@@ -563,30 +666,15 @@ class _BookingTrackingScreenState extends State<BookingTrackingScreen> {
     );
   }
 
-  void _fitMarkersOnMap() {
-    if (_mapController == null || _markers.isEmpty) return;
-
-    final bounds = _calculateBounds();
-    if (bounds != null) {
-      _mapController!.animateCamera(
-        CameraUpdate.newLatLngBounds(bounds, 100),
+  void _openInMapsApp() {
+    if (_serviceLocation != null) {
+      // TODO: Implement opening in external maps app
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Opening maps app with location: ${_serviceLocation!.latitude}, ${_serviceLocation!.longitude}'),
+        ),
       );
     }
-  }
-
-  LatLngBounds? _calculateBounds() {
-    if (_markers.isEmpty) return null;
-
-    final latitudes = _markers.map((m) => m.position.latitude).toList();
-    final longitudes = _markers.map((m) => m.position.longitude).toList();
-
-    latitudes.sort();
-    longitudes.sort();
-
-    return LatLngBounds(
-      southwest: LatLng(latitudes.first, longitudes.first),
-      northeast: LatLng(latitudes.last, longitudes.last),
-    );
   }
 
   void _refreshData() {

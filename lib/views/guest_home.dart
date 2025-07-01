@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import '../services/real_firebase_service.dart';
+import '../services/standalone_service.dart';
 import '../models/provider.dart';
-import 'simple_login.dart';
+import 'auth_screen.dart';
 import 'role_selection.dart';
 import 'food_delivery_screen.dart';
-import 'service_booking.dart';
+import 'smart_service_booking.dart';
 
 /// Real guest home screen without demo data
 class GuestHomeScreen extends StatefulWidget {
@@ -15,7 +15,7 @@ class GuestHomeScreen extends StatefulWidget {
 }
 
 class _GuestHomeScreenState extends State<GuestHomeScreen> {
-  RealFirebaseService? _firebaseService;
+  final StandaloneService _service = StandaloneService();
   List<Provider> _featuredProviders = [];
   List<Map<String, dynamic>> _serviceCategories = [];
   bool _isLoading = true;
@@ -28,59 +28,29 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
 
   Future<void> _loadData() async {
     try {
-      // Initialize real Firebase service for production use
-      _firebaseService = RealFirebaseService();
+      // Load service categories from standalone service
+      final categories = await _service.getServiceCategories();
       
-      // Load real service categories from Firebase
-      final categories = await _firebaseService!.getServiceCategories();
+      setState(() {
+        _serviceCategories = categories;
+        _isLoading = false;
+      });
       
-      if (categories.isNotEmpty) {
-        setState(() {
-          _serviceCategories = categories;
-          _isLoading = false;
-        });
-        
-        print('✅ Loaded ${categories.length} service categories from Firebase');
-      } else {
-        print('⚠️ No service categories found, loading default structure');
-        _loadDemoData();
-      }
+      print('✅ Loaded ${categories.length} service categories');
 
       // Load featured providers in the background
-      _firebaseService!.getAllProvidersStream().listen((providers) {
+      _service.getAllProvidersStream().listen((providers) {
         if (mounted) {
           setState(() {
             _featuredProviders = providers.take(6).toList();
           });
-          print('✅ Loaded ${providers.length} providers from Firebase');
+          print('✅ Loaded ${providers.length} providers');
         }
       });
     } catch (e) {
-      print('❌ Firebase service failed: $e');
-      print('🔄 Using fallback service structure');
-      _loadDemoData();
+      print('❌ Service failed: $e');
+      setState(() => _isLoading = false);
     }
-  }
-
-  void _loadDemoData() {
-    // Only basic service structure when Firebase is unavailable
-    setState(() {
-      _serviceCategories = [
-        {
-          'name': 'Home Services',
-          'icon': '🏠',
-          'description': 'Connect to Firebase for full service catalog',
-          'providers': 0,
-        },
-        {
-          'name': 'Setup Required',
-          'icon': '⚙️',
-          'description': 'Configure Firebase to access real services',
-          'providers': 0,
-        },
-      ];
-      _isLoading = false;
-    });
   }
 
   @override
@@ -95,7 +65,7 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
               _buildWelcomeSection(),
               _buildQuickActions(),
               _buildServiceCategories(),
-              _buildFeaturedProviders(),
+              _buildProvidersComingSoon(),
               _buildFooter(),
             ],
           ),
@@ -156,7 +126,7 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const SimpleLoginScreen(userType: 'customer')),
+                MaterialPageRoute(builder: (context) => const AuthScreen(userType: 'customer')),
               );
             },
             child: const Text(
@@ -231,7 +201,7 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const SimpleLoginScreen(userType: 'customer')),
+                  MaterialPageRoute(builder: (context) => const AuthScreen(userType: 'customer')),
                 );
               },
               icon: const Icon(Icons.login),
@@ -357,13 +327,13 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
         MaterialPageRoute(builder: (context) => const FoodDeliveryScreen()),
       );
     } else {
-      // Get service details for the booking screen
+      // Get service details for the smart booking screen
       IconData serviceIcon = Icons.home_repair_service;
       Color serviceColor = const Color(0xFF006B3C);
       
       // Customize icon and color based on service
       switch (serviceName.toLowerCase()) {
-        case 'home cleaning':
+        case 'house cleaning':
           serviceIcon = Icons.cleaning_services;
           serviceColor = const Color(0xFF2196F3);
           break;
@@ -375,9 +345,13 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
           serviceIcon = Icons.face_retouching_natural;
           serviceColor = const Color(0xFFE91E63);
           break;
-        case 'repairs & maintenance':
+        case 'plumbing':
           serviceIcon = Icons.build;
           serviceColor = const Color(0xFFFF9800);
+          break;
+        case 'electrical':
+          serviceIcon = Icons.electrical_services;
+          serviceColor = const Color(0xFFFFC107);
           break;
         case 'personal care':
           serviceIcon = Icons.spa;
@@ -388,7 +362,7 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => ServiceBookingScreen(
+          builder: (context) => SmartServiceBookingScreen(
             serviceName: serviceName,
             serviceIcon: serviceIcon,
             serviceColor: serviceColor,
@@ -398,16 +372,14 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
     }
   }
 
-  Widget _buildFeaturedProviders() {
-    if (_featuredProviders.isEmpty) return const SizedBox.shrink();
-
+  Widget _buildProvidersComingSoon() {
     return Container(
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Featured Providers',
+            'Service Providers',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -415,15 +387,40 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          SizedBox(
-            height: 120,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: _featuredProviders.length,
-              itemBuilder: (context, index) {
-                final provider = _featuredProviders[index];
-                return _buildProviderCard(provider);
-              },
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.blue.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
+            ),
+            child: const Column(
+              children: [
+                Icon(
+                  Icons.people,
+                  size: 48,
+                  color: Colors.blue,
+                ),
+                SizedBox(height: 12),
+                Text(
+                  'Service Providers Coming Soon!',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'We are currently onboarding trusted service providers across Ghana. Sign up to be notified when services become available in your area.',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.blue,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ),
           ),
         ],
