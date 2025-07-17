@@ -84,3 +84,18 @@ key.properties
 android/key.properties
 android/*.jks
 android/*.keystore
+
+# App Store Assets and Documentation
+app_store_assets/
+docs/app_store*
+docs/google_play*
+docs/submission*
+store_assets/
+*store_assets*/
+*_store_assets/
+screenshots/
+*screenshots*/
+*_screenshots/
+metadata/
+*metadata*/
+*_metadata/

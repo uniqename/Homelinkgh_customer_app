@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HomeLinkGH - Staging Environment</title>
+  <link rel="icon" type="image/png" href="/favicon.png"/>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+  <meta name="theme-color" content="#FF6B35">
+  <meta name="description" content="HomeLinkGH Staging - Test environment for Ghana's smartest service platform">
+  
+  <!-- Staging Environment Styles -->
+  <style>
+    .staging-banner {
+      background: linear-gradient(45deg, #ff6b35, #f7931e);
+      color: white;
+      padding: 10px;
+      text-align: center;
+      font-weight: bold;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 9999;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .staging-banner .environment-label {
+      background: rgba(255,255,255,0.2);
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-right: 10px;
+      font-size: 12px;
+    }
+    
+    body {
+      margin: 0;
+      padding-top: 50px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    .app-container {
+      margin-top: 10px;
+    }
+    
+    .loading-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 80vh;
+      flex-direction: column;
+    }
+    
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #FF6B35;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .test-info {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px;
+      font-size: 14px;
+    }
+    
+    .test-credentials {
+      background: #e7f3ff;
+      border: 1px solid #bee5eb;
+      border-radius: 6px;
+      padding: 15px;
+      margin: 10px 0;
+    }
+    
+    .test-credentials h4 {
+      margin: 0 0 10px 0;
+      color: #0056b3;
+    }
+    
+    .credential-item {
+      margin: 5px 0;
+      font-family: monospace;
+      background: white;
+      padding: 8px;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+    }
+  </style>
+</head>
+<body>
+  <!-- Staging Environment Banner -->
+  <div class="staging-banner">
+    <span class="environment-label">STAGING</span>
+    HomeLinkGH Testing Environment - Not for Production Use
+  </div>
+
+  <!-- Test Information Panel -->
+  <div class="test-info">
+    <h3>🧪 HomeLinkGH Staging Environment</h3>
+    <p>This is a testing environment for HomeLinkGH features. Use the credentials below to test the application.</p>
+    
+    <div class="test-credentials">
+      <h4>Test Customer Account</h4>
+      <div class="credential-item">Email: test.customer@homelinkgh.com</div>
+      <div class="credential-item">Password: TestPass123!</div>
+    </div>
+    
+    <div class="test-credentials">
+      <h4>Test Provider Account</h4>
+      <div class="credential-item">Email: test.provider@homelinkgh.com</div>
+      <div class="credential-item">Password: TestPass123!</div>
+    </div>
+    
+    <div class="test-credentials">
+      <h4>Available Test Services</h4>
+      <div class="credential-item">• Cleaning Services (GHS 50-200)</div>
+      <div class="credential-item">• Plumbing & Repairs (GHS 100-500)</div>
+      <div class="credential-item">• Food Delivery (GHS 20-100)</div>
+    </div>
+    
+    <div class="test-credentials">
+      <h4>Test Features</h4>
+      <div class="credential-item">✅ User Authentication</div>
+      <div class="credential-item">✅ Provider Search & Booking</div>
+      <div class="credential-item">✅ Real-time Notifications</div>
+      <div class="credential-item">✅ Chat/Messaging</div>
+      <div class="credential-item">✅ Payment Integration (Test Mode)</div>
+    </div>
+  </div>
+
+  <!-- Flutter App Container -->
+  <div class="app-container">
+    <div id="loading" class="loading-container">
+      <div class="spinner"></div>
+      <p>Loading HomeLinkGH Staging App...</p>
+    </div>
+  </div>
+
+  <!-- Flutter Web Scripts -->
+  <script src="flutter_bootstrap.js" async></script>
+  <script>
+    // Staging environment configuration
+    window.stagingConfig = {
+      environment: 'staging',
+      apiUrl: 'https://homelinkgh-staging.supabase.co',
+      enableDebug: true,
+      testMode: true,
+      features: {
+        authentication: true,
+        realTimeUpdates: true,
+        notifications: true,
+        fileStorage: true,
+        payments: 'test'
+      },
+      testUsers: [
+        {
+          email: 'test.customer@homelinkgh.com',
+          password: 'TestPass123!',
+          role: 'customer'
+        },
+        {
+          email: 'test.provider@homelinkgh.com',
+          password: 'TestPass123!',
+          role: 'provider'
+        }
+      ]
+    };
+    
+    // Hide loading indicator when app loads
+    window.addEventListener('flutter-first-frame', function() {
+      document.getElementById('loading').style.display = 'none';
+    });
+    
+    // Console logging for debugging
+    console.log('HomeLinkGH Staging Environment Loaded');
+    console.log('Available test credentials:', window.stagingConfig.testUsers);
+  </script>
+</body>
+</html>
