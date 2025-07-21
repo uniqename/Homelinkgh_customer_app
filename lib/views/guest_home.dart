@@ -29,10 +29,8 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
   }
 
   Future<void> _initializeTracking() async {
-    // Initialize App Tracking Transparency after the widget is built
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      AppTrackingService.initializeTracking(context);
-    });
+    // Initialize App Tracking Transparency
+    AppTrackingService.initializeTracking();
   }
 
   Future<void> _loadData() async {

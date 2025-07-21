@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../services/auth_service.dart';
+import '../data_privacy.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -121,6 +122,11 @@ class ProfileScreen extends StatelessWidget {
                     // Support Section
                     _buildSupportSection(context),
                     
+                    const SizedBox(height: 24),
+                    
+                    // Account Management Section
+                    _buildAccountManagementSection(context, isAnonymous),
+                    
                     const SizedBox(height: 32),
                     
                     // App Info
@@ -179,10 +185,13 @@ class ProfileScreen extends StatelessWidget {
               context,
               icon: Icons.security,
               title: 'Privacy & Security',
-              subtitle: 'Control your privacy settings',
+              subtitle: 'Export data, manage privacy & delete account',
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Privacy settings coming soon')),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const DataPrivacyScreen(),
+                  ),
                 );
               },
             ),
@@ -336,6 +345,59 @@ class ProfileScreen extends StatelessWidget {
                 color: Colors.grey[600],
               ),
               textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildAccountManagementSection(BuildContext context, bool isAnonymous) {
+    if (isAnonymous) {
+      return const SizedBox.shrink(); // Don't show for anonymous users
+    }
+    
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Account Management',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildSettingsItem(
+              context,
+              icon: Icons.download_outlined,
+              title: 'Export My Data',
+              subtitle: 'Download a copy of your personal data',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const DataPrivacyScreen(),
+                  ),
+                );
+              },
+            ),
+            const Divider(),
+            _buildSettingsItem(
+              context,
+              icon: Icons.delete_forever_outlined,
+              title: 'Delete Account',
+              subtitle: 'Permanently delete your account and data',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const DataPrivacyScreen(),
+                  ),
+                );
+              },
             ),
           ],
         ),

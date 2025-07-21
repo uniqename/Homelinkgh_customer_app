@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:app_tracking_transparency/app_tracking_transparency.dart';
-import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// App Tracking Transparency Service for HomeLinkGH
@@ -86,114 +85,48 @@ class AppTrackingService {
     }
   }
 
-  /// Show tracking permission dialog with context
-  static Future<bool> showTrackingDialog(BuildContext context) async {
+  /// Request tracking permission using Apple's ATT framework only
+  /// No custom dialog is shown - only the system ATT prompt
+  static Future<bool> requestTrackingIfNeeded() async {
     if (!Platform.isIOS) {
       return true;
     }
 
-    // Check if already requested
-    final hasRequested = await hasRequestedTracking();
-    final isAuthorized = await isTrackingAuthorized();
+    try {
+      // Check current status
+      final status = await AppTrackingTransparency.trackingAuthorizationStatus;
+      
+      if (status == TrackingStatus.authorized) {
+        await _saveTrackingPreference(true);
+        return true;
+      }
+      
+      if (status == TrackingStatus.denied || status == TrackingStatus.restricted) {
+        await _saveTrackingPreference(false);
+        return false;
+      }
 
-    if (hasRequested && !isAuthorized) {
-      // Already denied, don't show again
+      // Only request if not determined - this will show Apple's system dialog
+      if (status == TrackingStatus.notDetermined) {
+        final TrackingStatus newStatus = await AppTrackingTransparency.requestTrackingAuthorization();
+        
+        final authorized = newStatus == TrackingStatus.authorized;
+        await _saveTrackingPreference(authorized);
+        await _markTrackingRequested();
+        
+        return authorized;
+      }
+
+      return false;
+    } catch (e) {
+      print('Error requesting tracking permission: $e');
+      await _saveTrackingPreference(false);
       return false;
     }
-
-    if (isAuthorized) {
-      return true;
-    }
-
-    // Show explanatory dialog first
-    final shouldRequest = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Row(
-            children: [
-              Icon(Icons.privacy_tip, color: Colors.green),
-              SizedBox(width: 8),
-              Text('Privacy & Personalization'),
-            ],
-          ),
-          content: const Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'To provide you with the best experience, HomeLinkGH would like to:',
-                style: TextStyle(fontWeight: FontWeight.w500),
-              ),
-              SizedBox(height: 12),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.location_on, size: 16, color: Colors.green),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: Text('Show nearby service providers'),
-                  ),
-                ],
-              ),
-              SizedBox(height: 8),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.person, size: 16, color: Colors.green),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: Text('Personalize service recommendations'),
-                  ),
-                ],
-              ),
-              SizedBox(height: 8),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.security, size: 16, color: Colors.green),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: Text('Improve app security and performance'),
-                  ),
-                ],
-              ),
-              SizedBox(height: 16),
-              Text(
-                'Your privacy is important to us. You can change this setting anytime in your device Settings.',
-                style: TextStyle(fontSize: 12, color: Colors.grey),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Not Now'),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Allow'),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (shouldRequest == true) {
-      return await requestTrackingPermission();
-    }
-
-    await _markTrackingRequested();
-    return false;
   }
 
   /// Initialize tracking service on app start
-  static Future<void> initializeTracking(BuildContext context) async {
+  static Future<void> initializeTracking() async {
     if (!Platform.isIOS) {
       return;
     }
@@ -205,8 +138,8 @@ class AppTrackingService {
       final status = await getTrackingStatus();
       
       if (status == TrackingStatus.notDetermined) {
-        // Only show dialog if not determined
-        await showTrackingDialog(context);
+        // Request tracking using Apple's ATT framework only
+        await requestTrackingIfNeeded();
       } else if (status == TrackingStatus.authorized) {
         await _saveTrackingPreference(true);
       } else {

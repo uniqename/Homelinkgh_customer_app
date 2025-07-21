@@ -381,18 +381,34 @@ class _EnhancedFoodDeliveryScreenState extends State<EnhancedFoodDeliveryScreen>
                   Container(
                     height: 200,
                     decoration: BoxDecoration(
-                      color: Colors.grey[200],
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.map, size: 50, color: Colors.grey),
-                          SizedBox(height: 8),
-                          Text('Google Maps Integration'),
-                          Text('Restaurant location preview'),
-                        ],
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: GoogleMap(
+                        initialCameraPosition: CameraPosition(
+                          target: LatLng(
+                            selectedRestaurant['coordinates']['lat'],
+                            selectedRestaurant['coordinates']['lng'],
+                          ),
+                          zoom: 15,
+                        ),
+                        markers: {
+                          Marker(
+                            markerId: MarkerId(selectedRestaurant['name']),
+                            position: LatLng(
+                              selectedRestaurant['coordinates']['lat'],
+                              selectedRestaurant['coordinates']['lng'],
+                            ),
+                            infoWindow: InfoWindow(
+                              title: selectedRestaurant['name'],
+                              snippet: selectedRestaurant['location'],
+                            ),
+                          ),
+                        },
+                        myLocationButtonEnabled: false,
+                        zoomControlsEnabled: false,
+                        mapToolbarEnabled: false,
                       ),
                     ),
                   ),
