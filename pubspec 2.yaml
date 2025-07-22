@@ -44,6 +44,8 @@ dependencies:
   google_maps_flutter: ^2.5.0
   app_tracking_transparency: ^2.0.6+1
   # Additional packages for advanced features
+  firebase_messaging: ^14.7.10
+  flutter_local_notifications: ^16.3.2
   path_provider: ^2.1.2
   dio: ^5.4.0
 

@@ -12,7 +12,9 @@ class PricingApiService {
   void initialize() {
     _dio = Dio(BaseOptions(
       baseUrl: baseUrl,
-      timeout: const Duration(seconds: 10),
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 10),
+      sendTimeout: const Duration(seconds: 10),
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'views/guest_home.dart';
-import 'services/app_tracking_service.dart';
 import 'services/supabase_service.dart';
 import 'services/notification_service.dart';
 import 'services/pricing_api_service.dart';
