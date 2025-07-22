@@ -42,6 +42,40 @@ class _ProviderDashboardState extends State<ProviderDashboard> {
               );
             },
           ),
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              switch (value) {
+                case 'switch':
+                  _switchToCustomer();
+                  break;
+                case 'signout':
+                  _signOut();
+                  break;
+              }
+            },
+            itemBuilder: (BuildContext context) => [
+              const PopupMenuItem<String>(
+                value: 'switch',
+                child: Row(
+                  children: [
+                    Icon(Icons.swap_horiz, color: Color(0xFF006B3C)),
+                    SizedBox(width: 8),
+                    Text('Switch to Customer'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem<String>(
+                value: 'signout',
+                child: Row(
+                  children: [
+                    Icon(Icons.logout, color: Colors.orange),
+                    SizedBox(width: 8),
+                    Text('Sign Out'),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ],
       ),
       body: _getSelectedWidget(),
@@ -336,6 +370,70 @@ class _ProviderDashboardState extends State<ProviderDashboard> {
             ),
           ),
           Expanded(child: Text(value)),
+        ],
+      ),
+    );
+  }
+
+  void _switchToCustomer() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Switch to Customer'),
+        content: const Text('Do you want to switch to customer mode? You can switch back to provider mode anytime from your profile.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              // Navigate to customer dashboard
+              Navigator.pushReplacementNamed(context, '/customer-dashboard');
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF006B3C),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Switch'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _signOut() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Sign Out'),
+        content: const Text('Are you sure you want to sign out of your HomeLinkGH provider account?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              // Clear any stored authentication data here
+              // Navigate to login screen
+              Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+              
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Successfully signed out'),
+                  backgroundColor: Color(0xFF006B3C),
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Sign Out'),
+          ),
         ],
       ),
     );

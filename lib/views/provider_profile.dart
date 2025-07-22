@@ -421,6 +421,27 @@ class _ProviderProfileState extends State<ProviderProfile> {
               trailing: const Icon(Icons.arrow_forward_ios),
               onTap: _showHelpSupport,
             ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.swap_horiz, color: Color(0xFF006B3C)),
+              title: const Text('Switch to Customer'),
+              subtitle: const Text('Access customer services'),
+              trailing: const Icon(Icons.arrow_forward_ios),
+              onTap: _switchToCustomer,
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete_outline, color: Colors.red),
+              title: const Text('Delete Account'),
+              subtitle: const Text('Permanently delete your account'),
+              trailing: const Icon(Icons.arrow_forward_ios),
+              onTap: _showDeleteAccountOptions,
+            ),
+            ListTile(
+              leading: const Icon(Icons.logout, color: Colors.orange),
+              title: const Text('Sign Out'),
+              subtitle: const Text('Sign out of your account'),
+              onTap: _signOut,
+            ),
           ],
         ),
       ),
@@ -495,6 +516,267 @@ class _ProviderProfileState extends State<ProviderProfile> {
       const SnackBar(
         content: Text('Help & support would open here'),
         backgroundColor: Color(0xFF006B3C),
+      ),
+    );
+  }
+
+  void _switchToCustomer() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Switch to Customer'),
+        content: const Text('Do you want to switch to customer mode? You can switch back to provider mode anytime.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              // Navigate to customer dashboard
+              Navigator.pushReplacementNamed(context, '/customer-dashboard');
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF006B3C),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Switch'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteAccountOptions() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Account'),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Choose what you want to delete:'),
+            SizedBox(height: 16),
+            Text('⚠️ Warning: These actions cannot be undone!', 
+                 style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _confirmDeleteData();
+            },
+            child: const Text('Delete Data Only', style: TextStyle(color: Colors.orange)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _confirmDeleteAccount();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Delete Account'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDeleteData() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Personal Data'),
+        content: const Text(
+          'This will delete your personal data, job history, and earnings data while keeping your account active. You can continue providing services but will lose all historical information.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _performDataDeletion();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Delete Data'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDeleteAccount() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Account Permanently'),
+        content: const Text(
+          'This will permanently delete your account, all data, job history, and earnings. You will not be able to recover this information or provide services on HomeLinkGH.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _performAccountDeletion();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Delete Account'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _performDataDeletion() {
+    // Simulate data deletion process
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Deleting your personal data...'),
+          ],
+        ),
+      ),
+    );
+
+    // Simulate API call delay
+    Future.delayed(const Duration(seconds: 2), () {
+      Navigator.pop(context); // Remove loading dialog
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Data Deleted'),
+          content: const Text('Your personal data has been successfully deleted. Your account remains active for providing services.'),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                // Refresh profile data
+                setState(() {
+                  _nameController.text = 'Provider';
+                  _emailController.text = '';
+                  _phoneController.text = '';
+                  _addressController.text = '';
+                  _bioController.text = '';
+                  _completedJobs = 0;
+                  _rating = 0.0;
+                });
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF006B3C),
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
+  void _performAccountDeletion() {
+    // Simulate account deletion process
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Deleting your account...'),
+          ],
+        ),
+      ),
+    );
+
+    // Simulate API call delay
+    Future.delayed(const Duration(seconds: 2), () {
+      Navigator.pop(context); // Remove loading dialog
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Account Deleted'),
+          content: const Text('Your account has been permanently deleted. Thank you for using HomeLinkGH.'),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                // Navigate to login/welcome screen
+                Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF006B3C),
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
+  void _signOut() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Sign Out'),
+        content: const Text('Are you sure you want to sign out of your account?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              // Clear any stored authentication data here
+              // Navigate to login screen
+              Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+              
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Successfully signed out'),
+                  backgroundColor: Color(0xFF006B3C),
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Sign Out'),
+          ),
+        ],
       ),
     );
   }

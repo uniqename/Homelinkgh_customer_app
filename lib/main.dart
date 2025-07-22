@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'views/guest_home.dart';
 import 'services/app_tracking_service.dart';
 import 'services/supabase_service.dart';
+import 'services/notification_service.dart';
+import 'services/pricing_api_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  print('🚀 Starting HomeLinkGH - Production Ready');
-  print('📱 Initializing Supabase backend...');
+  print('🚀 Starting HomeLinkGH - Production Ready v4.1.0');
+  print('📱 Initializing advanced services...');
   
   // Initialize Supabase
   try {
@@ -15,6 +17,20 @@ void main() async {
     print('✅ Backend service initialized successfully');
   } catch (e) {
     print('⚠️  Backend service initialization failed, using local mode: $e');
+  }
+  
+  // Initialize advanced services
+  try {
+    // Initialize notifications
+    await NotificationService().initializePushNotifications();
+    print('✅ Push notifications initialized');
+    
+    // Initialize pricing API
+    PricingApiService().initialize();
+    print('✅ Pricing API service initialized');
+    
+  } catch (e) {
+    print('⚠️  Advanced services initialization warning: $e');
   }
   
   runApp(const HomeLinkGHApp());

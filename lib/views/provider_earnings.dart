@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'provider_payment_screen.dart';
 
 class ProviderEarningsScreen extends StatefulWidget {
   const ProviderEarningsScreen({super.key});
@@ -696,131 +697,14 @@ class _ProviderEarningsScreenState extends State<ProviderEarningsScreen> with Si
   }
 
   void _showCashOutOptions() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.6,
-        maxChildSize: 0.8,
-        minChildSize: 0.4,
-        builder: (context, scrollController) => Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(20),
-              topRight: Radius.circular(20),
-            ),
-          ),
-          child: Column(
-            children: [
-              Container(
-                height: 4,
-                width: 40,
-                margin: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const Padding(
-                padding: EdgeInsets.all(20),
-                child: Text(
-                  'Cash Out Options',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              Expanded(
-                child: ListView(
-                  controller: scrollController,
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  children: [
-                    _buildCashOutOption(
-                      'Mobile Money',
-                      'MTN, Vodafone, AirtelTigo',
-                      Icons.phone_android,
-                      '₵5 fee • Instant',
-                    ),
-                    const SizedBox(height: 12),
-                    _buildCashOutOption(
-                      'Bank Transfer',
-                      'All Ghana banks supported',
-                      Icons.account_balance,
-                      '₵2 fee • 1-2 business days',
-                    ),
-                    const SizedBox(height: 12),
-                    _buildCashOutOption(
-                      'Diaspora Transfer',
-                      'International bank transfer',
-                      Icons.send,
-                      '₵15 fee • 3-5 business days',
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const ProviderPaymentScreen(),
       ),
     );
   }
 
-  Widget _buildCashOutOption(String title, String subtitle, IconData icon, String fee) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey[300]!),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              color: const Color(0xFF006B3C).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(25),
-            ),
-            child: Icon(icon, color: const Color(0xFF006B3C)),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey,
-                  ),
-                ),
-                Text(
-                  fee,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF006B3C),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Icon(Icons.arrow_forward_ios, color: Colors.grey),
-        ],
-      ),
-    );
-  }
 
   void _showEarningsBreakdown() {
     showDialog(

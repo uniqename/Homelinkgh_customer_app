@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'contact_customer_screen.dart';
 
 class ProviderCalendar extends StatefulWidget {
   const ProviderCalendar({super.key});
@@ -166,9 +167,12 @@ class _ProviderCalendarState extends State<ProviderCalendar> {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Contact customer feature coming soon!'),
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ContactCustomerScreen(
+                    customerData: appointment,
+                  ),
                 ),
               );
             },

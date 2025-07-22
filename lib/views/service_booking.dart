@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import '../constants/service_types.dart';
+import '../services/pricing_api_service.dart';
+import '../services/notification_service.dart';
 
 class ServiceBookingScreen extends StatefulWidget {
   final String serviceName;
@@ -33,6 +38,7 @@ class _ServiceBookingScreenState extends State<ServiceBookingScreen> {
   String? selectedPaymentMethod = 'Mobile Money';
   bool isRecurring = false;
   String? recurringFrequency;
+  Map<String, dynamic> dynamicFieldValues = {};
 
   final List<Map<String, dynamic>> _availableProviders = [
     {
@@ -184,7 +190,7 @@ class _ServiceBookingScreenState extends State<ServiceBookingScreen> {
                         ),
                       ),
                       Text(
-                        _getServiceDescription(),
+                        ServiceTypes.getDetailedServiceDescription(widget.serviceName),
                         style: TextStyle(
                           color: Colors.grey[600],
                         ),
@@ -257,6 +263,98 @@ class _ServiceBookingScreenState extends State<ServiceBookingScreen> {
             maxLines: 2,
           ),
           const SizedBox(height: 16),
+          
+          // General Framework Questions
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.blue.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.blue.withValues(alpha: 0.2)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Text('📋', style: TextStyle(fontSize: 20)),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'General Service Information',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                ...ServiceTypes.getGeneralFields().map((field) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: _buildDynamicField(field),
+                  );
+                }),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 16),
+          
+          // Service-specific questions
+          if (ServiceTypes.getServiceSpecificFields(widget.serviceName).isNotEmpty) ...[
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.green.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.green.withValues(alpha: 0.2)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Text('🇬🇭', style: TextStyle(fontSize: 20)),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${widget.serviceName} Specific Details',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  ...ServiceTypes.getServiceSpecificFields(widget.serviceName).map((field) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: _buildDynamicField(field),
+                    );
+                  }),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+          
+          // Estimated Pricing Button
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.symmetric(vertical: 16),
+            child: OutlinedButton.icon(
+              onPressed: () => _showEstimatedPricing(),
+              icon: const Icon(Icons.calculate, color: Color(0xFF006B3C)),
+              label: const Text('Get Estimated Quote'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFF006B3C),
+                side: const BorderSide(color: Color(0xFF006B3C)),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+          ),
+          
           if (_shouldShowRecurringOption()) ...[
             CheckboxListTile(
               title: const Text('Recurring Service'),
@@ -641,7 +739,30 @@ class _ServiceBookingScreenState extends State<ServiceBookingScreen> {
   bool _validateCurrentStep() {
     switch (_currentStep) {
       case 0:
-        return _formKey.currentState?.validate() ?? false;
+        // Validate form fields
+        final isFormValid = _formKey.currentState?.validate() ?? false;
+        if (!isFormValid) return false;
+        
+        // Validate all dynamic fields (general + service-specific)
+        final allFields = ServiceTypes.getAllFieldsForService(widget.serviceName);
+        for (final field in allFields) {
+          final isRequired = field['required'] ?? false;
+          if (isRequired) {
+            final fieldName = field['name'];
+            final value = dynamicFieldValues[fieldName];
+            
+            if (value == null || 
+                (value is String && value.isEmpty) ||
+                (value is List && value.isEmpty) ||
+                (value is int && value == 0)) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Please fill in ${field['label']}')),
+              );
+              return false;
+            }
+          }
+        }
+        return true;
       case 1:
         if (selectedProvider == null) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -668,47 +789,29 @@ class _ServiceBookingScreenState extends State<ServiceBookingScreen> {
       _currentStep = 3;
     });
     
+    // Generate request ID
+    final requestId = 'REQ${DateTime.now().millisecondsSinceEpoch}';
+    
+    // Send notification to providers about new quote request
+    final location = dynamicFieldValues['jobLocation'] ?? _addressController.text;
+    final urgency = dynamicFieldValues['urgency'] ?? 'Scheduled (within 3 days)';
+    
+    NotificationService().sendNewQuoteRequestNotification(
+      requestId: requestId,
+      serviceName: widget.serviceName,
+      customerLocation: location,
+      urgency: urgency,
+    );
+    
     // Here you would typically send the booking data to your backend
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Booking submitted successfully!'),
+        content: Text('Booking submitted successfully! Providers will be notified.'),
         backgroundColor: Colors.green,
       ),
     );
   }
 
-  String _getServiceDescription() {
-    switch (widget.serviceName) {
-      case 'Food Delivery':
-        return 'Restaurant delivery, groceries, and more';
-      case 'Grocery':
-        return 'Fresh groceries delivered to your door';
-      case 'Cleaning':
-        return 'House cleaning and maintenance services';
-      case 'Laundry':
-        return 'Pickup, wash, dry, and delivery service';
-      case 'Nail Tech / Makeup':
-        return 'Beauty services at your location';
-      case 'Plumbing':
-        return 'Pipes, fixtures, and water system repairs';
-      case 'Electrical':
-        return 'Wiring, outlets, and electrical installations';
-      case 'HVAC':
-        return 'Heating, ventilation, and air conditioning';
-      case 'Painting':
-        return 'Interior and exterior painting services';
-      case 'Carpentry':
-        return 'Custom woodwork and furniture repair';
-      case 'Landscaping':
-        return 'Garden design, lawn care, and outdoor spaces';
-      case 'Babysitting':
-        return 'Trusted childcare services';
-      case 'Adult Sitter':
-        return 'Elderly care and companion services';
-      default:
-        return 'Professional service at your convenience';
-    }
-  }
 
   bool _shouldShowRecurringOption() {
     const recurringServices = [
@@ -740,10 +843,866 @@ class _ServiceBookingScreenState extends State<ServiceBookingScreen> {
     if (daysUntilService >= 2) {
       return '✅ Free cancellation available until 48 hours before your scheduled service time. You can cancel or reschedule without any charges.';
     } else if (hoursUntilService >= 48) {
-      return '✅ Free cancellation available until 48 hours before your scheduled service time. You have ${hoursUntilService} hours remaining for free cancellation.';
+      return '✅ Free cancellation available until 48 hours before your scheduled service time. You have $hoursUntilService hours remaining for free cancellation.';
     } else {
       return '⚠️ Cancellation not available: Less than 48 hours until service. Cancellations within 48 hours may incur charges. Please contact support for assistance.';
     }
+  }
+
+  Widget _buildDynamicField(Map<String, dynamic> field) {
+    final String fieldName = field['name'];
+    final String label = field['label'];
+    final String type = field['type'];
+    final bool isRequired = field['required'] ?? false;
+    
+    switch (type) {
+      case 'text':
+      case 'textarea':
+        return TextFormField(
+          decoration: InputDecoration(
+            labelText: '$label${isRequired ? ' *' : ''}',
+            border: const OutlineInputBorder(),
+          ),
+          maxLines: type == 'textarea' ? 3 : 1,
+          onChanged: (value) {
+            setState(() {
+              dynamicFieldValues[fieldName] = value;
+            });
+          },
+          validator: isRequired ? (value) {
+            if (value == null || value.isEmpty) {
+              return 'Please enter $label';
+            }
+            return null;
+          } : null,
+        );
+        
+      case 'number':
+        return TextFormField(
+          decoration: InputDecoration(
+            labelText: '$label${isRequired ? ' *' : ''}',
+            border: const OutlineInputBorder(),
+          ),
+          keyboardType: TextInputType.number,
+          onChanged: (value) {
+            setState(() {
+              dynamicFieldValues[fieldName] = int.tryParse(value) ?? 0;
+            });
+          },
+          validator: isRequired ? (value) {
+            if (value == null || value.isEmpty) {
+              return 'Please enter $label';
+            }
+            return null;
+          } : null,
+        );
+        
+      case 'dropdown':
+        final List<String> options = List<String>.from(field['options'] ?? []);
+        return DropdownButtonFormField<String>(
+          decoration: InputDecoration(
+            labelText: '$label${isRequired ? ' *' : ''}',
+            border: const OutlineInputBorder(),
+          ),
+          value: dynamicFieldValues[fieldName] as String?,
+          items: options.map((option) {
+            return DropdownMenuItem(
+              value: option,
+              child: Text(option),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              dynamicFieldValues[fieldName] = value;
+            });
+          },
+          validator: isRequired ? (value) {
+            if (value == null || value.isEmpty) {
+              return 'Please select $label';
+            }
+            return null;
+          } : null,
+        );
+        
+      case 'multiselect':
+        final List<String> options = List<String>.from(field['options'] ?? []);
+        final List<String> selectedValues = List<String>.from(dynamicFieldValues[fieldName] ?? []);
+        
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '$label${isRequired ? ' *' : ''}',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Column(
+                children: options.map((option) {
+                  final isSelected = selectedValues.contains(option);
+                  return CheckboxListTile(
+                    title: Text(option),
+                    value: isSelected,
+                    onChanged: (value) {
+                      setState(() {
+                        if (value == true) {
+                          selectedValues.add(option);
+                        } else {
+                          selectedValues.remove(option);
+                        }
+                        dynamicFieldValues[fieldName] = selectedValues;
+                      });
+                    },
+                  );
+                }).toList(),
+              ),
+            ),
+            if (isRequired && selectedValues.isEmpty)
+              const Padding(
+                padding: EdgeInsets.only(top: 8),
+                child: Text(
+                  'Please select at least one option',
+                  style: TextStyle(color: Colors.red, fontSize: 12),
+                ),
+              ),
+          ],
+        );
+        
+      case 'boolean':
+        return CheckboxListTile(
+          title: Text('$label${isRequired ? ' *' : ''}'),
+          value: dynamicFieldValues[fieldName] as bool? ?? false,
+          onChanged: (value) {
+            setState(() {
+              dynamicFieldValues[fieldName] = value ?? false;
+            });
+          },
+        );
+        
+      case 'date':
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '$label${isRequired ? ' *' : ''}',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: () async {
+                final date = await showDatePicker(
+                  context: context,
+                  initialDate: dynamicFieldValues[fieldName] as DateTime? ?? DateTime.now().add(const Duration(days: 1)),
+                  firstDate: DateTime.now(),
+                  lastDate: DateTime.now().add(const Duration(days: 365)),
+                );
+                if (date != null) {
+                  setState(() {
+                    dynamicFieldValues[fieldName] = date;
+                  });
+                }
+              },
+              icon: const Icon(Icons.calendar_today),
+              label: Text(
+                dynamicFieldValues[fieldName] != null
+                    ? '${(dynamicFieldValues[fieldName] as DateTime).day}/${(dynamicFieldValues[fieldName] as DateTime).month}/${(dynamicFieldValues[fieldName] as DateTime).year}'
+                    : 'Select Date',
+              ),
+            ),
+          ],
+        );
+        
+      case 'file_upload':
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '$label${isRequired ? ' *' : ''}',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey),
+                borderRadius: BorderRadius.circular(8),
+                color: Colors.grey[50],
+              ),
+              child: Column(
+                children: [
+                  const Icon(Icons.upload_file, size: 40, color: Colors.grey),
+                  const SizedBox(height: 8),
+                  const Text('Tap to upload photos/videos'),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    onPressed: () => _uploadFiles(fieldName),
+                    child: const Text('Choose Files'),
+                  ),
+                  if (dynamicFieldValues[fieldName] != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      '${(dynamicFieldValues[fieldName] as List).length} file(s) selected',
+                      style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildFilePreview(dynamicFieldValues[fieldName] as List<String>),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        );
+        
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+
+  void _uploadFiles(String fieldName) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Select Media',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildMediaOption(
+                  'Camera',
+                  Icons.camera_alt,
+                  () => _pickMedia(fieldName, ImageSource.camera),
+                ),
+                _buildMediaOption(
+                  'Gallery',
+                  Icons.photo_library,
+                  () => _pickMedia(fieldName, ImageSource.gallery),
+                ),
+                _buildMediaOption(
+                  'Multiple',
+                  Icons.photo_library_outlined,
+                  () => _pickMultipleImages(fieldName),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'You can upload photos and videos of the work area',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 14,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMediaOption(String title, IconData icon, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: const Color(0xFF006B3C).withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              icon,
+              size: 30,
+              color: const Color(0xFF006B3C),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _pickMedia(String fieldName, ImageSource source) async {
+    Navigator.pop(context); // Close bottom sheet
+    
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: source,
+        maxWidth: 1800,
+        maxHeight: 1800,
+        imageQuality: 85,
+      );
+      
+      if (image != null) {
+        final List<String> currentFiles = List<String>.from(dynamicFieldValues[fieldName] ?? []);
+        currentFiles.add(image.path);
+        
+        setState(() {
+          dynamicFieldValues[fieldName] = currentFiles;
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Photo added successfully! (${currentFiles.length} total)'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error picking image: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _pickMultipleImages(String fieldName) async {
+    Navigator.pop(context); // Close bottom sheet
+    
+    try {
+      final ImagePicker picker = ImagePicker();
+      final List<XFile> images = await picker.pickMultiImage(
+        maxWidth: 1800,
+        maxHeight: 1800,
+        imageQuality: 85,
+      );
+      
+      if (images.isNotEmpty) {
+        final List<String> currentFiles = List<String>.from(dynamicFieldValues[fieldName] ?? []);
+        currentFiles.addAll(images.map((e) => e.path));
+        
+        setState(() {
+          dynamicFieldValues[fieldName] = currentFiles;
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${images.length} photos added! (${currentFiles.length} total)'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error picking images: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Widget _buildFilePreview(List<String> filePaths) {
+    return Container(
+      height: 80,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: filePaths.length,
+        itemBuilder: (context, index) {
+          final filePath = filePaths[index];
+          final fileName = filePath.split('/').last;
+          
+          return Container(
+            width: 80,
+            margin: const EdgeInsets.only(right: 8),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey[300]!),
+            ),
+            child: Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: File(filePath).existsSync()
+                      ? Image.file(
+                          File(filePath),
+                          width: 80,
+                          height: 80,
+                          fit: BoxFit.cover,
+                        )
+                      : Container(
+                          width: 80,
+                          height: 80,
+                          color: Colors.grey[200],
+                          child: const Icon(Icons.image, size: 30),
+                        ),
+                ),
+                Positioned(
+                  top: 4,
+                  right: 4,
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        filePaths.removeAt(index);
+                      });
+                    },
+                    child: Container(
+                      width: 20,
+                      height: 20,
+                      decoration: const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.close,
+                        size: 12,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _showEstimatedPricing() async {
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Getting real-time pricing...'),
+          ],
+        ),
+      ),
+    );
+
+    try {
+      // Get location from dynamic fields or use default
+      final location = dynamicFieldValues['jobLocation'] ?? 'Greater Accra, Ghana';
+      
+      // Call pricing API
+      final pricing = await PricingApiService().getServicePricing(
+        serviceName: widget.serviceName,
+        serviceDetails: dynamicFieldValues,
+        location: location,
+      );
+
+      // Close loading dialog
+      Navigator.pop(context);
+
+      // Show pricing results
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('💰 Real-Time Pricing'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Service: ${widget.serviceName}',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                
+                if (pricing['success'] == true) ...[
+                  Text('Market Range: ${pricing['pricing']['priceRange']}'),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Average Price: ₵${pricing['pricing']['averagePrice']}',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF006B3C),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  
+                  // Pricing factors
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          '📊 Pricing Factors:',
+                          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                        ),
+                        const SizedBox(height: 4),
+                        Text('Base Rate: ₵${pricing['factors']['baseRate']}'),
+                        if (pricing['factors']['urgencyMultiplier'] != 1.0)
+                          Text('Urgency: ${(pricing['factors']['urgencyMultiplier'] * 100).toInt()}% of base'),
+                        Text('Location: ${pricing['factors']['location']}'),
+                        Text('Market: ${pricing['factors']['marketConditions']}'),
+                      ],
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  // Get provider quotes button
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _getProviderQuotes(),
+                      icon: const Icon(Icons.people),
+                      label: const Text('Get Provider Quotes'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF006B3C),
+                        side: const BorderSide(color: Color(0xFF006B3C)),
+                      ),
+                    ),
+                  ),
+                ] else ...[
+                  // Fallback pricing display
+                  const Text('Unable to get live pricing. Using estimated ranges:'),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Estimated: ₵80 - ₵300',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF006B3C),
+                    ),
+                  ),
+                ],
+                
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.amber),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        '⚠️ Important Note:',
+                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.amber),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        pricing['note'] ?? 'Pricing based on current market conditions. Final quote confirmed after provider assessment.',
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _showProviderSelection();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF006B3C),
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Find Providers'),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      // Close loading dialog and show error
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error getting pricing: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      
+      // Show fallback pricing
+      _showFallbackPricing();
+    }
+  }
+
+  void _showFallbackPricing() {
+    final fallbackPricing = ServiceTypes.calculateRoughPricing(widget.serviceName, dynamicFieldValues);
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('💰 Estimated Pricing'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Service: ${widget.serviceName}',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            Text('Base Price: ₵${fallbackPricing['basePrice']}'),
+            const SizedBox(height: 8),
+            Text(
+              'Estimated Total: ${fallbackPricing['priceRange']}',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF006B3C),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              fallbackPricing['note'],
+              style: const TextStyle(
+                fontSize: 12,
+                fontStyle: FontStyle.italic,
+                color: Colors.grey,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _showProviderSelection();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF006B3C),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Continue'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _getProviderQuotes() async {
+    Navigator.pop(context); // Close pricing dialog
+    
+    // Show loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Finding available providers...'),
+          ],
+        ),
+      ),
+    );
+
+    try {
+      final location = dynamicFieldValues['jobLocation'] ?? 'Greater Accra, Ghana';
+      
+      final providerQuotes = await PricingApiService().getProviderQuotes(
+        serviceName: widget.serviceName,
+        serviceDetails: dynamicFieldValues,
+        location: location,
+      );
+
+      Navigator.pop(context); // Close loading
+      _showProviderQuotes(providerQuotes);
+    } catch (e) {
+      Navigator.pop(context); // Close loading
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error getting provider quotes: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      _showProviderSelection(); // Fallback to regular provider selection
+    }
+  }
+
+  void _showProviderQuotes(List<Map<String, dynamic>> quotes) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        child: Container(
+          constraints: const BoxConstraints(maxHeight: 600),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Text(
+                  'Available Providers',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: quotes.length,
+                  itemBuilder: (context, index) {
+                    final quote = quotes[index];
+                    return Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey[300]!),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              CircleAvatar(
+                                backgroundColor: const Color(0xFF006B3C),
+                                child: Text(
+                                  quote['name'][0],
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Text(
+                                          quote['name'],
+                                          style: const TextStyle(fontWeight: FontWeight.bold),
+                                        ),
+                                        if (quote['verified'] == true) ...[
+                                          const SizedBox(width: 4),
+                                          const Icon(Icons.verified, size: 16, color: Colors.blue),
+                                        ],
+                                      ],
+                                    ),
+                                    Row(
+                                      children: [
+                                        Icon(Icons.star, size: 16, color: Colors.amber),
+                                        Text(' ${quote['rating']} (${quote['reviews']} reviews)'),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    '₵${quote['price']}',
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF006B3C),
+                                    ),
+                                  ),
+                                  Text(
+                                    quote['availability'],
+                                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Duration: ${quote['estimatedDuration']}',
+                            style: const TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                                selectedProvider = quote['name'];
+                                setState(() {
+                                  _currentStep = 2; // Move to scheduling step
+                                });
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF006B3C),
+                                foregroundColor: Colors.white,
+                              ),
+                              child: const Text('Select Provider'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Close'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showProviderSelection() {
+    // Fallback to existing provider selection logic
+    setState(() {
+      _currentStep = 1; // Move to provider selection step
+    });
   }
 
   @override
