@@ -219,7 +219,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
           pinned: true,
           backgroundColor: Theme.of(context).colorScheme.inversePrimary,
           flexibleSpace: FlexibleSpaceBar(
-            title: const Text('Blazer Services'),
+            title: const Text('HomeLinkGH'),
             background: Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(

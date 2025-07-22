@@ -9,7 +9,7 @@ import java.util.Properties
 import java.io.FileInputStream
 
 // Load keystore properties
-val keystorePropertiesFile = rootProject.file("key.properties")
+val keystorePropertiesFile = rootProject.file("key-upload.properties")
 val keystoreProperties = Properties()
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))

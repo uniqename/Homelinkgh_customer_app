@@ -416,6 +416,15 @@ class _SmartServiceBookingScreenState extends State<SmartServiceBookingScreen> {
           ),
           onChanged: (value) => _serviceData[field.id] = value,
         );
+      case FieldType.number:
+        return TextFormField(
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(
+            labelText: field.label + (field.isRequired ? ' *' : ''),
+            border: const OutlineInputBorder(),
+          ),
+          onChanged: (value) => _serviceData[field.id] = int.tryParse(value) ?? 0,
+        );
       case FieldType.phone:
         return TextFormField(
           keyboardType: TextInputType.phone,
@@ -423,6 +432,16 @@ class _SmartServiceBookingScreenState extends State<SmartServiceBookingScreen> {
             labelText: field.label + (field.isRequired ? ' *' : ''),
             border: const OutlineInputBorder(),
             prefixText: '+233 ',
+          ),
+          onChanged: (value) => _serviceData[field.id] = value,
+        );
+      case FieldType.address:
+        return TextFormField(
+          maxLines: 2,
+          decoration: InputDecoration(
+            labelText: field.label + (field.isRequired ? ' *' : ''),
+            border: const OutlineInputBorder(),
+            hintText: 'Enter your address',
           ),
           onChanged: (value) => _serviceData[field.id] = value,
         );
@@ -437,6 +456,8 @@ class _SmartServiceBookingScreenState extends State<SmartServiceBookingScreen> {
               .toList(),
           onChanged: (value) => _serviceData[field.id] = value,
         );
+      case FieldType.multiSelect:
+        return _buildMultiSelectField(field);
       default:
         return TextFormField(
           decoration: InputDecoration(
@@ -448,18 +469,105 @@ class _SmartServiceBookingScreenState extends State<SmartServiceBookingScreen> {
     }
   }
 
+  Widget _buildMultiSelectField(ServiceField field) {
+    final options = field.options ?? _getDefaultOptions(field.id);
+    final selectedValues = _serviceData[field.id] as List<String>? ?? [];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          field.label + (field.isRequired ? ' *' : ''),
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Column(
+            children: options.map((option) {
+              final isSelected = selectedValues.contains(option);
+              return CheckboxListTile(
+                title: Text(option),
+                value: isSelected,
+                onChanged: (bool? value) {
+                  setState(() {
+                    List<String> currentList = List<String>.from(selectedValues);
+                    if (value == true) {
+                      currentList.add(option);
+                    } else {
+                      currentList.remove(option);
+                    }
+                    _serviceData[field.id] = currentList;
+                  });
+                },
+              );
+            }).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+
   List<String> _getDefaultOptions(String fieldId) {
     switch (fieldId) {
       case 'service_type':
-        return ['Makeup', 'Hair Styling', 'Nail Care', 'Full Package'];
+        // Beauty services options
+        if (widget.serviceName.toLowerCase().contains('beauty') || 
+            widget.serviceName.toLowerCase().contains('makeup') ||
+            widget.serviceName.toLowerCase().contains('nail')) {
+          return ['Makeup Application', 'Hair Styling', 'Nail Care', 'Facial Treatment', 'Bridal Package'];
+        }
+        return ['Standard Service', 'Premium Service', 'Custom Service'];
       case 'cleaning_type':
         return ['Regular Cleaning', 'Deep Cleaning', 'Move-in/out Cleaning'];
       case 'urgency':
         return ['Normal', 'Urgent', 'Emergency'];
       case 'vehicle_type':
         return ['Sedan', 'SUV', 'Van', 'Luxury'];
+      case 'location_preference':
+        return ['At Home', 'Provider Location', 'Online Service'];
+      case 'care_type':
+        // For babysitting/childcare services
+        return ['Regular Babysitting', 'Overnight Care', 'Event Childcare', 'Educational Support'];
+      case 'children_ages':
+        return ['0-2 years', '3-5 years', '6-10 years', '11+ years'];
+      case 'duration':
+        return ['2-4 hours', '4-8 hours', 'Full Day', 'Overnight'];
+      case 'problem_type':
+        return ['Leak Repair', 'Installation', 'Maintenance', 'Emergency Fix'];
+      case 'electrical_issue':
+        return ['Installation', 'Repair', 'Maintenance', 'Safety Check'];
+      case 'safety_urgency':
+        return ['Normal', 'Urgent', 'Emergency'];
+      case 'laundry_type':
+        return ['Regular Wash', 'Dry Cleaning', 'Delicate Items', 'Bulk Laundry'];
+      case 'property_type':
+        return ['Apartment', 'House', 'Office', 'Commercial'];
+      case 'store_preference':
+        return ['Local Market', 'Supermarket', 'Specialty Store', 'Any Store'];
+      case 'mobility_needs':
+        return ['Independent', 'Limited Assistance', 'Full Assistance', 'Wheelchair Access'];
+      case 'preferred_detergent':
+        return ['Regular', 'Eco-Friendly', 'Sensitive Skin', 'Provider Choice'];
+      case 'preferred_time':
+        return ['Morning (8-12)', 'Afternoon (12-17)', 'Evening (17-20)', 'Flexible'];
+      case 'care_duration':
+        return ['Few Hours', 'Half Day', 'Full Day', 'Weekly', 'Monthly'];
       default:
-        return ['Option 1', 'Option 2', 'Option 3'];
+        // Fallback based on service name
+        if (widget.serviceName.toLowerCase().contains('beauty') || 
+            widget.serviceName.toLowerCase().contains('makeup')) {
+          return ['Basic Service', 'Standard Service', 'Premium Service'];
+        } else if (widget.serviceName.toLowerCase().contains('babysitting') || 
+                   widget.serviceName.toLowerCase().contains('childcare')) {
+          return ['Regular Care', 'Special Needs', 'Group Care'];
+        } else if (widget.serviceName.toLowerCase().contains('cleaning')) {
+          return ['Basic Clean', 'Deep Clean', 'Specialized Clean'];
+        }
+        return ['Basic Option', 'Standard Option', 'Premium Option'];
     }
   }
 
@@ -630,12 +738,49 @@ class _SmartServiceBookingScreenState extends State<SmartServiceBookingScreen> {
 
   void _nextStep() {
     if (_currentStep < _serviceConfig.smartWorkflow.getWorkflowSteps().length - 1) {
-      setState(() {
-        _currentStep++;
-        if (_currentStep == _serviceConfig.smartWorkflow.getWorkflowSteps().length - 1) {
-          // Final step - show confirmation
+      // Validate current step before proceeding
+      if (_validateCurrentStep()) {
+        setState(() {
+          _currentStep++;
+          if (_currentStep == _serviceConfig.smartWorkflow.getWorkflowSteps().length - 1) {
+            // Final step - show confirmation
+          }
+        });
+      } else {
+        // Show validation error
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Please fill in all required fields'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  bool _validateCurrentStep() {
+    switch (_currentStep) {
+      case 0:
+        // Initial step - no validation needed
+        return true;
+      case 1:
+        // Requirements step - validate required fields
+        for (final field in _serviceConfig.requiredInfo) {
+          if (field.isRequired) {
+            final value = _serviceData[field.id];
+            if (value == null || 
+                (value is String && value.isEmpty) ||
+                (value is List && value.isEmpty)) {
+              return false;
+            }
+          }
         }
-      });
+        return true;
+      case 2:
+        // Scheduling step - validate date and time
+        return _serviceData['date'] != null && _serviceData['time'] != null;
+      default:
+        return true;
     }
   }
 

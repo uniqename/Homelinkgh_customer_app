@@ -492,7 +492,7 @@ class _ProviderOnboardingScreenState extends State<ProviderOnboardingScreen> {
               ),
               SizedBox(height: 8),
               Text(
-                'Thank you for applying to become a Blazer service provider. Our team will review your application and get back to you within 2-3 business days.',
+                'Thank you for applying to become a HomeLinkGH service provider. Our team will review your application and get back to you within 2-3 business days.',
                 textAlign: TextAlign.center,
               ),
             ],

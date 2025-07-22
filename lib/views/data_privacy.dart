@@ -248,14 +248,14 @@ class _DataPrivacyScreenState extends State<DataPrivacyScreen> with SingleTicker
           ),
           const SizedBox(height: 12),
           
-          StreamBuilder(
+          StreamBuilder<List<Map<String, dynamic>>>(
             stream: DataExportService.getExportHistory('current_user_id'),
             builder: (context, snapshot) {
               if (!snapshot.hasData) {
                 return const Center(child: CircularProgressIndicator());
               }
               
-              final exports = snapshot.data!.docs;
+              final exports = snapshot.data!;
               
               if (exports.isEmpty) {
                 return Container(
@@ -272,8 +272,7 @@ class _DataPrivacyScreenState extends State<DataPrivacyScreen> with SingleTicker
               
               return Column(
                 children: exports.map((export) {
-                  final data = export.data() as Map<String, dynamic>;
-                  return _buildExportHistoryItem(data);
+                  return _buildExportHistoryItem(export);
                 }).toList(),
               );
             },

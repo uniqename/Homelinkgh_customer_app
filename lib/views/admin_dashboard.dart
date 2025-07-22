@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import '../services/notification_service.dart';
 import 'notification_screen.dart';
+import 'admin_pending_approvals_screen.dart';
+import 'admin_support_tickets_screen.dart';
+import 'admin_commission_management_screen.dart';
+import 'admin_service_configuration_screen.dart';
+import 'admin_service_areas_screen.dart';
+import 'admin_policy_management_screen.dart';
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
@@ -759,6 +765,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   onTap: _manageServiceAreas,
                 ),
                 ListTile(
+                  leading: const Icon(Icons.settings_applications),
+                  title: const Text('Service Configuration'),
+                  subtitle: const Text('Manage services, pricing, and features'),
+                  trailing: const Icon(Icons.arrow_forward_ios),
+                  onTap: _manageServiceConfiguration,
+                ),
+                ListTile(
                   leading: const Icon(Icons.rule),
                   title: const Text('Platform Policies'),
                   subtitle: const Text('Terms, privacy, and service policies'),
@@ -925,14 +938,20 @@ class _AdminDashboardState extends State<AdminDashboard> {
   }
 
   void _showPendingApprovals() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Opening pending approvals...')),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const AdminPendingApprovalsScreen(),
+      ),
     );
   }
 
   void _showSupportTickets() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Opening support tickets...')),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const AdminSupportTicketsScreen(),
+      ),
     );
   }
 
@@ -1149,20 +1168,38 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
   // Settings management methods
   void _manageCommissionRates() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Commission rate management would open here')),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const AdminCommissionManagementScreen(),
+      ),
     );
   }
 
   void _manageServiceAreas() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Service area management would open here')),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const AdminServiceAreasScreen(),
+      ),
+    );
+  }
+
+  void _manageServiceConfiguration() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const AdminServiceConfigurationScreen(),
+      ),
     );
   }
 
   void _managePolicies() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Policy management would open here')),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const AdminPolicyManagementScreen(),
+      ),
     );
   }
 

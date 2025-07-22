@@ -513,7 +513,7 @@ class _FoodDeliveryTrackingScreenState extends State<FoodDeliveryTrackingScreen>
             ListTile(
               leading: const Icon(Icons.email),
               title: const Text('Email Support'),
-              subtitle: const Text('support@blazer.com'),
+              subtitle: const Text('support@homelinkgh.com'),
               onTap: () {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(

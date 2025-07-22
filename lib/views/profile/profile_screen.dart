@@ -353,43 +353,56 @@ class ProfileScreen extends StatelessWidget {
   }
   
   Widget _buildAccountManagementSection(BuildContext context, bool isAnonymous) {
-    if (isAnonymous) {
-      return const SizedBox.shrink(); // Don't show for anonymous users
-    }
-    
     return Card(
+      elevation: 4,
+      color: Colors.red.shade50,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Account Management',
+              'Account & Data Management',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
+                color: Colors.red.shade700,
               ),
             ),
             const SizedBox(height: 16),
+            
+            // Prominent Delete Account Button
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.only(bottom: 12),
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const DataPrivacyScreen(),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red.shade600,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                  elevation: 2,
+                ),
+                icon: const Icon(Icons.delete_forever, size: 24),
+                label: const Text(
+                  'Delete My Account',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+            
+            // Secondary Export Data Option
             _buildSettingsItem(
               context,
               icon: Icons.download_outlined,
               title: 'Export My Data',
               subtitle: 'Download a copy of your personal data',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const DataPrivacyScreen(),
-                  ),
-                );
-              },
-            ),
-            const Divider(),
-            _buildSettingsItem(
-              context,
-              icon: Icons.delete_forever_outlined,
-              title: 'Delete Account',
-              subtitle: 'Permanently delete your account and data',
               onTap: () {
                 Navigator.push(
                   context,
