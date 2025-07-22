@@ -232,7 +232,7 @@ class _AdminPendingApprovalsScreenState extends State<AdminPendingApprovalsScree
             // Description
             Text(
               approval['description'],
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey[700],
               ),
