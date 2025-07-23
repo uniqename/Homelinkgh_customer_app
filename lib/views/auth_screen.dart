@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/standalone_service.dart';
-import '../services/demo_account_service.dart';
-import 'customer_home.dart';
+import 'unified_customer_home.dart';
 import 'provider_dashboard.dart';
-import 'dynamic_home.dart';
+import 'customer_onboarding_screen.dart';
 
 class AuthScreen extends StatefulWidget {
   final String userType;
@@ -74,6 +73,20 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF006B3C),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            } else {
+              Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+            }
+          },
+        ),
+      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -284,42 +297,6 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
               child: const Text('Forgot Password?'),
             ),
             
-            const SizedBox(height: 8),
-            const Divider(),
-            const SizedBox(height: 8),
-            
-            // Demo Account Button for App Store Reviewers
-            OutlinedButton(
-              onPressed: _isLoading ? null : _handleDemoLogin,
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Color(0xFF006B3C)),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Demo Account',
-                    style: TextStyle(
-                      color: Color(0xFF006B3C),
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    'For App Store Review',
-                    style: TextStyle(
-                      color: Color(0xFF006B3C),
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ],
         ),
       ),
@@ -499,7 +476,7 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
       await prefs.setBool('isLoggedIn', true);
       
       if (mounted) {
-        _navigateToHome();
+        await _navigateToHome();
       }
     } catch (e) {
       if (mounted) {
@@ -538,7 +515,7 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
             backgroundColor: Colors.green,
           ),
         );
-        _navigateToHome();
+        await _navigateToHome();
       }
     } catch (e) {
       if (mounted) {
@@ -553,76 +530,37 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
     }
   }
 
-  Future<void> _handleDemoLogin() async {
-    setState(() => _isLoading = true);
-    
-    try {
-      // Auto-login with demo credentials
-      final demoUser = await DemoAccountService.autoLoginDemo();
-      
-      if (demoUser != null && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Demo account loaded! Welcome App Store Reviewer!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        
-        // Navigate to customer home (demo mode)
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const CustomerHomeScreen()),
-          (route) => false,
-        );
-      } else {
-        throw Exception('Failed to load demo account');
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Demo login failed: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
 
-  void _navigateToHome() {
+  Future<void> _navigateToHome() async {
     Widget homeScreen;
     
     switch (widget.userType) {
-      case 'diaspora_customer':
-        homeScreen = const DynamicHomeScreen(
-          userId: 'diaspora_user',
-          userType: 'diaspora_customer',
-        );
-        break;
-      case 'family_helper':
-        homeScreen = const DynamicHomeScreen(
-          userId: 'family_helper',
-          userType: 'family_helper',
-        );
-        break;
       case 'provider':
         homeScreen = const ProviderDashboard();
         break;
       case 'customer':
+      case 'diaspora_customer':
+      case 'family_helper':
       default:
-        homeScreen = const CustomerHomeScreen();
+        // Check if customer has completed onboarding
+        final prefs = await SharedPreferences.getInstance();
+        final hasCompletedOnboarding = prefs.getBool('onboarding_completed') ?? false;
+        
+        if (hasCompletedOnboarding) {
+          homeScreen = const UnifiedCustomerHomeScreen();
+        } else {
+          homeScreen = const CustomerOnboardingScreen();
+        }
         break;
     }
     
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (context) => homeScreen),
-      (route) => false,
-    );
+    if (mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => homeScreen),
+        (route) => false,
+      );
+    }
   }
 
   @override

@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+// Firestore dependency removed - using simplified services
 
 /// Chat message model for real-time communication between customers and providers
 class ChatMessage {

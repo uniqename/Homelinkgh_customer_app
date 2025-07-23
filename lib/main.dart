@@ -60,7 +60,10 @@ class HomeLinkGHApp extends StatelessWidget {
           elevation: 0,
         ),
       ),
-      home: const GuestHomeScreen(), // Always show guest home - works without setup
+      routes: {
+        '/': (context) => const GuestHomeScreen(),
+        '/guest': (context) => const GuestHomeScreen(),
+      },
     );
   }
 }

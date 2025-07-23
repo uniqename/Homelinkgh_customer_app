@@ -46,7 +46,6 @@ class _ServiceBookingScreenState extends State<ServiceBookingScreen> {
       'rating': 4.8,
       'reviews': 156,
       'experience': '5+ years',
-      'price': 'GH₵150/hour',
       'avatar': 'KA',
       'verified': true,
       'available': true,
@@ -56,7 +55,6 @@ class _ServiceBookingScreenState extends State<ServiceBookingScreen> {
       'rating': 4.9,
       'reviews': 234,
       'experience': '3+ years',
-      'price': 'GH₵180/hour',
       'avatar': 'AM',
       'verified': true,
       'available': true,
@@ -66,7 +64,6 @@ class _ServiceBookingScreenState extends State<ServiceBookingScreen> {
       'rating': 4.7,
       'reviews': 89,
       'experience': '7+ years',
-      'price': 'GH₵210/hour',
       'avatar': 'SO',
       'verified': true,
       'available': false,
@@ -473,11 +470,20 @@ class _ServiceBookingScreenState extends State<ServiceBookingScreen> {
                     Text('Experience: ${provider['experience']}'),
                   ],
                 ),
-                trailing: Text(
-                  provider['price'],
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                trailing: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF006B3C).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFF006B3C)),
+                  ),
+                  child: const Text(
+                    'Get Quote',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                      color: Color(0xFF006B3C),
+                    ),
                   ),
                 ),
                 enabled: provider['available'],
@@ -1345,7 +1351,7 @@ class _ServiceBookingScreenState extends State<ServiceBookingScreen> {
                   Text('Market Range: ${pricing['pricing']['priceRange']}'),
                   const SizedBox(height: 8),
                   Text(
-                    'Average Price: ₵${pricing['pricing']['averagePrice']}',
+                    'Request Quote for Competitive Pricing',
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -1370,7 +1376,7 @@ class _ServiceBookingScreenState extends State<ServiceBookingScreen> {
                           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
                         ),
                         const SizedBox(height: 4),
-                        Text('Base Rate: ₵${pricing['factors']['baseRate']}'),
+                        const Text('Base Rate: Quote-based pricing'),
                         if (pricing['factors']['urgencyMultiplier'] != 1.0)
                           Text('Urgency: ${(pricing['factors']['urgencyMultiplier'] * 100).toInt()}% of base'),
                         Text('Location: ${pricing['factors']['location']}'),
@@ -1399,7 +1405,7 @@ class _ServiceBookingScreenState extends State<ServiceBookingScreen> {
                   const Text('Unable to get live pricing. Using estimated ranges:'),
                   const SizedBox(height: 8),
                   Text(
-                    'Estimated: ₵80 - ₵300',
+                    'Get personalized quote',
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -1484,7 +1490,7 @@ class _ServiceBookingScreenState extends State<ServiceBookingScreen> {
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            Text('Base Price: ₵${fallbackPricing['basePrice']}'),
+            const Text('Contact for quote'),
             const SizedBox(height: 8),
             Text(
               'Estimated Total: ${fallbackPricing['priceRange']}',

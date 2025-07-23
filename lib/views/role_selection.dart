@@ -182,33 +182,19 @@ class RoleSelectionScreen extends StatelessWidget {
                     children: [
                       _buildRoleCard(
                         context,
-                        icon: Icons.flight_land,
-                        title: 'I\'m Visiting Ghana',
-                        subtitle: 'Book before you land - we\'ll prep your house',
+                        icon: Icons.home_filled,
+                        title: 'I Need Home Services',
+                        subtitle: 'Whether visiting, living in Ghana, or helping family - book trusted services',
                         color: const Color(0xFF1E88E5),
-                        badge: 'DIASPORA MODE',
+                        badge: 'ALL-IN-ONE',
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const AuthScreen(userType: 'diaspora_customer'),
+                              builder: (context) => const AuthScreen(userType: 'customer'),
                             ),
                           );
                         },
-                      ),
-                      const SizedBox(height: 16),
-                      _buildRoleCard(
-                        context,
-                        icon: Icons.family_restroom,
-                        title: 'I\'m Helping Family',
-                        subtitle: 'Book services for loved ones from abroad',
-                        color: const Color(0xFFCE1126), // Ghana Red
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const AuthScreen(userType: 'family_helper'),
-                          ),
-                        ),
                       ),
                       const SizedBox(height: 16),
                       _buildRoleCard(

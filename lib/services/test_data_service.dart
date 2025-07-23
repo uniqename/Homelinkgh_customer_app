@@ -1,8 +1,8 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+// Firestore dependency removed - using simplified services
 import 'package:firebase_auth/firebase_auth.dart';
 
 class TestDataService {
-  static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  static final _firestore // FirebaseFirestore _firestore = _firestore // FirebaseFirestore.instance;
   static final FirebaseAuth _auth = FirebaseAuth.instance;
 
   /// Initialize the app with comprehensive test data for Ghana

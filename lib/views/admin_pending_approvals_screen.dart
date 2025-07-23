@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/document_viewer.dart';
 
 class AdminPendingApprovalsScreen extends StatefulWidget {
   const AdminPendingApprovalsScreen({super.key});
@@ -241,16 +242,53 @@ class _AdminPendingApprovalsScreenState extends State<AdminPendingApprovalsScree
             const SizedBox(height: 12),
             
             // Documents
+            const Text(
+              'Documents to verify:',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 8),
             Wrap(
               spacing: 8,
+              runSpacing: 8,
               children: (approval['documents'] as List<String>).map((doc) => 
-                Chip(
-                  label: Text(
-                    doc,
-                    style: const TextStyle(fontSize: 10),
+                GestureDetector(
+                  onTap: () => _viewDocument(approval, doc),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.blue, width: 1),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _getDocumentIcon(doc),
+                          size: 16,
+                          color: Colors.blue,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          doc,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.blue,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        const Icon(
+                          Icons.visibility,
+                          size: 14,
+                          color: Colors.blue,
+                        ),
+                      ],
+                    ),
                   ),
-                  backgroundColor: Colors.blue.withValues(alpha: 0.1),
-                  side: const BorderSide(color: Colors.blue, width: 0.5),
                 ),
               ).toList(),
             ),
@@ -449,5 +487,111 @@ class _AdminPendingApprovalsScreenState extends State<AdminPendingApprovalsScree
         ],
       ),
     );
+  }
+
+  void _viewDocument(Map<String, dynamic> approval, String documentType) {
+    // Create sample document data based on the document type and applicant
+    final documentData = _generateDocumentData(approval, documentType);
+    
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DocumentViewer(
+          documentType: documentType,
+          documentData: documentData,
+          onApprove: () => _approveDocument(approval, documentType),
+          onReject: () => _rejectDocument(approval, documentType),
+        ),
+      ),
+    );
+  }
+
+  Map<String, dynamic> _generateDocumentData(Map<String, dynamic> approval, String documentType) {
+    switch (documentType.toLowerCase()) {
+      case 'ghana card':
+      case 'id card':
+        return {
+          'fullName': approval['name'],
+          'idNumber': 'GHA-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}',
+          'dateOfBirth': '15/03/1990',
+          'issueDate': '10/01/2020',
+          'expiryDate': '10/01/2030',
+          'district': approval['location'].split(',').first,
+          'imageUrl': null, // In real app, this would be the actual document image
+        };
+      case 'business license':
+        return {
+          'businessName': approval['businessName'] ?? 'Sample Business',
+          'licenseNumber': 'BL-2024-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}',
+          'registrationDate': '01/01/2024',
+          'expiryDate': '31/12/2024',
+          'businessType': approval['service'] ?? 'Service Provider',
+          'registrar': 'Registrar General Department',
+          'imageUrl': null,
+        };
+      case 'certificate':
+      case 'training certificate':
+        return {
+          'certificateName': '${approval['service']} Professional Certificate',
+          'issuedTo': approval['name'],
+          'issuingAuthority': 'Ghana Training Institute',
+          'issueDate': '15/06/2023',
+          'certificateId': 'CERT-2023-${DateTime.now().millisecondsSinceEpoch.toString().substring(6)}',
+          'grade': 'Grade A',
+          'imageUrl': null,
+        };
+      case 'utility bill':
+        return {
+          'accountName': approval['name'],
+          'address': approval['location'],
+          'billDate': '01/07/2024',
+          'dueDate': '31/07/2024',
+          'provider': 'ECG Ghana',
+          'accountNumber': 'ECG-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
+          'imageUrl': null,
+        };
+      default:
+        return {
+          'documentType': documentType,
+          'applicantName': approval['name'],
+          'submittedDate': approval['submittedDate'],
+          'imageUrl': null,
+        };
+    }
+  }
+
+  void _approveDocument(Map<String, dynamic> approval, String documentType) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('$documentType approved for ${approval['name']}'),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
+
+  void _rejectDocument(Map<String, dynamic> approval, String documentType) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('$documentType rejected for ${approval['name']}'),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+
+  IconData _getDocumentIcon(String documentType) {
+    switch (documentType.toLowerCase()) {
+      case 'ghana card':
+      case 'id card':
+        return Icons.badge;
+      case 'business license':
+        return Icons.business;
+      case 'certificate':
+      case 'training certificate':
+        return Icons.school;
+      case 'utility bill':
+        return Icons.receipt;
+      default:
+        return Icons.description;
+    }
   }
 }

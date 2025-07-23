@@ -1,8 +1,8 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+// Firestore dependency removed - using simplified services
 import '../models/job.dart';
 
 class JobService {
-  static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  static final _firestore // FirebaseFirestore _firestore = _firestore // FirebaseFirestore.instance;
 
   static Stream<List<Job>> getProviderJobs(String providerId) {
     return _firestore

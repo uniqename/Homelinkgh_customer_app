@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/food_delivery_pricing_service.dart';
+import 'delivery_quote_selection_screen.dart';
 
 class EnhancedFoodDeliveryScreen extends StatefulWidget {
   const EnhancedFoodDeliveryScreen({super.key});
@@ -571,8 +573,6 @@ class _EnhancedFoodDeliveryScreenState extends State<EnhancedFoodDeliveryScreen>
     );
     
     final subtotal = _calculateTotal();
-    final deliveryFee = selectedRestaurant['deliveryFee'] as double;
-    final total = subtotal + deliveryFee;
 
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -609,30 +609,38 @@ class _EnhancedFoodDeliveryScreenState extends State<EnhancedFoodDeliveryScreen>
                   const Divider(),
                   Row(
                     children: [
-                      const Expanded(child: Text('Subtotal:')),
-                      Text('GH₵${subtotal.toStringAsFixed(2)}'),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      const Expanded(child: Text('Delivery Fee:')),
-                      Text('GH₵${deliveryFee.toStringAsFixed(2)}'),
-                    ],
-                  ),
-                  const Divider(),
-                  Row(
-                    children: [
                       const Expanded(
                         child: Text(
-                          'Total:',
+                          'Subtotal:',
                           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                       ),
                       Text(
-                        'GH₵${total.toStringAsFixed(2)}',
+                        'GH₵${subtotal.toStringAsFixed(2)}',
                         style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withAlpha(26),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.blue.withAlpha(51)),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.info_outline, color: Colors.blue, size: 16),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Delivery fees will be calculated based on your location and chosen delivery provider',
+                            style: TextStyle(fontSize: 12, color: Colors.blue),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -677,7 +685,7 @@ class _EnhancedFoodDeliveryScreenState extends State<EnhancedFoodDeliveryScreen>
                 backgroundColor: Colors.red,
                 foregroundColor: Colors.white,
               ),
-              child: Text(_currentStep < 4 ? 'Continue' : 'Place Order'),
+              child: Text(_currentStep < 4 ? 'Continue' : 'Choose Delivery Provider'),
             ),
           ),
         ],
@@ -884,11 +892,68 @@ class _EnhancedFoodDeliveryScreenState extends State<EnhancedFoodDeliveryScreen>
   }
 
   void _placeOrder() {
+    _navigateToDeliverySelection();
+  }
+
+  void _navigateToDeliverySelection() {
+    final selectedRestaurant = _restaurants.firstWhere(
+      (restaurant) => restaurant['name'] == _selectedRestaurant,
+      orElse: () => _restaurants.first,
+    );
+
+    final restaurantLocation = Location(
+      latitude: selectedRestaurant['coordinates']['lat'],
+      longitude: selectedRestaurant['coordinates']['lng'],
+    );
+
+    // For demo purposes, using Accra city center as customer location
+    const customerLocation = Location(
+      latitude: 5.6037,
+      longitude: -0.1870,
+    );
+
+    final orderValue = _calculateTotal();
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DeliveryQuoteSelectionScreen(
+          restaurantName: selectedRestaurant['name'],
+          restaurantLocation: restaurantLocation,
+          customerLocation: customerLocation,
+          orderValue: orderValue,
+          orderItems: _selectedItems,
+        ),
+      ),
+    ).then((selectedQuote) {
+      if (selectedQuote != null) {
+        _showOrderConfirmation(selectedQuote);
+      }
+    });
+  }
+
+  void _showOrderConfirmation(DeliveryQuote quote) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Order Placed!'),
-        content: const Text('Your food order has been placed successfully. You will receive updates via your preferred communication method.'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Your food order has been placed successfully!'),
+            const SizedBox(height: 12),
+            Text('Delivery Provider: ${quote.providerName}'),
+            Text('Delivery Fee: GH₵${quote.deliveryFee.toStringAsFixed(2)}'),
+            Text('Service Fee: GH₵${quote.platformServiceFee.toStringAsFixed(2)}'),
+            Text('Estimated Time: ${quote.estimatedTimeText}'),
+            const SizedBox(height: 8),
+            const Text(
+              'You will receive updates via your preferred communication method.',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+          ],
+        ),
         actions: [
           TextButton(
             onPressed: () {

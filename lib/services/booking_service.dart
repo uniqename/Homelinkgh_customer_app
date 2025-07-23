@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:cloud_firestore/cloud_firestore.dart';
+// Firestore dependency removed - using simplified services
 import 'package:homelinkgh_customer/models/location.dart';
 import '../models/booking.dart';
 import '../models/provider.dart';
@@ -13,7 +13,7 @@ class BookingService {
   static const String _providersCollection = 'providers';
   static const String _customersCollection = 'customers';
   
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final _firestore // FirebaseFirestore _firestore = _firestore // FirebaseFirestore.instance;
   final ChatService _chatService = ChatService();
   final PushNotificationService _notificationService = PushNotificationService();
   final GpsTrackingService _trackingService = GpsTrackingService();

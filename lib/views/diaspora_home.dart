@@ -64,7 +64,6 @@ class _DiasporaHomeScreenState extends State<DiasporaHomeScreen> {
     {
       'name': 'Welcome Home Starter',
       'description': 'Deep cleaning + water delivery + grocery stocking',
-      'price': '₵450',
       'duration': 'Day 1 Setup',
       'icon': Icons.home,
       'color': const Color(0xFF006B3C),
@@ -74,7 +73,6 @@ class _DiasporaHomeScreenState extends State<DiasporaHomeScreen> {
     {
       'name': 'Wedding Ready',
       'description': 'Professional makeup + hair styling + tailoring',
-      'price': '₵680',
       'duration': '4-6 hours',
       'icon': Icons.celebration,
       'color': const Color(0xFFCE1126),
@@ -83,7 +81,6 @@ class _DiasporaHomeScreenState extends State<DiasporaHomeScreen> {
     {
       'name': 'Family Care Weekly',
       'description': 'Elderly care + house cleaning + grocery runs',
-      'price': '₵320/week',
       'duration': 'Weekly',
       'icon': Icons.family_restroom,
       'color': const Color(0xFF1E88E5),
@@ -92,7 +89,6 @@ class _DiasporaHomeScreenState extends State<DiasporaHomeScreen> {
     {
       'name': 'Airport VIP',
       'description': 'Airport pickup + house prep + welcome meal',
-      'price': '₵380',
       'duration': 'Arrival Day',
       'icon': Icons.flight_land,
       'color': const Color(0xFFF57C00),
@@ -617,12 +613,20 @@ class _DiasporaHomeScreenState extends State<DiasporaHomeScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    bundle['price'],
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: bundle['color'],
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: bundle['color'].withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: bundle['color']),
+                    ),
+                    child: const Text(
+                      'Request Quote',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF006B3C),
+                      ),
                     ),
                   ),
                   ElevatedButton(
@@ -883,7 +887,7 @@ class _DiasporaHomeScreenState extends State<DiasporaHomeScreen> {
               return ListTile(
                 leading: Icon(bundle['icon'], color: bundle['color']),
                 title: Text(bundle['name']),
-                subtitle: Text(bundle['price']),
+                subtitle: const Text('Tap to request quote'),
                 onTap: () {
                   Navigator.pop(context);
                   _bookBundle(bundle);
@@ -919,7 +923,7 @@ class _DiasporaHomeScreenState extends State<DiasporaHomeScreen> {
               child: Text('• $service'),
             )).toList(),
             const SizedBox(height: 16),
-            Text('Price: ${bundle['price']}', style: const TextStyle(fontWeight: FontWeight.bold)),
+            const Text('Price: Request quote for competitive pricing', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF006B3C))),
             Text('Duration: ${bundle['duration']}'),
           ],
         ),

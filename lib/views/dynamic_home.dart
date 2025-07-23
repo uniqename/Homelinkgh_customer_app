@@ -117,7 +117,7 @@ class _DynamicHomeScreenState extends State<DynamicHomeScreen> with TickerProvid
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Welcome ${widget.userType == 'diaspora_customer' ? 'Diaspora Customer' : widget.userType == 'family_helper' ? 'Family Helper' : 'Customer'}'),
+        title: Text('Welcome ${widget.userType == 'diaspora_customer' ? 'to HomeLinkGH' : widget.userType == 'family_helper' ? 'Family Helper' : 'to HomeLinkGH'}'),
         backgroundColor: const Color(0xFF006B3C),
         foregroundColor: Colors.white,
         leading: IconButton(
@@ -763,70 +763,73 @@ class _DynamicHomeScreenState extends State<DynamicHomeScreen> with TickerProvid
   }
 
   Widget _buildTrendingServiceCard(Map<String, dynamic> service) {
-    return Container(
-      width: 160,
-      margin: const EdgeInsets.only(right: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  service['icon'],
-                  color: service['color'],
-                  size: 20,
-                ),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    '+${service['growth']}%',
-                    style: const TextStyle(
-                      color: Colors.green,
-                      fontSize: 8,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              service['name'],
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const Spacer(),
-            Text(
-              'From ₵${service['price']}',
-              style: TextStyle(
-                fontSize: 12,
-                color: service['color'],
-                fontWeight: FontWeight.w600,
-              ),
+    return GestureDetector(
+      onTap: () => _navigateToService(service),
+      child: Container(
+        width: 160,
+        margin: const EdgeInsets.only(right: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
             ),
           ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    service['icon'],
+                    color: service['color'],
+                    size: 20,
+                  ),
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      '+${service['growth']}%',
+                      style: const TextStyle(
+                        color: Colors.green,
+                        fontSize: 8,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                service['name'],
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const Spacer(),
+              Text(
+                'From ₵${service['price']}',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: service['color'],
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1151,73 +1154,133 @@ class _DynamicHomeScreenState extends State<DynamicHomeScreen> with TickerProvid
 
     return Column(
       children: offers.map((offer) {
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [(offer['color'] as Color).withOpacity(0.1), (offer['color'] as Color).withOpacity(0.05)],
+        return GestureDetector(
+          onTap: () => _showOfferDetails(offer),
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [(offer['color'] as Color).withOpacity(0.1), (offer['color'] as Color).withOpacity(0.05)],
+              ),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: (offer['color'] as Color).withOpacity(0.3)),
             ),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: (offer['color'] as Color).withOpacity(0.3)),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: (offer['color'] as Color).withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    offer['icon'] as IconData,
-                    color: offer['color'] as Color,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        offer['title'] as String,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      Text(
-                        offer['subtitle'] as String,
-                        style: const TextStyle(
-                          color: Colors.grey,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: offer['color'] as Color,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    offer['code'] as String,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: (offer['color'] as Color).withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      offer['icon'] as IconData,
+                      color: offer['color'] as Color,
+                      size: 20,
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          offer['title'] as String,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        Text(
+                          offer['subtitle'] as String,
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: offer['color'] as Color,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      offer['code'] as String,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );
       }).toList(),
+    );
+  }
+
+  void _showOfferDetails(Map<String, dynamic> offer) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(offer['title'] as String),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(offer['subtitle'] as String),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: (offer['color'] as Color).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Promo Code:'),
+                    Text(
+                      offer['code'] as String,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: offer['color'] as Color,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text('This offer can be applied at checkout when booking services.'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Close'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                // Copy code to clipboard could be added here
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Code ${offer['code']} saved for checkout!')),
+                );
+              },
+              child: const Text('Use Code'),
+            ),
+          ],
+        );
+      },
     );
   }
 

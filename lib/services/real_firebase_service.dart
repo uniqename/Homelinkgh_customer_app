@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:math' as Math;
-import 'package:cloud_firestore/cloud_firestore.dart';
+// Firestore dependency removed - using simplified services
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:homelinkgh_customer/models/location.dart';
 import '../models/provider.dart';
@@ -13,7 +13,7 @@ class RealFirebaseService {
   factory RealFirebaseService() => _instance;
   RealFirebaseService._internal();
 
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final _firestore // FirebaseFirestore _firestore = _firestore // FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   // ============================================================================

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../services/notification_service.dart';
+import 'contact_customer_screen.dart';
 
 class ProviderQuoteManagementScreen extends StatefulWidget {
   const ProviderQuoteManagementScreen({super.key});
@@ -316,23 +317,36 @@ class _ProviderQuoteManagementScreenState extends State<ProviderQuoteManagementS
               const SizedBox(height: 16),
               
               // Action buttons
-              Row(
+              Column(
                 children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => _viewQuoteDetails(quote),
-                      child: const Text('View Details'),
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => _viewQuoteDetails(quote),
+                          child: const Text('View Details'),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      OutlinedButton(
+                        onPressed: () => _contactCustomer(quote),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFF006B3C),
+                        ),
+                        child: const Icon(Icons.message),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
                     child: ElevatedButton(
                       onPressed: () => _createQuote(quote),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF006B3C),
                         foregroundColor: Colors.white,
                       ),
-                      child: const Text('Quote Now'),
+                      child: const Text('Submit Custom Quote'),
                     ),
                   ),
                 ],
@@ -474,23 +488,36 @@ class _ProviderQuoteManagementScreenState extends State<ProviderQuoteManagementS
               ),
               
               const SizedBox(height: 16),
-              Row(
+              Column(
                 children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => _editQuote(quote),
-                      child: const Text('Edit Quote'),
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => _editQuote(quote),
+                          child: const Text('Edit Quote'),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      OutlinedButton(
+                        onPressed: () => _contactCustomer(quote),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFF006B3C),
+                        ),
+                        child: const Icon(Icons.message),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
                     child: ElevatedButton(
                       onPressed: () => _followUpQuote(quote),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF006B3C),
                         foregroundColor: Colors.white,
                       ),
-                      child: const Text('Follow Up'),
+                      child: const Text('Follow Up with Customer'),
                     ),
                   ),
                 ],
@@ -773,6 +800,15 @@ class _ProviderQuoteManagementScreenState extends State<ProviderQuoteManagementS
           ),
           Expanded(child: Text(value)),
         ],
+      ),
+    );
+  }
+
+  void _contactCustomer(Map<String, dynamic> quote) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ContactCustomerScreen(customerData: quote),
       ),
     );
   }

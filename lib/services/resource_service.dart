@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+// Firestore dependency removed - using simplified services
 import 'package:geolocator/geolocator.dart';
 import '../models/resource.dart';
 
@@ -7,7 +7,7 @@ class ResourceService {
   factory ResourceService() => _instance;
   ResourceService._internal();
 
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final _firestore // FirebaseFirestore _firestore = _firestore // FirebaseFirestore.instance;
 
   // Get all resources by type
   Future<List<Resource>> getResourcesByType(ResourceType type) async {

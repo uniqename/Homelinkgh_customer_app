@@ -30,7 +30,7 @@ class _SmartServiceBookingScreenState extends State<SmartServiceBookingScreen> {
   void initState() {
     super.initState();
     _serviceConfig = _flowManager.getServiceFlow(widget.serviceName);
-    _checkAuthentication();
+    // Don't force authentication immediately - let guests browse service details
   }
 
   Future<void> _checkAuthentication() async {
@@ -101,6 +101,13 @@ class _SmartServiceBookingScreenState extends State<SmartServiceBookingScreen> {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
+              Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+            },
+            child: const Text('Browse as Guest'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
               Navigator.pop(context);
             },
             child: const Text('Cancel'),
@@ -133,6 +140,17 @@ class _SmartServiceBookingScreenState extends State<SmartServiceBookingScreen> {
         title: Text('Book ${widget.serviceName}'),
         backgroundColor: widget.serviceColor.withValues(alpha: 0.1),
         foregroundColor: widget.serviceColor,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            // Ensure we can always go back to guest home
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            } else {
+              Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+            }
+          },
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.info_outline),
@@ -736,7 +754,20 @@ class _SmartServiceBookingScreenState extends State<SmartServiceBookingScreen> {
     );
   }
 
-  void _nextStep() {
+  void _nextStep() async {
+    // Check authentication before proceeding to booking steps (after service details)
+    if (_currentStep >= 1) {
+      final prefs = await SharedPreferences.getInstance();
+      final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+      
+      if (!isLoggedIn) {
+        if (mounted) {
+          _showAuthDialog();
+        }
+        return;
+      }
+    }
+    
     if (_currentStep < _serviceConfig.smartWorkflow.getWorkflowSteps().length - 1) {
       // Validate current step before proceeding
       if (_validateCurrentStep()) {
@@ -748,12 +779,14 @@ class _SmartServiceBookingScreenState extends State<SmartServiceBookingScreen> {
         });
       } else {
         // Show validation error
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Please fill in all required fields'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Please fill in all required fields'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     }
   }

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'smart_booking_flow.dart';
 import '../services/local_data_service.dart';
 import '../services/ai_recommendations_service.dart';
 import '../services/smart_personalization_service.dart';
@@ -8,6 +7,8 @@ import 'role_selection.dart';
 import 'guest_home.dart';
 import 'enhanced_food_delivery_screen.dart';
 import 'enhanced_grocery_screen.dart';
+import 'quote_request_screen.dart';
+import 'data_privacy.dart';
 
 class CustomerHomeScreen extends StatefulWidget {
   const CustomerHomeScreen({super.key});
@@ -455,12 +456,14 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
               ),
             );
           } else {
+            // Use quote request system for all other services
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => SmartBookingFlowScreen(
-                  serviceType: service['name'],
-                  isGuestUser: false,
+                builder: (context) => QuoteRequestScreen(
+                  serviceName: service['name'],
+                  serviceIcon: service['icon'],
+                  serviceColor: service['color'],
                 ),
               ),
             );
@@ -687,9 +690,22 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
             },
           ),
           _buildProfileOption(
+            icon: Icons.security,
+            title: 'Privacy & Security',
+            subtitle: 'Export data, manage privacy & delete account',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const DataPrivacyScreen(),
+                ),
+              );
+            },
+          ),
+          _buildProfileOption(
             icon: Icons.settings,
             title: 'Settings',
-            subtitle: 'App preferences and privacy',
+            subtitle: 'App preferences',
             onTap: () {
               _showSettingsScreen();
             },
@@ -784,10 +800,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const SmartBookingFlowScreen(
-                      serviceType: 'Food Delivery',
-                      isGuestUser: false,
-                    ),
+                    builder: (context) => const EnhancedFoodDeliveryScreen(),
                   ),
                 );
               },
@@ -815,9 +828,10 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const SmartBookingFlowScreen(
-                      serviceType: 'Restaurant Partnership',
-                      isGuestUser: false,
+                    builder: (context) => QuoteRequestScreen(
+                      serviceName: 'Restaurant Partnership',
+                      serviceIcon: Icons.restaurant,
+                      serviceColor: Colors.orange,
                     ),
                   ),
                 );
@@ -900,15 +914,34 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
             
             final services = recommendation['services'] as List<dynamic>?;
             if (services != null && services.isNotEmpty) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => SmartBookingFlowScreen(
-                    serviceType: services.first.toString(),
-                    isGuestUser: false,
+              final serviceType = services.first.toString();
+              // Navigate based on service type
+              if (serviceType == 'Food Delivery') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const EnhancedFoodDeliveryScreen(),
                   ),
-                ),
-              );
+                );
+              } else if (serviceType == 'Grocery') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const EnhancedGroceryScreen(),
+                  ),
+                );
+              } else {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => QuoteRequestScreen(
+                      serviceName: serviceType,
+                      serviceIcon: Icons.build,
+                      serviceColor: Theme.of(context).primaryColor,
+                    ),
+                  ),
+                );
+              }
             }
           },
           child: Container(
@@ -1264,15 +1297,33 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                 child: InkWell(
                   onTap: () {
                     Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => SmartBookingFlowScreen(
-                          serviceType: service['name'],
-                          isGuestUser: false,
+                    // Navigate based on service type
+                    if (service['name'] == 'Food Delivery') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const EnhancedFoodDeliveryScreen(),
                         ),
-                      ),
-                    );
+                      );
+                    } else if (service['name'] == 'Grocery') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const EnhancedGroceryScreen(),
+                        ),
+                      );
+                    } else {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => QuoteRequestScreen(
+                            serviceName: service['name'],
+                            serviceIcon: service['icon'],
+                            serviceColor: service['color'],
+                          ),
+                        ),
+                      );
+                    }
                   },
                   child: Container(
                     padding: const EdgeInsets.all(8),
@@ -1371,11 +1422,15 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.privacy_tip),
-              title: const Text('Privacy Policy'),
+              title: const Text('Privacy & Data Management'),
               trailing: const Icon(Icons.arrow_forward_ios, size: 16),
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Privacy policy coming soon!')),
+                Navigator.pop(context); // Close the settings dialog
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const DataPrivacyScreen(),
+                  ),
                 );
               },
             ),
@@ -1387,6 +1442,27 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Terms of service coming soon!')),
                 );
+              },
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.delete_forever, color: Colors.red),
+              title: const Text(
+                'Delete My Account',
+                style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+              ),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.red),
+              onTap: () {
+                Navigator.pop(context); // Close the settings dialog
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const DataPrivacyScreen(),
+                  ),
+                ).then((_) {
+                  // Automatically navigate to the Delete Account tab
+                  // This would need to be implemented in DataPrivacyScreen to accept an initial tab parameter
+                });
               },
             ),
           ],

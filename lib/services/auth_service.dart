@@ -1,5 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+// Using simplified service instead of Firestore
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user.dart';
 import 'demo_auth_service.dart';
@@ -10,7 +10,7 @@ class AuthService {
   AuthService._internal();
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final _firestore // FirebaseFirestore _firestore = _firestore // FirebaseFirestore.instance;
   final DemoAuthService _demoAuth = DemoAuthService();
   
   bool _useDemo = false;

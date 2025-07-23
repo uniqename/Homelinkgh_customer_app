@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:cloud_firestore/cloud_firestore.dart';
+// Firestore dependency removed - using simplified services
 import '../models/chat_message.dart';
 import '../models/booking.dart';
 import 'push_notification_service.dart';
@@ -9,7 +9,7 @@ class ChatService {
   static const String _chatCollection = 'chats';
   static const String _messagesSubcollection = 'messages';
   
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final _firestore // FirebaseFirestore _firestore = _firestore // FirebaseFirestore.instance;
   final PushNotificationService _notificationService = PushNotificationService();
 
   /// Send a new message in a chat

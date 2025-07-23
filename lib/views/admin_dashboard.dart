@@ -7,6 +7,7 @@ import 'admin_commission_management_screen.dart';
 import 'admin_service_configuration_screen.dart';
 import 'admin_service_areas_screen.dart';
 import 'admin_policy_management_screen.dart';
+import 'admin_provider_applications_screen.dart';
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
@@ -411,25 +412,33 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              Row(
+              Column(
                 children: [
-                  ElevatedButton.icon(
-                    onPressed: _reviewApplications,
-                    icon: const Icon(Icons.rate_review),
-                    label: const Text('Review Apps'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                      foregroundColor: Colors.white,
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: _reviewApplications,
+                      icon: const Icon(Icons.rate_review),
+                      label: const Text('Review Applications'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  ElevatedButton.icon(
-                    onPressed: _addNewProvider,
-                    icon: const Icon(Icons.add),
-                    label: const Text('Add Provider'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF006B3C),
-                      foregroundColor: Colors.white,
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: _addNewProvider,
+                      icon: const Icon(Icons.add),
+                      label: const Text('Add Provider'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF006B3C),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
                     ),
                   ),
                 ],
@@ -1046,8 +1055,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
   // Provider management methods
   void _reviewApplications() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Opening provider applications for review...')),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const AdminProviderApplicationsScreen(),
+      ),
     );
   }
 
