@@ -1,0 +1,17 @@
+# Netlify redirects for Beacon of New Beginnings website
+
+# Privacy policy redirects for Google Play compliance
+/privacy-policy /privacy-policy.html 200
+/privacy /privacy-policy.html 200
+/privacy.html /privacy-policy.html 200
+
+# Ensure clean URLs work
+/privacy-policy/ /privacy-policy.html 200
+
+# Terms of service (if needed later)
+/terms-of-service /terms-of-service.html 200
+/terms /terms-of-service.html 200
+
+# Support page redirects
+/support /contact.html 200
+/help /contact.html 200
