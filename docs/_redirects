@@ -16,5 +16,11 @@
 /support /support.html 200
 /help /support.html 200
 
+# Account deletion page redirects (App Store requirement)
+/account/delete /account-deletion.html 200
+/account/deletion /account-deletion.html 200
+/delete-account /account-deletion.html 200
+/data-deletion /account-deletion.html 200
+
 # Root redirects
 / /index.html 200
