@@ -206,6 +206,48 @@ Get started today and experience reliable services at your fingertips!
 
 ---
 
+## 🔍 **Google Play Reviewer Access Instructions**
+
+### **Demo Account for Testing**
+- **Email:** `reviewer@homelinkgh.com`
+- **Password:** `ReviewTest2025!`
+- **Account Type:** Full customer account with sample data
+- **Alternative:** Guest browsing available (tap "Browse as Guest")
+
+### **Core Features to Test**
+1. **Service Booking:** Home screen → Home Services → Select provider → Book service
+2. **Food Delivery:** Home screen → Food Delivery → Browse restaurants → Order food
+3. **Emergency Features:** Profile → Emergency Contacts → View Ghana emergency numbers (999, 191, 192, 193)
+4. **Location Services:** Used only for service provider matching (not tracking)
+
+### **Payment Testing**
+- **Test Mode:** All payments in sandbox mode, no real transactions
+- **Methods:** Mobile money (MTN/Vodafone Ghana), test cards, cash options
+- **Flow:** Complete booking → Select payment → Confirmation screen
+
+### **Privacy Testing**
+- **Account Deletion:** Profile → Settings → Delete Account OR visit https://homelinkgh.com/account/delete  
+- **Data Access:** Profile → Privacy & Data → View/export personal data
+- **Location Permission:** Only requested when needed for service matching
+
+### **Ghana-Specific Features**
+- **Emergency Integration:** Direct dialing to Ghana Emergency (999) - DO NOT complete calls during testing
+- **Ghana Card:** Demo verification system (no real Ghana Card needed)
+- **Local Context:** Ghana Cedis (GH¢), Accra/Kumasi/Takoradi locations, GMT timezone
+
+### **Important Notes for Reviewers**
+- **Geographic Focus:** Built specifically for Ghana market with local emergency services integration
+- **Safety Features:** Provider verification system, emergency contacts supplement official services
+- **No Sensitive Permissions:** SMS/Call log permissions removed for policy compliance
+- **Business Model:** Free app with transparent commission from service transactions
+
+### **Reviewer Support**
+- **Email:** reviewer-support@homelinkgh.com
+- **Response Time:** Within 2 hours during Ghana business hours (GMT)
+- **Resources:** Privacy policy, terms, and support pages all accessible at https://homelinkgh.com
+
+---
+
 ## ✅ **Pre-Submission Checklist**
 
 ### **Required Uploads**
