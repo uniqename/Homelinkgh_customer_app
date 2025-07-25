@@ -1,0 +1,37 @@
+# Netlify configuration for HomeLinkGH website
+[build]
+  # Publish the docs directory which contains our website
+  publish = "docs"
+  
+  # No build command needed since we have static HTML files
+  command = ""
+
+# Custom headers for security and performance
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Content-Security-Policy = "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'"
+
+# Enable HTTPS redirects
+[[redirects]]
+  from = "http://homelinkgh.com/*"
+  to = "https://homelinkgh.com/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "http://www.homelinkgh.com/*"
+  to = "https://homelinkgh.com/:splat"
+  status = 301
+  force = true
+
+# Handle www subdomain
+[[redirects]]
+  from = "https://www.homelinkgh.com/*"
+  to = "https://homelinkgh.com/:splat"
+  status = 301
+  force = true
