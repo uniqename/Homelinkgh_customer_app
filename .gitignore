@@ -99,3 +99,10 @@ screenshots/
 metadata/
 *metadata*/
 *_metadata/
+
+# Submission packets (contain sensitive reviewer credentials)
+*SUBMISSION_PACKET*.md
+*REVIEWER_INSTRUCTIONS*.md
+APPLE_APP_STORE_SUBMISSION_PACKET.md
+GOOGLE_PLAY_SUBMISSION_PACKET*.md
+GOOGLE_PLAY_REVIEWER_INSTRUCTIONS.md
