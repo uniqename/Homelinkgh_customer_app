@@ -1,0 +1,20 @@
+# Netlify redirects for HomeLinkGH website
+
+# Privacy policy redirects for App Store compliance
+/privacy-policy /privacy.html 200
+/privacy /privacy.html 200
+/privacy.html /privacy.html 200
+
+# Ensure clean URLs work
+/privacy-policy/ /privacy.html 200
+
+# Terms of service
+/terms-of-service /terms.html 200
+/terms /terms.html 200
+
+# Support page redirects
+/support /support.html 200
+/help /support.html 200
+
+# Root redirects
+/ /index.html 200
