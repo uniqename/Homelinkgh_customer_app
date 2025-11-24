@@ -1,14 +1,15 @@
 class AppConstants {
   // Website and Contact Information
-  static const String websiteUrl = 'https://beaconnewbeginnings.org'; // Update this to your actual domain
-  static const String organizationName = 'Beacon of New Beginnings';
-  static const String organizationEmail = 'info@beaconnewbeginnings.org';
-  static const String emergencyContactGhana = '191'; // Ghana Police Emergency
-  static const String supportEmail = 'support@beaconnewbeginnings.org';
+  static const String websiteUrl = 'https://homelinkgh.com';
+  static const String organizationName = 'HomeLinkGH';
+  static const String organizationEmail = 'consulting.enam@gmail.com';
+  static const String emergencyContactGhana = '999'; // Ghana Emergency Services
+  static const String supportEmail = 'consulting.enam@gmail.com';
+  static const String privacyPolicyUrl = 'https://homelinkgh.com/privacy';
   
   // App Information
   static const String appVersion = '1.0.0';
-  static const String appDescription = 'Providing safety, healing, and empowerment to survivors of abuse and homelessness';
+  static const String appDescription = 'Connecting Ghanaians with trusted home services, food delivery, and essential support';
   
   // Emergency Contacts (Ghana)
   static const Map<String, String> emergencyContacts = {
@@ -32,8 +33,7 @@ class AppConstants {
   ];
   
   // Privacy and Security
-  static const String privacyPolicyUrl = 'https://beaconnewbeginnings.org/privacy';
-  static const String termsOfServiceUrl = 'https://beaconnewbeginnings.org/terms';
+  static const String termsOfServiceUrl = 'https://homelinkgh.com/terms';
   
   // Colors
   static const int primaryColorValue = 0xFF00796B;

@@ -177,7 +177,7 @@ While we strive to protect your information, no system is 100% secure. We encour
 • Withdraw consent for data collection
 • Receive a copy of your data
 
-To exercise these rights, contact us at privacy@homelinkgh.com''',
+To exercise these rights, contact us at consulting.enam@gmail.com''',
         ),
 
         _buildSection(
@@ -247,12 +247,12 @@ We will notify you of significant changes through the app or email. Your continu
           '13. Contact Information',
           '''For privacy-related questions or concerns, contact us:
 
-Email: privacy@homelinkgh.com
+Email: consulting.enam@gmail.com
 Phone: +233 XX XXX XXXX
 Address: [Company Address], Accra, Ghana
 
 Data Protection Officer: [Name]
-Email: dpo@homelinkgh.com
+Email: consulting.enam@gmail.com
 
 You may also contact the Data Protection Commission of Ghana if you have concerns about our data practices.''',
         ),
@@ -343,7 +343,7 @@ Your privacy is important to us. This policy explains how we collect, use, and p
 
 For the complete privacy policy, please visit our app or website.
 
-Contact us: privacy@homelinkgh.com''';
+Contact us: consulting.enam@gmail.com''';
 
     Clipboard.setData(const ClipboardData(text: privacyText));
   }
