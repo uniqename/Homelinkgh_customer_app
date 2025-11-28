@@ -93,17 +93,13 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
       ),
       child: Row(
         children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(
-              Icons.home,
-              color: Color(0xFF006B3C),
-              size: 24,
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.asset(
+              'assets/images/homelink_logo.png',
+              width: 40,
+              height: 40,
+              fit: BoxFit.contain,
             ),
           ),
           const SizedBox(width: 12),
