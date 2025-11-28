@@ -260,7 +260,7 @@ class _ReferralDriveScreenState extends State<ReferralDriveScreen> {
                       _buildHowItWorksStep(
                         '4',
                         'Build Community',
-                        'Help grow Ghana\\'s most trusted diaspora service platform',
+                        'Help grow Ghana\'s diaspora service platform',
                         Icons.group,
                       ),
                     ],
@@ -597,7 +597,7 @@ class _ReferralDriveScreenState extends State<ReferralDriveScreen> {
   }
 
   void _shareToWhatsApp() {
-    final message = "🇬🇭 Join me on HomeLinkGH - Ghana's premier diaspora service platform! Use my code $userReferralCode and get ₵20 credit. Perfect for booking services before you land! Download: https://homelink.gh/app";
+    final message = "🇬🇭 Join me on HomeLinkGH - Ghana's diaspora service platform! Use my code $userReferralCode and get ₵20 credit. Perfect for booking services before you land! Download: https://homelink.gh/app";
     // Implement WhatsApp sharing
   }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:homelinkgh_customer/models/location.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:homeservices_ghana/models/location.dart';
 import '../models/chat_message.dart';
 import '../models/booking.dart';
 import '../services/chat_service.dart';
@@ -725,11 +726,57 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
   }
 
-  void _sendPhoto() {
-    // TODO: Implement photo sharing functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Photo sharing coming soon!')),
-    );
+  void _sendPhoto() async {
+    try {
+      final picker = ImagePicker();
+      final image = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
+
+      if (image == null) return;
+
+      // Show loading indicator
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Uploading image...')),
+        );
+      }
+
+      // Read image bytes
+      final imageBytes = await image.readAsBytes();
+
+      // Upload image
+      final imageUrl = await _chatService.uploadChatImage(
+        imageBytes,
+        widget.bookingId,
+      );
+
+      // Send image message
+      await _chatService.sendImage(
+        bookingId: widget.bookingId,
+        senderId: widget.currentUserId,
+        senderName: widget.currentUserName,
+        senderType: widget.currentUserType,
+        imageUrl: imageUrl,
+      );
+
+      _scrollToBottom();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Image sent successfully!')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to send image: $e')),
+        );
+      }
+    }
   }
 
   void _showLocationOnMap(Map<String, dynamic> locationData) {
@@ -856,9 +903,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   void _callSupport() {
-    // TODO: Implement support call functionality
+    // Open phone dialer for support
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Support call functionality coming soon!')),
+      const SnackBar(
+        content: Text('For support, please call: +233 XXX XXX XXX'),
+        duration: Duration(seconds: 5),
+      ),
     );
   }
 }

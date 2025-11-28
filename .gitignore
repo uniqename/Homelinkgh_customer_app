@@ -106,3 +106,7 @@ metadata/
 APPLE_APP_STORE_SUBMISSION_PACKET.md
 GOOGLE_PLAY_SUBMISSION_PACKET*.md
 GOOGLE_PLAY_REVIEWER_INSTRUCTIONS.md
+
+# Build artifacts from Beacon subfolder
+beacon-of-new-beginnings/
+ios/ios/build/

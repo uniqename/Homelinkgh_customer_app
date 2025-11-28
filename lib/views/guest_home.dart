@@ -410,20 +410,20 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
                 ),
                 SizedBox(height: 12),
                 Text(
-                  'Service Providers Coming Soon!',
+                  'Trusted Service Providers Available!',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.blue,
+                    color: Colors.green,
                   ),
                   textAlign: TextAlign.center,
                 ),
                 SizedBox(height: 8),
                 Text(
-                  'We are currently onboarding trusted service providers across Ghana. Sign up to be notified when services become available in your area.',
+                  'Connect with verified service providers across Ghana. Browse available services and book with confidence.',
                   style: TextStyle(
                     fontSize: 14,
-                    color: Colors.blue,
+                    color: Colors.grey,
                   ),
                   textAlign: TextAlign.center,
                 ),

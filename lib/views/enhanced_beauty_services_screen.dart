@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+
 
 class EnhancedBeautyServicesScreen extends StatefulWidget {
   final String serviceType; // 'nail_tech' or 'makeup_artist'

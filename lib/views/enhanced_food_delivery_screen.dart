@@ -30,6 +30,8 @@ class _EnhancedFoodDeliveryScreenState extends State<EnhancedFoodDeliveryScreen>
       'rating': 4.5,
       'deliveryTime': '20-30 mins',
       'deliveryFee': 15.0,
+      'website': 'https://www.papaye.com.gh',
+      'phone': '+233 30 251 1111',
       'menu': [
         {'name': 'Jollof Rice with Chicken', 'price': 35.0, 'description': 'Traditional Ghanaian jollof with grilled chicken', 'category': 'Main Course'},
         {'name': 'Banku with Tilapia', 'price': 45.0, 'description': 'Fresh tilapia with traditional banku', 'category': 'Main Course'},
@@ -44,6 +46,8 @@ class _EnhancedFoodDeliveryScreenState extends State<EnhancedFoodDeliveryScreen>
       'rating': 4.2,
       'deliveryTime': '15-25 mins',
       'deliveryFee': 12.0,
+      'website': 'https://www.kfcghana.com',
+      'phone': '+233 30 276 3676',
       'menu': [
         {'name': 'Original Recipe Chicken', 'price': 28.0, 'description': '2 pieces of original recipe chicken', 'category': 'Main Course'},
         {'name': 'Zinger Burger', 'price': 25.0, 'description': 'Spicy chicken burger with fries', 'category': 'Main Course'},
@@ -56,6 +60,7 @@ class _EnhancedFoodDeliveryScreenState extends State<EnhancedFoodDeliveryScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: const Text('Food Delivery'),
         backgroundColor: Colors.red,
@@ -240,6 +245,35 @@ class _EnhancedFoodDeliveryScreenState extends State<EnhancedFoodDeliveryScreen>
                                 ),
                               ],
                             ),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              if (restaurant['website'] != null)
+                                Expanded(
+                                  child: OutlinedButton.icon(
+                                    onPressed: () => _openWebsite(restaurant['website']),
+                                    icon: const Icon(Icons.language, size: 16),
+                                    label: const Text('Menu & Prices', style: TextStyle(fontSize: 12)),
+                                    style: OutlinedButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    ),
+                                  ),
+                                ),
+                              if (restaurant['phone'] != null) ...[
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: OutlinedButton.icon(
+                                    onPressed: () => _callRestaurant(restaurant['phone']),
+                                    icon: const Icon(Icons.phone, size: 16),
+                                    label: const Text('Call', style: TextStyle(fontSize: 12)),
+                                    style: OutlinedButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                         ],
                       ),
@@ -958,11 +992,54 @@ class _EnhancedFoodDeliveryScreenState extends State<EnhancedFoodDeliveryScreen>
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
-              Navigator.of(context).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Tracking feature will be available soon')),
+              );
             },
-            child: const Text('OK'),
+            child: const Text('Track Order'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              Navigator.of(context).popUntil((route) => route.isFirst);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF006B3C),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Go to Dashboard'),
           ),
         ],
+      ),
+    );
+  }
+
+  void _openWebsite(String url) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Visit: $url for current menu and prices'),
+        duration: const Duration(seconds: 5),
+        action: SnackBarAction(
+          label: 'COPY',
+          onPressed: () {
+            // Copy URL to clipboard functionality would go here
+          },
+        ),
+      ),
+    );
+  }
+
+  void _callRestaurant(String phone) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Call restaurant: $phone'),
+        duration: const Duration(seconds: 5),
+        action: SnackBarAction(
+          label: 'CALL',
+          onPressed: () {
+            // Phone dialer functionality would go here
+          },
+        ),
       ),
     );
   }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:homelinkgh_customer/models/location.dart';
+import 'package:homeservices_ghana/models/location.dart';
 import '../models/booking.dart';
 import '../services/booking_service.dart';
 import '../services/gps_tracking_service.dart';

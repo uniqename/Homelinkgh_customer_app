@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
+
 import '../../services/auth_service_minimal.dart';
 import '../../services/location_service.dart';
 import '../../services/anonymous_data_service.dart';

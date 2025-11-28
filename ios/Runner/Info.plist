@@ -24,64 +24,50 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<false/>
+	</dict>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>This app may use Bluetooth to connect with nearby devices for enhanced service delivery experience.</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>This app may access your calendar to schedule service appointments and send reminders.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs access to camera to take photos for service requests, provider profiles, and order documentation.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>This app may access contacts to help you easily invite family members to use HomeLinkGH services.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>This app needs access to your location to find nearby service providers, calculate delivery times, and provide accurate service estimates.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app needs access to your location to find nearby service providers, calculate delivery times, and provide accurate service estimates.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app may need access to microphone for voice messages and video calls with service providers.</string>
+	<key>NSMotionUsageDescription</key>
+	<string>This app may access motion data to improve location accuracy for service delivery.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs access to photo library to select images for service requests, provider profiles, and order documentation.</string>
+	<key>NSPrivacyManifest</key>
+	<dict>
+		<key>NSPrivacyAccessedAPITypes</key>
+		<array/>
+		<key>NSPrivacyCollectedDataTypes</key>
+		<array/>
+		<key>NSPrivacyTracking</key>
+		<false/>
+	</dict>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>This app would like to access your device's advertising identifier to provide personalized service recommendations and improve your experience with HomeLinkGH.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
-	<key>UISupportedInterfaceOrientations</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
-	<key>UISupportedInterfaceOrientations~ipad</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
-	
-	<!-- Camera Usage -->
-	<key>NSCameraUsageDescription</key>
-	<string>This app needs access to camera to take photos for service requests, provider profiles, and order documentation.</string>
-	
-	<!-- Photo Library Usage -->
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>This app needs access to photo library to select images for service requests, provider profiles, and order documentation.</string>
-	
-	<!-- Location Usage -->
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>This app needs access to your location to find nearby service providers, calculate delivery times, and provide accurate service estimates.</string>
-	
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>This app needs access to your location to find nearby service providers, calculate delivery times, and provide accurate service estimates.</string>
-	
-	<!-- Microphone Usage -->
-	<key>NSMicrophoneUsageDescription</key>
-	<string>This app may need access to microphone for voice messages and video calls with service providers.</string>
-	
-	<!-- Contacts Usage -->
-	<key>NSContactsUsageDescription</key>
-	<string>This app may access contacts to help you easily invite family members to use HomeLinkGH services.</string>
-	
-	<!-- Bluetooth Usage -->
-	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>This app may use Bluetooth to connect with nearby devices for enhanced service delivery experience.</string>
-	
-	<!-- Calendar Usage -->
-	<key>NSCalendarsUsageDescription</key>
-	<string>This app may access your calendar to schedule service appointments and send reminders.</string>
-	
-	<!-- Motion Usage -->
-	<key>NSMotionUsageDescription</key>
-	<string>This app may access motion data to improve location accuracy for service delivery.</string>
-	
-	<!-- iOS 26 Compatibility -->
 	<key>UISceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
@@ -99,38 +85,22 @@
 			</array>
 		</dict>
 	</dict>
-	
-	<!-- Privacy Manifest -->
-	<key>NSPrivacyManifest</key>
-	<dict>
-		<key>NSPrivacyTracking</key>
-		<false/>
-		<key>NSPrivacyCollectedDataTypes</key>
-		<array/>
-		<key>NSPrivacyAccessedAPITypes</key>
-		<array/>
-	</dict>
-	
-	<!-- Required for iOS 26 -->
-	<key>UIUserInterfaceStyle</key>
-	<string>Automatic</string>
-	
 	<key>UIStatusBarStyle</key>
 	<string>UIStatusBarStyleDefault</string>
-	
-	<!-- App Transport Security -->
-	<key>NSAppTransportSecurity</key>
-	<dict>
-		<key>NSAllowsArbitraryLoads</key>
-		<false/>
-	</dict>
-	
-	<!-- App Tracking Transparency -->
-	<key>NSUserTrackingUsageDescription</key>
-	<string>This app would like to access your device's advertising identifier to provide personalized service recommendations and improve your experience with HomeLinkGH.</string>
-	
-	<!-- Export Compliance - App uses only standard encryption (HTTPS/TLS) -->
-	<key>ITSAppUsesNonExemptEncryption</key>
-	<false/>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UIUserInterfaceStyle</key>
+	<string>Automatic</string>
 </dict>
 </plist>

@@ -69,6 +69,7 @@ class _StreamlinedBookingFlowState extends State<StreamlinedBookingFlow> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: Text('Book ${widget.serviceName}'),
         backgroundColor: widget.serviceColor,
@@ -142,7 +143,7 @@ class _StreamlinedBookingFlowState extends State<StreamlinedBookingFlow> {
             ),
             child: Row(
               children: [
-                if (_currentStep > 0)
+                if (_currentStep > 0 && _currentStep < 5)
                   TextButton(
                     onPressed: () {
                       setState(() {
@@ -161,7 +162,32 @@ class _StreamlinedBookingFlowState extends State<StreamlinedBookingFlow> {
                       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     ),
                     child: Text(_getNextButtonText()),
+                  )
+                else if (_currentStep == 5) ...[
+                  // Completion screen buttons
+                  TextButton(
+                    onPressed: () {
+                      // Navigate to booking tracking
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Tracking feature will be available soon')),
+                      );
+                    },
+                    child: const Text('Track Service'),
                   ),
+                  const SizedBox(width: 12),
+                  ElevatedButton(
+                    onPressed: () {
+                      // Navigate back to home dashboard
+                      Navigator.of(context).popUntil((route) => route.isFirst);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: widget.serviceColor,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    ),
+                    child: const Text('Go to Dashboard'),
+                  ),
+                ],
               ],
             ),
           ),
@@ -194,11 +220,14 @@ class _StreamlinedBookingFlowState extends State<StreamlinedBookingFlow> {
   }
 
   Widget _buildServiceDetailsStep() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(20),
@@ -336,16 +365,20 @@ class _StreamlinedBookingFlowState extends State<StreamlinedBookingFlow> {
             ),
           ),
         ],
+        ),
       ),
     );
   }
 
   Widget _buildSchedulingStep() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
           const Text(
             'When do you need this service?',
             style: TextStyle(
@@ -421,6 +454,7 @@ class _StreamlinedBookingFlowState extends State<StreamlinedBookingFlow> {
             );
           }).toList(),
         ],
+        ),
       ),
     );
   }

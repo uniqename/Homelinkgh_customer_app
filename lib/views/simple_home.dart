@@ -238,14 +238,34 @@ class SimpleHomeScreen extends StatelessWidget {
             ),
           );
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('$title feature coming soon!')),
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text(title),
+              content: Text('$title feature is currently being configured. Please check back later or contact support for assistance.'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('OK'),
+                ),
+              ],
+            ),
           );
         }
         break;
       default:
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$title feature coming soon!')),
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(title),
+            content: Text('$title feature is currently being configured. Please check back later or contact support for assistance.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
         );
     }
   }

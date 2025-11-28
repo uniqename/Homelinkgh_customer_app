@@ -73,6 +73,7 @@ class _EnhancedGroceryScreenState extends State<EnhancedGroceryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: const Text('Grocery Shopping'),
         backgroundColor: Colors.green,
@@ -676,9 +677,22 @@ class _EnhancedGroceryScreenState extends State<EnhancedGroceryScreen> {
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
-              Navigator.of(context).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Tracking feature will be available soon')),
+              );
             },
-            child: const Text('OK'),
+            child: const Text('Track Order'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              Navigator.of(context).popUntil((route) => route.isFirst);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF006B3C),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Go to Dashboard'),
           ),
         ],
       ),

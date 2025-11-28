@@ -1,5 +1,5 @@
-name: homelinkgh_customer
-description: "HomeLinkGH - Connecting Ghanaians worldwide with trusted home services, food delivery, and essential support."
+name: homeservices_ghana
+description: "Home Services Ghana - Connecting Ghanaians with trusted home services, food delivery, and essential support."
 publish_to: 'none'
 
 # The following defines the version and build number for your application.
@@ -14,7 +14,7 @@ publish_to: 'none'
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 4.1.0+26
+version: 4.1.1+45
 
 environment:
   sdk: ^3.8.1
@@ -31,7 +31,6 @@ dependencies:
   cupertino_icons: ^1.0.8
   geolocator: ^10.1.0
   geocoding: ^2.1.1
-  url_launcher: ^6.2.2
   image_picker: ^1.0.4
   shared_preferences: ^2.2.2
   provider: ^6.1.1
@@ -72,6 +71,7 @@ flutter:
   assets:
     - assets/images/
     - assets/icons/
+    - assets/legal/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

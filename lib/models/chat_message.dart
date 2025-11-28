@@ -81,10 +81,6 @@ class ChatMessage {
     );
   }
 
-  factory ChatMessage.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
-    return ChatMessage.fromMap(data, doc.id);
-  }
 
   /// Creates a system message for booking status updates
   factory ChatMessage.systemMessage({

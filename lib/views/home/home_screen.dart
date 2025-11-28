@@ -26,9 +26,38 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
+      body: Column(
+        children: [
+          // Service Disclaimer Bar
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            color: Colors.blue[50],
+            child: Row(
+              children: [
+                Icon(Icons.info_outline, color: Colors.blue[800], size: 16),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Service Platform Only • Verify Providers • Emergency: Call 999',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.blue[800],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Main Content
+          Expanded(
+            child: IndexedStack(
+              index: _currentIndex,
+              children: _screens,
+            ),
+          ),
+        ],
       ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,

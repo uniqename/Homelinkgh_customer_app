@@ -1,15 +1,17 @@
 import 'dart:async';
-// Firestore dependency removed - using simplified services
+import 'dart:typed_data';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/chat_message.dart';
 import '../models/booking.dart';
+import 'supabase_service.dart';
 import 'push_notification_service.dart';
 
 /// Real-time chat service for communication between customers and providers
 class ChatService {
   static const String _chatCollection = 'chats';
   static const String _messagesSubcollection = 'messages';
-  
-  final _firestore // FirebaseFirestore _firestore = _firestore // FirebaseFirestore.instance;
+
+  final SupabaseService _supabase = SupabaseService();
   final PushNotificationService _notificationService = PushNotificationService();
 
   /// Send a new message in a chat
@@ -23,28 +25,23 @@ class ChatService {
     Map<String, dynamic>? metadata,
   }) async {
     try {
-      final chatMessage = ChatMessage(
-        id: '',
-        bookingId: bookingId,
-        senderId: senderId,
-        senderName: senderName,
-        senderType: senderType,
-        message: message,
-        messageType: messageType,
-        timestamp: DateTime.now(),
-        isRead: false,
-        metadata: metadata,
-      );
+      final messageData = {
+        'booking_id': bookingId,
+        'sender_id': senderId,
+        'sender_name': senderName,
+        'sender_type': senderType,
+        'message': message,
+        'message_type': messageType,
+        'timestamp': DateTime.now().toIso8601String(),
+        'is_read': false,
+        'metadata': metadata,
+      };
 
-      // Add message to Firestore
-      await _firestore
-          .collection(_chatCollection)
-          .doc(bookingId)
-          .collection(_messagesSubcollection)
-          .add(chatMessage.toMap());
+      // Add message to Supabase
+      await _supabase.supabase.from(_messagesSubcollection).insert(messageData);
 
       // Update chat metadata
-      await _updateChatMetadata(bookingId, chatMessage);
+      await _updateChatMetadata(bookingId, messageData);
 
       // Send push notification to the other party
       await _sendChatNotification(bookingId, senderType, senderName, message);
@@ -56,37 +53,38 @@ class ChatService {
 
   /// Get real-time messages stream for a booking
   Stream<List<ChatMessage>> getMessagesStream(String bookingId) {
-    return _firestore
-        .collection(_chatCollection)
-        .doc(bookingId)
-        .collection(_messagesSubcollection)
-        .orderBy('timestamp', descending: false)
-        .snapshots()
-        .map((snapshot) {
-      return snapshot.docs
-          .map((doc) => ChatMessage.fromFirestore(doc))
-          .toList();
+    return _supabase.supabase
+        .from(_messagesSubcollection)
+        .stream(primaryKey: ['id'])
+        .eq('booking_id', bookingId)
+        .order('timestamp', ascending: true)
+        .map((data) {
+      return data.map((item) {
+        return ChatMessage(
+          id: item['id'].toString(),
+          bookingId: item['booking_id'] ?? '',
+          senderId: item['sender_id'] ?? '',
+          senderName: item['sender_name'] ?? '',
+          senderType: item['sender_type'] ?? '',
+          message: item['message'] ?? '',
+          messageType: item['message_type'] ?? 'text',
+          timestamp: DateTime.parse(item['timestamp']),
+          isRead: item['is_read'] ?? false,
+          metadata: item['metadata'],
+        );
+      }).toList();
     });
   }
 
   /// Mark messages as read
   Future<void> markMessagesAsRead(String bookingId, String userId) async {
     try {
-      final batch = _firestore.batch();
-      
-      final unreadMessages = await _firestore
-          .collection(_chatCollection)
-          .doc(bookingId)
-          .collection(_messagesSubcollection)
-          .where('senderId', isNotEqualTo: userId)
-          .where('isRead', isEqualTo: false)
-          .get();
-
-      for (final doc in unreadMessages.docs) {
-        batch.update(doc.reference, {'isRead': true});
-      }
-
-      await batch.commit();
+      await _supabase.supabase
+          .from(_messagesSubcollection)
+          .update({'is_read': true})
+          .eq('booking_id', bookingId)
+          .neq('sender_id', userId)
+          .eq('is_read', false);
     } catch (e) {
       throw Exception('Failed to mark messages as read: $e');
     }
@@ -95,15 +93,14 @@ class ChatService {
   /// Get unread message count for a booking
   Future<int> getUnreadMessageCount(String bookingId, String userId) async {
     try {
-      final unreadMessages = await _firestore
-          .collection(_chatCollection)
-          .doc(bookingId)
-          .collection(_messagesSubcollection)
-          .where('senderId', isNotEqualTo: userId)
-          .where('isRead', isEqualTo: false)
-          .get();
+      final response = await _supabase.supabase
+          .from(_messagesSubcollection)
+          .select('id')
+          .eq('booking_id', bookingId)
+          .neq('sender_id', userId)
+          .eq('is_read', false);
 
-      return unreadMessages.docs.length;
+      return (response as List).length;
     } catch (e) {
       return 0;
     }
@@ -116,19 +113,21 @@ class ChatService {
     Map<String, dynamic>? metadata,
   }) async {
     try {
-      final systemMessage = ChatMessage.systemMessage(
-        bookingId: bookingId,
-        message: message,
-        metadata: metadata,
-      );
+      final messageData = {
+        'booking_id': bookingId,
+        'sender_id': 'system',
+        'sender_name': 'HomeLinkGH',
+        'sender_type': 'system',
+        'message': message,
+        'message_type': 'system',
+        'timestamp': DateTime.now().toIso8601String(),
+        'is_read': false,
+        'metadata': metadata,
+      };
 
-      await _firestore
-          .collection(_chatCollection)
-          .doc(bookingId)
-          .collection(_messagesSubcollection)
-          .add(systemMessage.toMap());
+      await _supabase.supabase.from(_messagesSubcollection).insert(messageData);
 
-      await _updateChatMetadata(bookingId, systemMessage);
+      await _updateChatMetadata(bookingId, messageData);
     } catch (e) {
       throw Exception('Failed to send system message: $e');
     }
@@ -185,12 +184,13 @@ class ChatService {
   /// Get chat metadata (last message, participants, etc.)
   Future<Map<String, dynamic>?> getChatMetadata(String bookingId) async {
     try {
-      final doc = await _firestore
-          .collection(_chatCollection)
-          .doc(bookingId)
-          .get();
+      final response = await _supabase.supabase
+          .from(_chatCollection)
+          .select()
+          .eq('booking_id', bookingId)
+          .single();
 
-      return doc.exists ? doc.data() : null;
+      return response;
     } catch (e) {
       return null;
     }
@@ -198,16 +198,17 @@ class ChatService {
 
   /// Get all chats for a user
   Stream<List<Map<String, dynamic>>> getUserChatsStream(String userId) {
-    return _firestore
-        .collection(_chatCollection)
-        .where('participants', arrayContains: userId)
-        .orderBy('lastMessageTime', descending: true)
-        .snapshots()
-        .map((snapshot) {
-      return snapshot.docs.map((doc) {
-        final data = doc.data();
-        data['bookingId'] = doc.id;
-        return data;
+    return _supabase.supabase
+        .from(_chatCollection)
+        .stream(primaryKey: ['id'])
+        .contains('participants', [userId])
+        .order('last_message_time', ascending: false)
+        .map((data) {
+      return data.map((item) {
+        return {
+          ...item,
+          'bookingId': item['booking_id'],
+        };
       }).toList();
     });
   }
@@ -222,29 +223,27 @@ class ChatService {
   }) async {
     try {
       final chatData = {
+        'booking_id': bookingId,
         'participants': [customerId, providerId],
-        'participantNames': {
+        'participant_names': {
           customerId: customerName,
           providerId: providerName,
         },
-        'participantTypes': {
+        'participant_types': {
           customerId: 'customer',
           providerId: 'provider',
         },
-        'createdAt': DateTime.now().toIso8601String(),
-        'lastMessage': 'Chat started',
-        'lastMessageTime': DateTime.now().toIso8601String(),
-        'lastMessageSender': 'system',
-        'unreadCount': {
+        'created_at': DateTime.now().toIso8601String(),
+        'last_message': 'Chat started',
+        'last_message_time': DateTime.now().toIso8601String(),
+        'last_message_sender': 'system',
+        'unread_count': {
           customerId: 0,
           providerId: 0,
         },
       };
 
-      await _firestore
-          .collection(_chatCollection)
-          .doc(bookingId)
-          .set(chatData);
+      await _supabase.supabase.from(_chatCollection).insert(chatData);
 
       // Send welcome system message
       await sendSystemMessage(
@@ -258,19 +257,19 @@ class ChatService {
   }
 
   /// Update chat metadata when a new message is sent
-  Future<void> _updateChatMetadata(String bookingId, ChatMessage message) async {
+  Future<void> _updateChatMetadata(String bookingId, Map<String, dynamic> messageData) async {
     try {
       final updateData = {
-        'lastMessage': message.message,
-        'lastMessageTime': message.timestamp.toIso8601String(),
-        'lastMessageSender': message.senderId,
-        'lastMessageType': message.messageType,
+        'last_message': messageData['message'],
+        'last_message_time': messageData['timestamp'],
+        'last_message_sender': messageData['sender_id'],
+        'last_message_type': messageData['message_type'],
       };
 
-      await _firestore
-          .collection(_chatCollection)
-          .doc(bookingId)
-          .update(updateData);
+      await _supabase.supabase
+          .from(_chatCollection)
+          .update(updateData)
+          .eq('booking_id', bookingId);
 
     } catch (e) {
       // If document doesn't exist, it will be created when chat is initialized
@@ -286,18 +285,19 @@ class ChatService {
   ) async {
     try {
       // Get booking details to find recipient
-      final bookingDoc = await _firestore
-          .collection('bookings')
-          .doc(bookingId)
-          .get();
+      final bookingData = await _supabase.supabase
+          .from('bookings')
+          .select()
+          .eq('id', bookingId)
+          .single();
 
-      if (!bookingDoc.exists) return;
+      if (bookingData == null) return;
 
-      final booking = Booking.fromMap(bookingDoc.data()!, bookingDoc.id);
-      
+      final booking = Booking.fromMap(bookingData, bookingId);
+
       // Determine recipient
-      final recipientId = senderType == 'customer' 
-          ? booking.providerId 
+      final recipientId = senderType == 'customer'
+          ? booking.providerId
           : booking.customerId;
 
       // Send notification
@@ -322,21 +322,17 @@ class ChatService {
   Future<void> deleteChat(String bookingId) async {
     try {
       // Delete all messages first
-      final messagesQuery = await _firestore
-          .collection(_chatCollection)
-          .doc(bookingId)
-          .collection(_messagesSubcollection)
-          .get();
-
-      final batch = _firestore.batch();
-      for (final doc in messagesQuery.docs) {
-        batch.delete(doc.reference);
-      }
+      await _supabase.supabase
+          .from(_messagesSubcollection)
+          .delete()
+          .eq('booking_id', bookingId);
 
       // Delete chat document
-      batch.delete(_firestore.collection(_chatCollection).doc(bookingId));
+      await _supabase.supabase
+          .from(_chatCollection)
+          .delete()
+          .eq('booking_id', bookingId);
 
-      await batch.commit();
     } catch (e) {
       throw Exception('Failed to delete chat: $e');
     }
@@ -345,15 +341,28 @@ class ChatService {
   /// Archive chat (keep messages but mark as archived)
   Future<void> archiveChat(String bookingId) async {
     try {
-      await _firestore
-          .collection(_chatCollection)
-          .doc(bookingId)
+      await _supabase.supabase
+          .from(_chatCollection)
           .update({
         'archived': true,
-        'archivedAt': DateTime.now().toIso8601String(),
-      });
+        'archived_at': DateTime.now().toIso8601String(),
+      })
+          .eq('booking_id', bookingId);
     } catch (e) {
       throw Exception('Failed to archive chat: $e');
+    }
+  }
+
+  /// Upload image to storage and return URL
+  Future<String> uploadChatImage(Uint8List imageBytes, String bookingId) async {
+    try {
+      return await _supabase.uploadFile(
+        'chat-images',
+        'chat_${bookingId}_${DateTime.now().millisecondsSinceEpoch}.jpg',
+        imageBytes,
+      );
+    } catch (e) {
+      throw Exception('Failed to upload image: $e');
     }
   }
 }

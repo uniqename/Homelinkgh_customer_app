@@ -162,8 +162,54 @@ class ProfileScreen extends StatelessWidget {
                 title: 'Edit Profile',
                 subtitle: 'Update your personal information',
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Profile editing coming soon')),
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Edit Profile'),
+                      content: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          TextField(
+                            decoration: const InputDecoration(
+                              labelText: 'Full Name',
+                              hintText: 'Enter your full name',
+                            ),
+                            controller: TextEditingController(text: 'Kwame Asante'),
+                          ),
+                          const SizedBox(height: 16),
+                          TextField(
+                            decoration: const InputDecoration(
+                              labelText: 'Phone Number',
+                              hintText: 'Enter your phone number',
+                            ),
+                            controller: TextEditingController(text: '+233 24 123 4567'),
+                          ),
+                          const SizedBox(height: 16),
+                          TextField(
+                            decoration: const InputDecoration(
+                              labelText: 'Location',
+                              hintText: 'Enter your location',
+                            ),
+                            controller: TextEditingController(text: 'Accra, Ghana'),
+                          ),
+                        ],
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Profile updated successfully')),
+                            );
+                          },
+                          child: const Text('Save'),
+                        ),
+                      ],
+                    ),
                   );
                 },
               ),
@@ -175,8 +221,40 @@ class ProfileScreen extends StatelessWidget {
               title: 'Notifications',
               subtitle: 'Manage notification preferences',
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Notification settings coming soon')),
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Notification Settings'),
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SwitchListTile(
+                          title: const Text('Push Notifications'),
+                          subtitle: const Text('Receive app notifications'),
+                          value: true,
+                          onChanged: (value) {},
+                        ),
+                        SwitchListTile(
+                          title: const Text('SMS Notifications'),
+                          subtitle: const Text('Receive SMS alerts'),
+                          value: false,
+                          onChanged: (value) {},
+                        ),
+                        SwitchListTile(
+                          title: const Text('Email Updates'),
+                          subtitle: const Text('Receive email updates'),
+                          value: true,
+                          onChanged: (value) {},
+                        ),
+                      ],
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Close'),
+                      ),
+                    ],
+                  ),
                 );
               },
             ),
@@ -274,8 +352,52 @@ class ProfileScreen extends StatelessWidget {
               title: 'Help & FAQ',
               subtitle: 'Get answers to common questions',
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Help section coming soon')),
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Help & FAQ'),
+                    content: SizedBox(
+                      width: double.maxFinite,
+                      height: 300,
+                      child: ListView(
+                        children: [
+                          ExpansionTile(
+                            title: const Text('How do I book a service?'),
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: const Text('Simply select a service category, choose your preferred provider, and follow the booking steps.'),
+                              ),
+                            ],
+                          ),
+                          ExpansionTile(
+                            title: const Text('What payment methods are accepted?'),
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: const Text('We accept Mobile Money, bank transfers, and cash payments.'),
+                              ),
+                            ],
+                          ),
+                          ExpansionTile(
+                            title: const Text('How do I contact support?'),
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: const Text('You can call us at +233 30 234 1234 or email support@homelinkgh.com'),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Close'),
+                      ),
+                    ],
+                  ),
                 );
               },
             ),
@@ -286,8 +408,47 @@ class ProfileScreen extends StatelessWidget {
               title: 'Send Feedback',
               subtitle: 'Help us improve the app',
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Feedback form coming soon')),
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Send Feedback'),
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        TextField(
+                          decoration: const InputDecoration(
+                            labelText: 'Subject',
+                            hintText: 'What is your feedback about?',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        TextField(
+                          maxLines: 4,
+                          decoration: const InputDecoration(
+                            labelText: 'Message',
+                            hintText: 'Tell us what you think...',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ],
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Thank you for your feedback!')),
+                          );
+                        },
+                        child: const Text('Send'),
+                      ),
+                    ],
+                  ),
                 );
               },
             ),
@@ -302,7 +463,7 @@ class ProfileScreen extends StatelessWidget {
                   context: context,
                   builder: (context) => AlertDialog(
                     title: const Text('Contact Support'),
-                    content: const Text('For support, please contact:\n\nEmail: support@beaconnewbeginnings.org\nPhone: Available 24/7 through the app'),
+                    content: const Text('For support, please contact:\n\nEmail: support@homelinkgh.com\nPhone: +233 30 123 4567\nWebsite: homelinkgh.com'),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.of(context).pop(),

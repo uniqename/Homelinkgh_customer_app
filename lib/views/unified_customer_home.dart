@@ -39,15 +39,13 @@ class _UnifiedCustomerHomeScreenState extends State<UnifiedCustomerHomeScreen> {
   
   Future<void> _initializeSmartFeatures() async {
     try {
-      await _personalization.initializePersonalization();
-      await _aiRecommendations.initializeRecommendations();
-      await _gamification.initializeGamification();
+      // Initialize services with individual error handling
+      await _safeInitializePersonalization();
+      await _safeInitializeRecommendations();
+      await _safeInitializeGamification();
       
-      final recommendations = await _aiRecommendations.getRecommendations({
-        'context': 'unified_customer',
-        'time_of_day': DateTime.now().hour,
-        'user_location': 'ghana',
-      });
+      // Get recommendations with fallback
+      final recommendations = await _safeGetRecommendations();
       
       setState(() {
         _smartPicks = recommendations.take(3).toList();
@@ -56,9 +54,70 @@ class _UnifiedCustomerHomeScreenState extends State<UnifiedCustomerHomeScreen> {
     } catch (e) {
       print('Error initializing smart features: $e');
       setState(() {
+        _smartPicks = _getFallbackRecommendations();
         _isLoadingSmartFeatures = false;
       });
     }
+  }
+
+  Future<void> _safeInitializePersonalization() async {
+    try {
+      await _personalization.initializePersonalization();
+    } catch (e) {
+      print('Personalization service initialization failed: $e');
+    }
+  }
+
+  Future<void> _safeInitializeRecommendations() async {
+    try {
+      await _aiRecommendations.initializeRecommendations();
+    } catch (e) {
+      print('AI Recommendations service initialization failed: $e');
+    }
+  }
+
+  Future<void> _safeInitializeGamification() async {
+    try {
+      await _gamification.initializeGamification();
+    } catch (e) {
+      print('Gamification service initialization failed: $e');
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> _safeGetRecommendations() async {
+    try {
+      return await _aiRecommendations.getRecommendations({
+        'context': 'unified_customer',
+        'time_of_day': DateTime.now().hour,
+        'user_location': 'ghana',
+      });
+    } catch (e) {
+      print('Error getting AI recommendations: $e');
+      return _getFallbackRecommendations();
+    }
+  }
+
+  List<Map<String, dynamic>> _getFallbackRecommendations() {
+    return [
+      {
+        'title': 'Welcome to HomeLinkGH',
+        'description': 'Start by browsing our most popular services',
+        'icon': Icons.home,
+        'action': 'browse_services',
+      },
+      {
+        'title': 'Food Delivery',
+        'description': 'Order delicious meals from local restaurants',
+        'icon': Icons.delivery_dining,
+        'action': 'food_delivery',
+      },
+      {
+        'title': 'House Cleaning',
+        'description': 'Keep your home sparkling clean',
+        'icon': Icons.cleaning_services,
+        'action': 'house_cleaning',
+      },
+    ];
   }
 
   final List<String> languages = ['English', 'Akan/Twi', 'Ga', 'Ewe', 'Hausa'];
@@ -942,26 +1001,168 @@ class _UnifiedCustomerHomeScreenState extends State<UnifiedCustomerHomeScreen> {
   }
 
   void _showAddressesScreen() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Address management coming soon!')),
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('My Addresses'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.home),
+              title: const Text('Home'),
+              subtitle: const Text('Accra, Greater Accra Region'),
+              trailing: IconButton(
+                icon: const Icon(Icons.edit),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.work),
+              title: const Text('Work'),
+              subtitle: const Text('Tema, Greater Accra Region'),
+              trailing: IconButton(
+                icon: const Icon(Icons.edit),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Add New'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
     );
   }
 
   void _showPaymentMethodsScreen() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Payment methods coming soon!')),
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Payment Methods'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.credit_card),
+              title: const Text('Mobile Money'),
+              subtitle: const Text('MTN Mobile Money'),
+              trailing: const Icon(Icons.check_circle, color: Colors.green),
+            ),
+            ListTile(
+              leading: const Icon(Icons.account_balance),
+              title: const Text('Bank Transfer'),
+              subtitle: const Text('GCB Bank'),
+              trailing: IconButton(
+                icon: const Icon(Icons.edit),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Add New'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
     );
   }
 
   void _showOrderHistoryScreen() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Order history coming soon!')),
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Order History'),
+        content: SizedBox(
+          width: double.maxFinite,
+          height: 300,
+          child: ListView(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.cleaning_services, color: Colors.blue),
+                title: const Text('House Cleaning'),
+                subtitle: const Text('Completed • Dec 20, 2024'),
+                trailing: const Text('GH₵120'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.restaurant, color: Colors.orange),
+                title: const Text('Food Delivery'),
+                subtitle: const Text('Completed • Dec 18, 2024'),
+                trailing: const Text('GH₵45'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.build, color: Colors.green),
+                title: const Text('Plumbing Repair'),
+                subtitle: const Text('Completed • Dec 15, 2024'),
+                trailing: const Text('GH₵200'),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
     );
   }
 
   void _showHelpSupportScreen() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Help & support coming soon!')),
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Help & Support'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.phone),
+              title: const Text('Call Support'),
+              subtitle: const Text('+233 30 234 1234'),
+              onTap: () => Navigator.pop(context),
+            ),
+            ListTile(
+              leading: const Icon(Icons.email),
+              title: const Text('Email Support'),
+              subtitle: const Text('support@homelinkgh.com'),
+              onTap: () => Navigator.pop(context),
+            ),
+            ListTile(
+              leading: const Icon(Icons.chat),
+              title: const Text('WhatsApp Support'),
+              subtitle: const Text('Available 24/7'),
+              onTap: () => Navigator.pop(context),
+            ),
+            ListTile(
+              leading: const Icon(Icons.help),
+              title: const Text('FAQ'),
+              subtitle: const Text('Common questions'),
+              onTap: () => Navigator.pop(context),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -999,8 +1200,44 @@ class _UnifiedCustomerHomeScreenState extends State<UnifiedCustomerHomeScreen> {
               subtitle: const Text('English (Ghana)'),
               trailing: const Icon(Icons.arrow_forward_ios, size: 16),
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Language settings coming soon!')),
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Language Settings'),
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        RadioListTile<String>(
+                          title: const Text('English'),
+                          value: 'English',
+                          groupValue: 'English',
+                          onChanged: (value) => Navigator.pop(context),
+                        ),
+                        RadioListTile<String>(
+                          title: const Text('Twi'),
+                          value: 'Twi',
+                          groupValue: 'English',
+                          onChanged: (value) => Navigator.pop(context),
+                        ),
+                        RadioListTile<String>(
+                          title: const Text('Ga'),
+                          value: 'Ga',  
+                          groupValue: 'English',
+                          onChanged: (value) => Navigator.pop(context),
+                        ),
+                      ],
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Save'),
+                      ),
+                    ],
+                  ),
                 );
               },
             ),

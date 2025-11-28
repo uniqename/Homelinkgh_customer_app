@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:homelinkgh_customer/models/location.dart';
+import 'package:homeservices_ghana/models/location.dart';
 import '../models/provider.dart';
 import '../models/service_request.dart';
 import '../models/booking.dart';

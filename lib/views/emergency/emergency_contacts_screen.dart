@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
+
 import '../../constants/app_constants.dart';
 import '../../services/location_service.dart';
 import '../../data/location_based_resources.dart';
