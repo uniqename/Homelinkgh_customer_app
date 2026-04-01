@@ -32,37 +32,37 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'your-web-api-key',
-    appId: 'your-web-app-id',
-    messagingSenderId: 'your-sender-id',
-    projectId: 'ngo-support-app',
-    authDomain: 'ngo-support-app.firebaseapp.com',
-    storageBucket: 'ngo-support-app.appspot.com',
+    apiKey: 'AIzaSyBsjIkZWvsGtttkUGdePRcuhMLeovfr9LE',
+    appId: '1:762633102960:web:homelinkgh-app',
+    messagingSenderId: '762633102960',
+    projectId: 'homelinkgh-app',
+    authDomain: 'homelinkgh-app.firebaseapp.com',
+    storageBucket: 'homelinkgh-app.firebasestorage.app',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDemo-Key-For-Testing-Only-Not-Real',
-    appId: '1:123456789:android:demo-app-id',
-    messagingSenderId: '123456789',
-    projectId: 'beacon-new-beginnings-demo',
-    storageBucket: 'beacon-new-beginnings-demo.appspot.com',
+    apiKey: 'AIzaSyBfl6Z101buiUpfXYq7i0wrN9q3r1kYB4Y',
+    appId: '1:762633102960:android:653dd01a77e55cf94af6b5',
+    messagingSenderId: '762633102960',
+    projectId: 'homelinkgh-app',
+    storageBucket: 'homelinkgh-app.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'your-ios-api-key',
-    appId: 'your-ios-app-id',
-    messagingSenderId: 'your-sender-id',
-    projectId: 'ngo-support-app',
-    storageBucket: 'ngo-support-app.appspot.com',
-    iosBundleId: 'com.beaconnewbeginnings.ngo-support-app',
+    apiKey: 'AIzaSyBsjIkZWvsGtttkUGdePRcuhMLeovfr9LE',
+    appId: '1:762633102960:ios:ab3dbea50d3479934af6b5',
+    messagingSenderId: '762633102960',
+    projectId: 'homelinkgh-app',
+    storageBucket: 'homelinkgh-app.firebasestorage.app',
+    iosBundleId: 'com.homelink.provider.app',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'your-macos-api-key',
-    appId: 'your-macos-app-id',
-    messagingSenderId: 'your-sender-id',
-    projectId: 'ngo-support-app',
-    storageBucket: 'ngo-support-app.appspot.com',
-    iosBundleId: 'com.beaconnewbeginnings.ngo-support-app',
+    apiKey: 'AIzaSyBsjIkZWvsGtttkUGdePRcuhMLeovfr9LE',
+    appId: '1:762633102960:ios:ab3dbea50d3479934af6b5',
+    messagingSenderId: '762633102960',
+    projectId: 'homelinkgh-app',
+    storageBucket: 'homelinkgh-app.firebasestorage.app',
+    iosBundleId: 'com.homelink.provider.app',
   );
 }

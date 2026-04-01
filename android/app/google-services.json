@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "762633102960",
+    "project_id": "homelinkgh-app",
+    "storage_bucket": "homelinkgh-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:762633102960:android:653dd01a77e55cf94af6b5",
+        "android_client_info": {
+          "package_name": "com.homeservicesghana.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBfl6Z101buiUpfXYq7i0wrN9q3r1kYB4Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
