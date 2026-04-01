@@ -35,8 +35,10 @@ build/
 
 # Sensitive credentials — never commit these
 .env
+assets/.env
 *.jks
 *.keystore
+key-upload.properties
 google-services.json
 GoogleService-Info.plist
 
