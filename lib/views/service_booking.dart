@@ -370,7 +370,7 @@ class _ServiceBookingScreenState extends State<ServiceBookingScreen> {
                   labelText: 'Frequency',
                   border: OutlineInputBorder(),
                 ),
-                value: recurringFrequency,
+                initialValue: recurringFrequency,
                 items: const [
                   DropdownMenuItem(value: 'weekly', child: Text('Weekly')),
                   DropdownMenuItem(value: 'biweekly', child: Text('Bi-weekly')),
@@ -910,7 +910,7 @@ class _ServiceBookingScreenState extends State<ServiceBookingScreen> {
             labelText: '$label${isRequired ? ' *' : ''}',
             border: const OutlineInputBorder(),
           ),
-          value: dynamicFieldValues[fieldName] as String?,
+          initialValue: dynamicFieldValues[fieldName] as String?,
           items: options.map((option) {
             return DropdownMenuItem(
               value: option,

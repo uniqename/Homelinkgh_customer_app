@@ -1,9 +1,5 @@
 import 'dart:async';
-import 'dart:typed_data';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/provider.dart';
-import '../models/booking.dart';
-import '../models/service_request.dart';
 
 /// Staging Supabase service for testing HomeLinkGH features
 /// Uses separate staging database with test data
