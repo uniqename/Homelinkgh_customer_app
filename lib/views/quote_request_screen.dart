@@ -3,6 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../services/quote_service.dart';
 import '../models/quote.dart';
+import '../widgets/payment_method_selector.dart';
 import 'quote_communication_screen.dart';
 
 class QuoteRequestScreen extends StatefulWidget {
@@ -522,9 +523,9 @@ class _QuoteRequestScreenState extends State<QuoteRequestScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () => _respondToQuote(quote, QuoteStatus.accepted),
+                    onPressed: () => _acceptQuoteWithPayment(quote),
                     style: ElevatedButton.styleFrom(backgroundColor: widget.serviceColor),
-                    child: const Text('Accept Quote'),
+                    child: const Text('Accept & Pay'),
                   ),
                 ),
               ],
@@ -631,6 +632,43 @@ class _QuoteRequestScreenState extends State<QuoteRequestScreen> {
     );
   }
 
+  /// Opens the payment sheet; only marks the quote accepted after successful payment.
+  Future<void> _acceptQuoteWithPayment(Quote quote) async {
+    // Guard: must have had at least one message exchange (providerMessage set means they replied)
+    if (quote.providerMessage == null || quote.providerMessage!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Please chat with the provider first before accepting.',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.orange,
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
+    final result = await showPaymentSheet(
+      context,
+      amount: quote.amount,
+      currency: 'GHS',
+      customerEmail: 'customer@homelinkgh.com', // replaced by real auth email
+      customerName: 'HomeLinkGH Customer',
+      description: '${widget.serviceName} — ${quote.providerName ?? "Provider"}',
+      serviceRequestId: _serviceRequestId,
+      quoteId: quote.id,
+      providerId: quote.providerId,
+      providerName: quote.providerName,
+      serviceType: widget.serviceName,
+    );
+
+    if (result == null || !result.success) return;
+
+    // Payment succeeded — now officially accept the quote
+    await _respondToQuote(quote, QuoteStatus.accepted);
+  }
+
   Future<void> _respondToQuote(Quote quote, QuoteStatus response) async {
     try {
       await _quoteService.respondToQuote(
@@ -640,8 +678,10 @@ class _QuoteRequestScreenState extends State<QuoteRequestScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Quote ${response.toString().split('.').last}ed!'),
-          backgroundColor: Colors.green,
+          content: Text(response == QuoteStatus.accepted
+              ? '✅ Booking confirmed! Payment received.'
+              : 'Quote declined.'),
+          backgroundColor: response == QuoteStatus.accepted ? Colors.green : Colors.grey,
         ),
       );
     } catch (e) {

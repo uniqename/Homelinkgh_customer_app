@@ -47,9 +47,9 @@ class StandaloneService {
       {
         'id': 'food_delivery',
         'name': 'Food Delivery',
-        'description': 'Fast and reliable food delivery',
+        'description': 'Fast and reliable food delivery from restaurants across Ghana',
         'icon': '🍽️',
-        'basePrice': 30,
+        'basePrice': 45,
         'currency': 'GHS',
         'isActive': true,
         'providers': 0,
@@ -57,9 +57,9 @@ class StandaloneService {
       {
         'id': 'transportation',
         'name': 'Transportation',
-        'description': 'Reliable transport services',
+        'description': 'Reliable driver hire and transport services',
         'icon': '🚗',
-        'basePrice': 80,
+        'basePrice': 50,
         'currency': 'GHS',
         'isActive': true,
         'providers': 0,

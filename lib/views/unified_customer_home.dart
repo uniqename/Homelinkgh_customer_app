@@ -4,6 +4,7 @@ import '../constants/app_constants.dart';
 import '../services/smart_personalization_service.dart';
 import '../services/ai_recommendations_service.dart';
 import '../services/gamification_service.dart';
+import '../widgets/payment_method_selector.dart';
 import 'role_selection.dart';
 import 'enhanced_food_delivery_screen.dart';
 import 'enhanced_grocery_screen.dart';
@@ -389,12 +390,183 @@ class _UnifiedCustomerHomeScreenState extends State<UnifiedCustomerHomeScreen> {
                   itemBuilder: (context, index) =>
                       _buildServiceCard(_serviceCategories[index]),
                 ),
+
+                const SizedBox(height: 32),
+                _buildDonateWidget(),
+                const SizedBox(height: 16),
               ],
             ),
           ),
         ),
       ],
     );
+  }
+
+  Widget _buildDonateWidget() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF003D1F), Color(0xFF001F10)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: const Color(0xFFFCD116).withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFCD116).withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Text('🇬🇭', style: TextStyle(fontSize: 20)),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'Support HomeLinkGH',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            'Help us connect more Ghanaian families with trusted home service providers.',
+            style: TextStyle(color: Colors.white54, fontSize: 13, height: 1.5),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              _donateChip('GH₵ 20', 20.0),
+              const SizedBox(width: 8),
+              _donateChip('GH₵ 50', 50.0),
+              const SizedBox(width: 8),
+              _donateChip('GH₵ 100', 100.0),
+              const SizedBox(width: 8),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => _donate(null),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF006B3C),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Center(
+                      child: Text('Other',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        )),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _donateChip(String label, double amount) {
+    return GestureDetector(
+      onTap: () => _donate(amount),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFCD116).withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFFCD116).withValues(alpha: 0.4)),
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(
+            color: Color(0xFFFCD116),
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _donate(double? fixedAmount) async {
+    double amount = fixedAmount ?? 10.0;
+    if (fixedAmount == null) {
+      final controller = TextEditingController();
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: const Color(0xFF0D2016),
+          title: const Text('Enter Donation Amount',
+            style: TextStyle(color: Colors.white)),
+          content: TextField(
+            controller: controller,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            autofocus: true,
+            style: const TextStyle(color: Colors.white),
+            decoration: const InputDecoration(
+              prefixText: 'GH₵ ',
+              prefixStyle: TextStyle(color: Colors.white54),
+              hintText: '0.00',
+              hintStyle: TextStyle(color: Colors.white24),
+              enabledBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Color(0xFF006B3C))),
+              focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Color(0xFF006B3C), width: 2)),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel', style: TextStyle(color: Colors.white38))),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF006B3C)),
+              child: const Text('Continue')),
+          ],
+        ),
+      );
+      if (confirmed != true) return;
+      amount = double.tryParse(controller.text) ?? 10.0;
+      if (amount <= 0) return;
+    }
+
+    final result = await showPaymentSheet(
+      context,
+      amount: amount,
+      currency: 'GHS',
+      customerEmail: 'donor@homelinkgh.com',
+      customerName: 'HomeLinkGH Customer',
+      description: 'Donation to HomeLinkGH',
+    );
+
+    if (result != null && result.success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Thank you for your donation of GH₵ ${amount.toStringAsFixed(2)}! 🙏'),
+          backgroundColor: const Color(0xFF006B3C),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
   }
 
   Widget _sectionHeader(String title, {VoidCallback? onSeeAll}) {
