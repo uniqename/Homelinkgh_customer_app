@@ -359,6 +359,42 @@ class QuoteService {
   }
 
   // ============================================================================
+  // QUOTE COMMUNICATION (messages between customer and provider)
+  // ============================================================================
+
+  /// Get all messages for a specific quote (uses quote ID as conversation ID)
+  Future<List<Map<String, dynamic>>> getQuoteCommunication(String quoteId) async {
+    try {
+      final rows = await _client
+          .from('messages')
+          .select()
+          .eq('conversation_id', quoteId)
+          .order('created_at', ascending: true);
+      return List<Map<String, dynamic>>.from(rows);
+    } catch (e) {
+      print('⚠️ Could not load quote messages: $e');
+      return [];
+    }
+  }
+
+  /// Send a message within a quote conversation
+  Future<void> sendMessage({
+    required String quoteId,
+    required String senderId,
+    required String senderType, // 'customer' | 'provider'
+    required String message,
+  }) async {
+    await _client.from('messages').insert({
+      'conversation_id': quoteId,
+      'sender_id': senderId,
+      'message': message,
+      'type': 'text',
+      'metadata': {'sender_type': senderType},
+      'created_at': DateTime.now().toIso8601String(),
+    });
+  }
+
+  // ============================================================================
   // HELPERS
   // ============================================================================
 

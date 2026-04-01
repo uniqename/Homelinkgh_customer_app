@@ -595,6 +595,7 @@ class _QuoteRequestScreenState extends State<QuoteRequestScreen> {
       final requestId = await _quoteService.createServiceRequest(
         serviceType: widget.serviceName,
         description: _descriptionController.text.trim(),
+        location: _locationController.text.trim().isEmpty ? 'Not specified' : _locationController.text.trim(),
         scheduledDate: _selectedDate ?? DateTime.now(),
         budget: budgetMax ?? budgetMin ?? 0.0,
         isUrgent: _isUrgent,
