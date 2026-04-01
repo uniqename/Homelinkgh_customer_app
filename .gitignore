@@ -49,3 +49,4 @@ android/captures/
 # iOS CocoaPods
 ios/Pods/
 ios/.symlinks/
+lib/firebase_options.dart
