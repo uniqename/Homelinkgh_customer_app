@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter_stripe/flutter_stripe.dart';
 import 'views/guest_home.dart';
 import 'services/supabase_service.dart';
 import 'services/notification_service.dart';
@@ -30,16 +29,6 @@ void main() async {
     print('✅ Environment variables loaded');
   } catch (e) {
     print('⚠️  No .env file found, payment features may not work: $e');
-  }
-
-  // Initialize Stripe
-  try {
-    Stripe.publishableKey = dotenv.env['STRIPE_PUBLISHABLE_KEY'] ?? '';
-    Stripe.merchantIdentifier = 'merchant.com.homelink.provider.app';
-    await Stripe.instance.applySettings();
-    print('✅ Stripe initialized');
-  } catch (e) {
-    print('⚠️  Stripe initialization warning: $e');
   }
 
   // Initialize Supabase

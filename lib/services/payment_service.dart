@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutterwave_standard/flutterwave.dart';
 import 'package:flutter_paypal_payment/flutter_paypal_payment.dart';
-import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import '../models/payment_result.dart';
@@ -21,7 +20,6 @@ class PaymentService {
   String? _flutterwaveSecretKey;
   String? _paypalClientId;
   String? _paypalSecret;
-  String? _stripeSecretKey;
   bool _isInitialized = false;
 
   Future<void> initialize() async {
@@ -31,7 +29,6 @@ class PaymentService {
       _flutterwaveSecretKey = dotenv.env['FLUTTERWAVE_SECRET_KEY'];
       _paypalClientId      = dotenv.env['PAYPAL_CLIENT_ID'];
       _paypalSecret        = dotenv.env['PAYPAL_SECRET'];
-      _stripeSecretKey     = dotenv.env['STRIPE_SECRET_KEY'];
       _isInitialized = true;
       developer.log('✅ [Payment] HomeLinkGH payment service initialized');
     } catch (e) {
@@ -187,97 +184,6 @@ class PaymentService {
           message: 'Card payment ${response.status ?? "failed"}. Please try again.');
     } catch (e) {
       return PaymentResult.failure(message: 'Card payment failed: $e');
-    }
-  }
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // STRIPE  (Card + Apple Pay + Google Pay + Link)
-  // ─────────────────────────────────────────────────────────────────────────
-  Future<PaymentResult> processStripePayment({
-    required BuildContext context,
-    required double amount,
-    required String currency,
-    required String customerEmail,
-    required String customerName,
-    String? description,
-    String? transactionRef,
-    String? serviceRequestId,
-    String? quoteId,
-    String? providerId,
-    String? providerName,
-    String? serviceType,
-  }) async {
-    try {
-      if (!_isInitialized) await initialize();
-
-      if (_stripeSecretKey == null || _stripeSecretKey!.isEmpty) {
-        return PaymentResult.failure(message: 'Stripe not configured.');
-      }
-
-      final amountInSmallestUnit = (amount * 100).round();
-
-      final response = await http.post(
-        Uri.parse('https://api.stripe.com/v1/payment_intents'),
-        headers: {
-          'Authorization': 'Bearer $_stripeSecretKey',
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: {
-          'amount': amountInSmallestUnit.toString(),
-          'currency': currency.toLowerCase(),
-          'receipt_email': customerEmail,
-          'description': description ?? 'HomeLinkGH Service Payment',
-          'automatic_payment_methods[enabled]': 'true',
-          'automatic_payment_methods[allow_redirects]': 'never',
-        },
-      );
-
-      if (response.statusCode != 200) {
-        return PaymentResult.failure(
-            message: 'Stripe error (${response.statusCode}). Please try again.');
-      }
-
-      final data = jsonDecode(response.body) as Map<String, dynamic>;
-      final clientSecret = data['client_secret'] as String;
-      final paymentIntentId = clientSecret.split('_secret')[0];
-
-      await Stripe.instance.initPaymentSheet(
-        paymentSheetParameters: SetupPaymentSheetParameters(
-          paymentIntentClientSecret: clientSecret,
-          merchantDisplayName: 'HomeLinkGH',
-          applePay: const PaymentSheetApplePay(merchantCountryCode: 'GH'),
-          googlePay: PaymentSheetGooglePay(
-            merchantCountryCode: 'GH',
-            currencyCode: currency.toLowerCase(),
-            testEnv: (_stripeSecretKey ?? '').contains('test'),
-          ),
-          style: ThemeMode.system,
-        ),
-      );
-
-      await Stripe.instance.presentPaymentSheet();
-
-      await _recordBooking(
-        transactionId: paymentIntentId,
-        amount: amount, currency: currency, method: 'stripe',
-        serviceRequestId: serviceRequestId, quoteId: quoteId,
-        providerId: providerId, providerName: providerName,
-        serviceType: serviceType,
-      );
-
-      return PaymentResult.success(
-        transactionId: paymentIntentId,
-        message: 'Payment completed',
-        rawResponse: {'payment_intent_id': paymentIntentId},
-      );
-    } on StripeException catch (e) {
-      if (e.error.code == FailureCode.Canceled) {
-        return PaymentResult.failure(message: 'Payment cancelled.');
-      }
-      return PaymentResult.failure(
-          message: e.error.message ?? 'Stripe payment failed.');
-    } catch (e) {
-      return PaymentResult.failure(message: 'Payment failed: $e');
     }
   }
 

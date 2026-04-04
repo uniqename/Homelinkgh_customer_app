@@ -71,7 +71,7 @@ class _PaymentSheet extends StatefulWidget {
   State<_PaymentSheet> createState() => _PaymentSheetState();
 }
 
-enum _Method { momo, card, stripe, paypal, paystack }
+enum _Method { momo, card, paypal, paystack }
 
 class _PaymentSheetState extends State<_PaymentSheet> {
   _Method? _selected;
@@ -276,21 +276,6 @@ class _PaymentSheetState extends State<_PaymentSheet> {
             serviceType: widget.serviceType,
           );
 
-        case _Method.stripe:
-          result = await _paymentService.processStripePayment(
-            context: context,
-            amount: widget.amount,
-            currency: widget.currency,
-            customerEmail: widget.customerEmail,
-            customerName: widget.customerName,
-            description: widget.description,
-            serviceRequestId: widget.serviceRequestId,
-            quoteId: widget.quoteId,
-            providerId: widget.providerId,
-            providerName: widget.providerName,
-            serviceType: widget.serviceType,
-          );
-
         case _Method.paypal:
           result = await _paymentService.processPayPalPayment(
             context: context,
@@ -424,10 +409,6 @@ class _PaymentSheetState extends State<_PaymentSheet> {
               _tile(_Method.card, '💳', 'Debit / Credit Card',
                 'Visa, Mastercard, Verve  via Flutterwave'),
 
-              // ── Stripe ──
-              _tile(_Method.stripe, '⚡', 'Card / Apple Pay / Google Pay',
-                'Powered by Stripe  ·  Link supported'),
-
               // ── PayPal ──
               _tile(_Method.paypal, '🌐', 'PayPal',
                 'International payments in USD'),
@@ -524,7 +505,7 @@ class _PaymentSheetState extends State<_PaymentSheet> {
                   children: [
                     const Icon(Icons.lock_outline, size: 11, color: Colors.white24),
                     const SizedBox(width: 4),
-                    const Text('Flutterwave · Stripe · PayPal · PayStack',
+                    const Text('Flutterwave · PayPal · PayStack',
                       style: TextStyle(color: Colors.white24, fontSize: 11)),
                   ],
                 ),
