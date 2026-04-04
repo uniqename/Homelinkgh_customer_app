@@ -1,5 +1,6 @@
 class PaymentResult {
   final bool success;
+  final bool isPending;
   final String? transactionId;
   final String? message;
   final String? receiptUrl;
@@ -7,6 +8,7 @@ class PaymentResult {
 
   const PaymentResult({
     required this.success,
+    this.isPending = false,
     this.transactionId,
     this.message,
     this.receiptUrl,

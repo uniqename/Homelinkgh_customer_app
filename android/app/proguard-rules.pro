@@ -20,6 +20,14 @@
 -keep class com.flutterwave.** { *; }
 -dontwarn com.flutterwave.**
 
+# Stripe — keep push provisioning and all Stripe classes
+-keep class com.stripe.** { *; }
+-keep class com.reactnativestripesdk.** { *; }
+-dontwarn com.stripe.**
+-dontwarn com.reactnativestripesdk.**
+# Suppress missing push provisioning class (not used in this app)
+-dontwarn com.stripe.android.pushProvisioning.**
+
 # PayPal WebView
 -keep class com.paypal.** { *; }
 -dontwarn com.paypal.**

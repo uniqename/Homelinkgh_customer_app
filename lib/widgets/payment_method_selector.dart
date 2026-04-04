@@ -4,8 +4,8 @@ import '../services/payment_service.dart';
 import '../models/payment_result.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Top-level helper — call from anywhere to present the payment bottom sheet.
-// Returns the PaymentResult when done, or null if the user dismisses.
+// Top-level helper — present the payment bottom sheet from anywhere.
+// Returns PaymentResult on completion, null if user dismisses.
 // ─────────────────────────────────────────────────────────────────────────────
 Future<PaymentResult?> showPaymentSheet(
   BuildContext context, {
@@ -71,7 +71,7 @@ class _PaymentSheet extends StatefulWidget {
   State<_PaymentSheet> createState() => _PaymentSheetState();
 }
 
-enum _Method { momo, card, paypal, bankTransfer }
+enum _Method { momo, card, stripe, paypal, paystack }
 
 class _PaymentSheetState extends State<_PaymentSheet> {
   _Method? _selected;
@@ -83,6 +83,9 @@ class _PaymentSheetState extends State<_PaymentSheet> {
   String _momoNetwork = 'MTN';
   static const _networks = ['MTN', 'Vodafone', 'AirtelTigo'];
 
+  // PayStack pending verify
+  String? _paystackRef;
+
   final _paymentService = PaymentService();
 
   @override
@@ -91,40 +94,32 @@ class _PaymentSheetState extends State<_PaymentSheet> {
     super.dispose();
   }
 
-  // ── UI helpers ──────────────────────────────────────────────────────────────
-
+  // ── Colours ─────────────────────────────────────────────────────────────────
   static const _green = Color(0xFF006B3C);
-  static const _gold = Color(0xFFFCD116);
-  static const _bg = Color(0xFF0A1A10);
-  static const _card = Color(0xFF0D2016);
+  static const _gold  = Color(0xFFFCD116);
+  static const _bg    = Color(0xFF0A1A10);
+  static const _card  = Color(0xFF0D2016);
 
-  Widget _methodTile(_Method method, IconData icon, String title, String subtitle) {
-    final selected = _selected == method;
+  // ── Tiles ───────────────────────────────────────────────────────────────────
+  Widget _tile(_Method method, String emoji, String title, String subtitle) {
+    final sel = _selected == method;
     return GestureDetector(
-      onTap: _processing ? null : () => setState(() { _selected = method; _error = null; }),
+      onTap: _processing ? null : () => setState(() { _selected = method; _error = null; _paystackRef = null; }),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: selected ? _green.withValues(alpha: 0.15) : _card,
+          color: sel ? _green.withValues(alpha: 0.15) : _card,
           border: Border.all(
-            color: selected ? _green : Colors.white.withValues(alpha: 0.1),
-            width: selected ? 1.5 : 1,
+            color: sel ? _green : Colors.white.withValues(alpha: 0.1),
+            width: sel ? 1.5 : 1,
           ),
           borderRadius: BorderRadius.circular(14),
         ),
         child: Row(
           children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: selected ? _green.withValues(alpha: 0.2) : Colors.white.withValues(alpha: 0.06),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(icon, color: selected ? _green : Colors.white60, size: 22),
-            ),
+            Text(emoji, style: const TextStyle(fontSize: 26)),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
@@ -132,17 +127,17 @@ class _PaymentSheetState extends State<_PaymentSheet> {
                 children: [
                   Text(title,
                     style: TextStyle(
-                      color: selected ? Colors.white : Colors.white.withValues(alpha: 0.87),
+                      color: sel ? Colors.white : Colors.white.withValues(alpha: 0.87),
                       fontWeight: FontWeight.w600, fontSize: 15)),
                   Text(subtitle,
                     style: const TextStyle(color: Colors.white38, fontSize: 12)),
                 ],
               ),
             ),
-            if (selected)
+            if (sel)
               const Icon(Icons.check_circle, color: _green, size: 20)
             else
-              Icon(Icons.radio_button_off, color: Colors.white24, size: 20),
+              const Icon(Icons.radio_button_off, color: Colors.white24, size: 20),
           ],
         ),
       ),
@@ -151,7 +146,7 @@ class _PaymentSheetState extends State<_PaymentSheet> {
 
   Widget _momoExtra() {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: _card,
@@ -161,7 +156,6 @@ class _PaymentSheetState extends State<_PaymentSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Network picker
           const Text('Mobile Network', style: TextStyle(color: Colors.white54, fontSize: 12)),
           const SizedBox(height: 8),
           Row(
@@ -187,7 +181,6 @@ class _PaymentSheetState extends State<_PaymentSheet> {
             }).toList(),
           ),
           const SizedBox(height: 14),
-          // Phone number
           const Text('Phone Number', style: TextStyle(color: Colors.white54, fontSize: 12)),
           const SizedBox(height: 6),
           TextField(
@@ -203,18 +196,12 @@ class _PaymentSheetState extends State<_PaymentSheet> {
               filled: true,
               fillColor: Colors.white.withValues(alpha: 0.05),
               contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: _green),
-              ),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.15))),
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.15))),
+              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: _green)),
             ),
           ),
         ],
@@ -222,15 +209,33 @@ class _PaymentSheetState extends State<_PaymentSheet> {
     );
   }
 
-  // ── Payment dispatch ─────────────────────────────────────────────────────
+  Widget _infoBox(String text) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: _gold.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: _gold.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.info_outline, color: _gold, size: 15),
+          const SizedBox(width: 8),
+          Expanded(child: Text(text, style: const TextStyle(color: _gold, fontSize: 12))),
+        ],
+      ),
+    );
+  }
 
+  // ── Payment dispatch ─────────────────────────────────────────────────────────
   Future<void> _pay() async {
     if (_selected == null) {
       setState(() => _error = 'Please select a payment method');
       return;
     }
     if (_selected == _Method.momo && _phoneController.text.length < 9) {
-      setState(() => _error = 'Enter a valid phone number');
+      setState(() => _error = 'Enter a valid Ghana phone number');
       return;
     }
 
@@ -248,14 +253,13 @@ class _PaymentSheetState extends State<_PaymentSheet> {
             network: _momoNetwork,
             customerEmail: widget.customerEmail,
             customerName: widget.customerName,
-            description: widget.description ?? 'HomeLinkGH Payment',
+            description: widget.description,
             serviceRequestId: widget.serviceRequestId,
             quoteId: widget.quoteId,
             providerId: widget.providerId,
             providerName: widget.providerName,
             serviceType: widget.serviceType,
           );
-          break;
 
         case _Method.card:
           result = await _paymentService.processCardPayment(
@@ -264,14 +268,28 @@ class _PaymentSheetState extends State<_PaymentSheet> {
             currency: widget.currency,
             customerEmail: widget.customerEmail,
             customerName: widget.customerName,
-            description: widget.description ?? 'HomeLinkGH Payment',
+            description: widget.description,
             serviceRequestId: widget.serviceRequestId,
             quoteId: widget.quoteId,
             providerId: widget.providerId,
             providerName: widget.providerName,
             serviceType: widget.serviceType,
           );
-          break;
+
+        case _Method.stripe:
+          result = await _paymentService.processStripePayment(
+            context: context,
+            amount: widget.amount,
+            currency: widget.currency,
+            customerEmail: widget.customerEmail,
+            customerName: widget.customerName,
+            description: widget.description,
+            serviceRequestId: widget.serviceRequestId,
+            quoteId: widget.quoteId,
+            providerId: widget.providerId,
+            providerName: widget.providerName,
+            serviceType: widget.serviceType,
+          );
 
         case _Method.paypal:
           result = await _paymentService.processPayPalPayment(
@@ -279,38 +297,66 @@ class _PaymentSheetState extends State<_PaymentSheet> {
             amount: widget.amount,
             currency: widget.currency == 'GHS' ? 'USD' : widget.currency,
             description: widget.description ?? 'HomeLinkGH Payment',
+            serviceRequestId: widget.serviceRequestId,
+            quoteId: widget.quoteId,
+            providerId: widget.providerId,
+            providerName: widget.providerName,
+            serviceType: widget.serviceType,
           );
-          break;
 
-        case _Method.bankTransfer:
-          // Bank transfer via PayStack — initiate and show instructions
-          result = PaymentResult.failure(
-            message: 'Bank Transfer via PayStack coming soon. Please use MoMo or Card.',
+        case _Method.paystack:
+          result = await _paymentService.processPaystackPayment(
+            amount: widget.amount,
+            currency: widget.currency,
+            customerEmail: widget.customerEmail,
+            customerName: widget.customerName,
+            description: widget.description,
           );
-          break;
+          // PayStack opens a browser — show verify button
+          if (result.isPending) {
+            setState(() {
+              _paystackRef = result.transactionId;
+              _processing = false;
+            });
+            return;
+          }
       }
 
       if (!mounted) return;
-
       if (result.success) {
         Navigator.pop(context, result);
       } else {
-        setState(() {
-          _processing = false;
-          _error = result.message ?? 'Payment failed. Please try again.';
-        });
+        setState(() { _processing = false; _error = result.message ?? 'Payment failed. Try again.'; });
       }
     } catch (e) {
       if (!mounted) return;
-      setState(() {
-        _processing = false;
-        _error = 'Payment error: $e';
-      });
+      setState(() { _processing = false; _error = 'Payment error: $e'; });
     }
   }
 
-  // ── Build ────────────────────────────────────────────────────────────────
+  Future<void> _verifyPaystack() async {
+    if (_paystackRef == null) return;
+    setState(() { _processing = true; _error = null; });
 
+    final result = await _paymentService.verifyPaystackPayment(
+      _paystackRef!,
+      serviceRequestId: widget.serviceRequestId,
+      quoteId: widget.quoteId,
+      providerId: widget.providerId,
+      providerName: widget.providerName,
+      serviceType: widget.serviceType,
+      amount: widget.amount,
+    );
+
+    if (!mounted) return;
+    if (result.success) {
+      Navigator.pop(context, result);
+    } else {
+      setState(() { _processing = false; _error = result.message ?? 'Verification failed. Try again.'; });
+    }
+  }
+
+  // ── Build ─────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
@@ -328,15 +374,11 @@ class _PaymentSheetState extends State<_PaymentSheet> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Handle
+              // Handle bar
               Center(
-                child: Container(
-                  width: 40, height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.white24,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
+                child: Container(width: 40, height: 4,
+                  decoration: BoxDecoration(color: Colors.white24,
+                    borderRadius: BorderRadius.circular(2))),
               ),
               const SizedBox(height: 18),
 
@@ -346,8 +388,7 @@ class _PaymentSheetState extends State<_PaymentSheet> {
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF003D1F), Color(0xFF0A1A10)],
-                  ),
+                    colors: [Color(0xFF003D1F), Color(0xFF0A1A10)]),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: _green.withValues(alpha: 0.35)),
                 ),
@@ -357,12 +398,8 @@ class _PaymentSheetState extends State<_PaymentSheet> {
                       style: TextStyle(color: Colors.white54, fontSize: 13)),
                     const SizedBox(height: 6),
                     Text('$symbol ${widget.amount.toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: -0.5,
-                      )),
+                      style: const TextStyle(color: Colors.white, fontSize: 32,
+                        fontWeight: FontWeight.bold, letterSpacing: -0.5)),
                     if (widget.description != null) ...[
                       const SizedBox(height: 4),
                       Text(widget.description!,
@@ -374,54 +411,55 @@ class _PaymentSheetState extends State<_PaymentSheet> {
               const SizedBox(height: 24),
 
               const Text('Choose Payment Method',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 17,
-                  fontWeight: FontWeight.bold,
-                )),
+                style: TextStyle(color: Colors.white, fontSize: 17,
+                  fontWeight: FontWeight.bold)),
               const SizedBox(height: 14),
 
-              _methodTile(_Method.momo, Icons.phone_android,
-                'Mobile Money (MoMo)',
-                'MTN, Vodafone Cash, AirtelTigo Money'),
-
+              // ── MoMo ──
+              _tile(_Method.momo, '📱', 'Mobile Money (MoMo)',
+                'MTN, Vodafone Cash, AirtelTigo'),
               if (_selected == _Method.momo) _momoExtra(),
 
-              _methodTile(_Method.card, Icons.credit_card,
-                'Debit / Credit Card',
-                'Visa, Mastercard, Verve'),
+              // ── Flutterwave card ──
+              _tile(_Method.card, '💳', 'Debit / Credit Card',
+                'Visa, Mastercard, Verve  via Flutterwave'),
 
-              _methodTile(_Method.paypal, Icons.language,
-                'PayPal',
+              // ── Stripe ──
+              _tile(_Method.stripe, '⚡', 'Card / Apple Pay / Google Pay',
+                'Powered by Stripe  ·  Link supported'),
+
+              // ── PayPal ──
+              _tile(_Method.paypal, '🌐', 'PayPal',
                 'International payments in USD'),
 
-              _methodTile(_Method.bankTransfer, Icons.account_balance,
-                'Bank Transfer (GHS)',
-                'Via PayStack — local bank accounts'),
+              // ── PayStack bank transfer ──
+              _tile(_Method.paystack, '🏦', 'Bank Transfer (GHS)',
+                'Local Ghana bank accounts via PayStack'),
+              if (_selected == _Method.paystack)
+                _infoBox('PayStack will open in your browser. Come back and tap '
+                    '"Verify Payment" after completing the transfer.'),
 
-              if (_selected == _Method.bankTransfer)
-                Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: _gold.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: _gold.withValues(alpha: 0.25)),
-                  ),
-                  child: const Row(
-                    children: [
-                      Icon(Icons.info_outline, color: _gold, size: 16),
-                      SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Bank Transfer via PayStack is coming soon. Use MoMo or Card for now.',
-                          style: TextStyle(color: _gold, fontSize: 12),
-                        ),
-                      ),
-                    ],
+              // PayStack pending verify button
+              if (_paystackRef != null) ...[
+                const SizedBox(height: 4),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: OutlinedButton.icon(
+                    onPressed: _processing ? null : _verifyPaystack,
+                    icon: const Icon(Icons.verified_outlined, color: _green),
+                    label: const Text('Verify Payment',
+                      style: TextStyle(color: _green, fontWeight: FontWeight.w600)),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: _green),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14))),
                   ),
                 ),
+                const SizedBox(height: 10),
+              ],
 
+              // Error
               if (_error != null) ...[
                 const SizedBox(height: 8),
                 Container(
@@ -435,9 +473,8 @@ class _PaymentSheetState extends State<_PaymentSheet> {
                     children: [
                       const Icon(Icons.error_outline, color: Colors.red, size: 16),
                       const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(_error!, style: const TextStyle(color: Colors.red, fontSize: 13)),
-                      ),
+                      Expanded(child: Text(_error!,
+                        style: const TextStyle(color: Colors.red, fontSize: 13))),
                     ],
                   ),
                 ),
@@ -445,49 +482,49 @@ class _PaymentSheetState extends State<_PaymentSheet> {
 
               const SizedBox(height: 20),
 
-              // Pay button
-              SizedBox(
-                width: double.infinity,
-                height: 54,
-                child: ElevatedButton(
-                  onPressed: _processing ? null : _pay,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _green,
-                    foregroundColor: Colors.white,
-                    disabledBackgroundColor: _green.withValues(alpha: 0.4),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    elevation: 0,
+              // Pay button (hidden when PayStack pending)
+              if (_paystackRef == null)
+                SizedBox(
+                  width: double.infinity,
+                  height: 54,
+                  child: ElevatedButton(
+                    onPressed: _processing ? null : _pay,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _green,
+                      foregroundColor: Colors.white,
+                      disabledBackgroundColor: _green.withValues(alpha: 0.4),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
+                      elevation: 0,
+                    ),
+                    child: _processing
+                      ? const SizedBox(width: 22, height: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5, color: Colors.white))
+                      : Text('Pay $symbol ${widget.amount.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold)),
                   ),
-                  child: _processing
-                    ? const SizedBox(
-                        width: 22, height: 22,
-                        child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
-                    : Text(
-                        'Pay $symbol ${widget.amount.toStringAsFixed(2)}',
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
-              ),
 
               const SizedBox(height: 12),
 
-              // Cancel
               SizedBox(
-                width: double.infinity,
-                height: 44,
+                width: double.infinity, height: 44,
                 child: TextButton(
                   onPressed: _processing ? null : () => Navigator.pop(context, null),
-                  child: const Text('Cancel', style: TextStyle(color: Colors.white38, fontSize: 14)),
+                  child: const Text('Cancel',
+                    style: TextStyle(color: Colors.white38, fontSize: 14)),
                 ),
               ),
 
-              // Security note
               Center(
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.lock_outline, size: 12, color: Colors.white24),
+                    const Icon(Icons.lock_outline, size: 11, color: Colors.white24),
                     const SizedBox(width: 4),
-                    const Text('Secured by Flutterwave · PayPal · PayStack',
+                    const Text('Flutterwave · Stripe · PayPal · PayStack',
                       style: TextStyle(color: Colors.white24, fontSize: 11)),
                   ],
                 ),
@@ -501,7 +538,7 @@ class _PaymentSheetState extends State<_PaymentSheet> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Kept for backward compatibility — screens that already import this widget
+// Kept for backward compatibility
 // ─────────────────────────────────────────────────────────────────────────────
 class PaymentMethodSelector extends StatelessWidget {
   final String userId;
@@ -517,7 +554,6 @@ class PaymentMethodSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Legacy widget — just show a placeholder directing to showPaymentSheet
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(

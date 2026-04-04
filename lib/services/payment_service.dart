@@ -4,203 +4,53 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutterwave_standard/flutterwave.dart';
 import 'package:flutter_paypal_payment/flutter_paypal_payment.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 import '../models/payment_result.dart';
 import 'supabase_service.dart';
 
-/// Service for handling payment processing through various gateways
-/// Supports: Flutterwave (Cards, Mobile Money), PayPal
+/// HomeLinkGH Payment Service
+/// Supports: MoMo (MTN/Vodafone/AirtelTigo), Card, Stripe, PayPal, PayStack
 class PaymentService {
   static final PaymentService _instance = PaymentService._internal();
   factory PaymentService() => _instance;
   PaymentService._internal();
 
-  // API Keys (loaded from .env)
   String? _flutterwavePublicKey;
   String? _flutterwaveSecretKey;
-  String? _flutterwaveEncryptionKey;
   String? _paypalClientId;
   String? _paypalSecret;
+  String? _stripeSecretKey;
   bool _isInitialized = false;
 
-  /// Initialize payment service and load API keys from environment
   Future<void> initialize() async {
-    if (_isInitialized) {
-      developer.log('💳 [Payment] Already initialized');
-      return;
-    }
-
+    if (_isInitialized) return;
     try {
-      developer.log('💳 [Payment] Initializing payment service...');
-
-      // Load API keys from .env
       _flutterwavePublicKey = dotenv.env['FLUTTERWAVE_PUBLIC_KEY'];
       _flutterwaveSecretKey = dotenv.env['FLUTTERWAVE_SECRET_KEY'];
-      _flutterwaveEncryptionKey = dotenv.env['FLUTTERWAVE_ENCRYPTION_KEY'];
-      _paypalClientId = dotenv.env['PAYPAL_CLIENT_ID'];
-      _paypalSecret = dotenv.env['PAYPAL_SECRET'];
-
-      // Validate Flutterwave keys
-      if (_flutterwavePublicKey == null || _flutterwavePublicKey!.isEmpty) {
-        developer.log('⚠️ [Payment] Flutterwave public key not found in .env');
-      }
-      if (_flutterwaveSecretKey == null || _flutterwaveSecretKey!.isEmpty) {
-        developer.log('⚠️ [Payment] Flutterwave secret key not found in .env');
-      }
-
-      // Validate PayPal keys
-      if (_paypalClientId == null || _paypalClientId!.isEmpty) {
-        developer.log('⚠️ [Payment] PayPal client ID not found in .env');
-      }
-
+      _paypalClientId      = dotenv.env['PAYPAL_CLIENT_ID'];
+      _paypalSecret        = dotenv.env['PAYPAL_SECRET'];
+      _stripeSecretKey     = dotenv.env['STRIPE_SECRET_KEY'];
       _isInitialized = true;
-      developer.log('✅ [Payment] Payment service initialized successfully');
+      developer.log('✅ [Payment] HomeLinkGH payment service initialized');
     } catch (e) {
-      developer.log('❌ [Payment] Failed to initialize: $e');
-      _isInitialized = false;
+      developer.log('❌ [Payment] Init failed: $e');
     }
   }
 
-  /// Process card payment through Flutterwave
-  ///
-  /// Supports Visa, Mastercard, Verve cards
-  /// Works for both USD and GHS currencies
-  Future<PaymentResult> processCardPayment({
-    required BuildContext context,
-    required double amount,
-    required String currency,
-    required String customerEmail,
-    required String customerName,
-    String? customerPhone,
-    String? description,
-    String? transactionRef,
-    // Booking context — if provided, a bookings record is created on success
-    String? serviceRequestId,
-    String? quoteId,
-    String? providerId,
-    String? providerName,
-    String? serviceType,
-  }) async {
-    try {
-      developer.log('💳 [Payment] Processing card payment: $currency $amount');
-
-      // Ensure initialized
-      if (!_isInitialized) {
-        await initialize();
-      }
-
-      // Validate API keys
-      if (_flutterwavePublicKey == null || _flutterwavePublicKey!.isEmpty) {
-        return PaymentResult.failure(
-          message: 'Payment gateway not configured. Please contact support.',
-        );
-      }
-
-      // Generate transaction reference if not provided
-      final String txRef = transactionRef ??
-          'HLG-TXN-${DateTime.now().millisecondsSinceEpoch}';
-
-      // Create Flutterwave customer
-      final customer = Customer(
-        name: customerName,
-        phoneNumber: customerPhone ?? '',
-        email: customerEmail,
-      );
-
-      // Create Flutterwave request
-      final Flutterwave flutterwave = Flutterwave(
-        publicKey: _flutterwavePublicKey!,
-        currency: currency,
-        redirectUrl: 'https://homelinkgh.com/payment/callback',
-        txRef: txRef,
-        amount: amount.toString(),
-        customer: customer,
-        paymentOptions: 'card',
-        customization: Customization(
-          title: 'HomeLinkGH Services',
-          description: description ?? 'Service Payment',
-          logo: 'https://homelinkgh.com/logo.png',
-        ),
-        isTestMode: _flutterwavePublicKey!.contains('TEST'), // Auto-detect test mode
-      );
-
-      // Initiate payment
-      developer.log('💳 [Payment] Launching Flutterwave payment UI...');
-      final ChargeResponse response = await flutterwave.charge(context);
-
-      // Process response
-      if (response.success == true) {
-        developer.log('✅ [Payment] Card payment successful: ${response.transactionId}');
-
-        // Verify payment on backend (important for security)
-        final bool verified = await verifyFlutterwavePayment(
-          response.transactionId ?? '',
-        );
-
-        if (verified) {
-          // Record booking in Supabase if booking context was provided
-          await _recordBooking(
-            transactionId: response.transactionId ?? txRef,
-            txRef: txRef,
-            amount: amount,
-            currency: currency,
-            paymentMethod: 'card',
-            customerEmail: customerEmail,
-            customerName: customerName,
-            serviceRequestId: serviceRequestId,
-            quoteId: quoteId,
-            providerId: providerId,
-            providerName: providerName,
-            serviceType: serviceType,
-          );
-
-          return PaymentResult.success(
-            transactionId: response.transactionId ?? txRef,
-            message: 'Payment completed successfully',
-            rawResponse: {
-              'tx_ref': response.txRef,
-              'transaction_id': response.transactionId,
-              'status': response.status,
-            },
-          );
-        } else {
-          return PaymentResult.failure(
-            message: 'Payment verification failed. Please contact support.',
-            rawResponse: {'tx_ref': response.txRef},
-          );
-        }
-      } else {
-        developer.log('❌ [Payment] Card payment failed: ${response.status}');
-        return PaymentResult.failure(
-          message: 'Payment ${response.status ?? "failed"}. Please try again.',
-          rawResponse: {
-            'tx_ref': response.txRef,
-            'status': response.status,
-          },
-        );
-      }
-    } catch (e) {
-      developer.log('❌ [Payment] Card payment error: $e');
-      return PaymentResult.failure(
-        message: 'Payment failed: ${e.toString()}',
-      );
-    }
-  }
-
-  /// Process Mobile Money payment through Flutterwave
-  ///
-  /// Supports: MTN Mobile Money, Vodafone Cash, AirtelTigo Money
-  /// Only works for GHS currency
+  // ─────────────────────────────────────────────────────────────────────────
+  // MOBILE MONEY  (MTN, Vodafone Cash, AirtelTigo)
+  // ─────────────────────────────────────────────────────────────────────────
   Future<PaymentResult> processMomoPayment({
     required BuildContext context,
     required double amount,
     required String phoneNumber,
-    required String network, // 'MTN', 'VODAFONE', 'TIGO'
+    required String network,
     required String customerEmail,
     String? customerName,
     String? description,
     String? transactionRef,
-    // Booking context — if provided, a bookings record is created on success
     String? serviceRequestId,
     String? quoteId,
     String? providerId,
@@ -208,46 +58,29 @@ class PaymentService {
     String? serviceType,
   }) async {
     try {
-      developer.log('📱 [Payment] Processing MoMo payment: GHS $amount via $network');
+      if (!_isInitialized) await initialize();
 
-      // Ensure initialized
-      if (!_isInitialized) {
-        await initialize();
-      }
-
-      // Validate API keys
       if (_flutterwavePublicKey == null || _flutterwavePublicKey!.isEmpty) {
-        return PaymentResult.failure(
-          message: 'Payment gateway not configured. Please contact support.',
-        );
+        return PaymentResult.failure(message: 'Payment gateway not configured.');
       }
-
-      // Generate transaction reference if not provided
-      final String txRef = transactionRef ??
-          'HLG-MOMO-${DateTime.now().millisecondsSinceEpoch}';
-
-      // Validate phone number (Ghana format)
       if (!_isValidGhanaPhone(phoneNumber)) {
         return PaymentResult.failure(
-          message: 'Invalid phone number. Please use Ghana format (e.g., 0241234567)',
-        );
+            message: 'Invalid phone number. Use Ghana format e.g. 024 000 0000');
       }
 
-      // Create Flutterwave customer
-      final customer = Customer(
-        name: customerName ?? 'Anonymous Donor',
-        phoneNumber: phoneNumber,
-        email: customerEmail,
-      );
+      final txRef = transactionRef ?? 'HLG-MOMO-${DateTime.now().millisecondsSinceEpoch}';
 
-      // Create Flutterwave request with Mobile Money
-      final Flutterwave flutterwave = Flutterwave(
+      final flutterwave = Flutterwave(
         publicKey: _flutterwavePublicKey!,
-        currency: 'GHS', // MoMo only supports GHS
+        currency: 'GHS',
         redirectUrl: 'https://homelinkgh.com/payment/callback',
         txRef: txRef,
         amount: amount.toString(),
-        customer: customer,
+        customer: Customer(
+          name: customerName ?? 'HomeLinkGH Customer',
+          phoneNumber: phoneNumber,
+          email: customerEmail,
+        ),
         paymentOptions: 'mobilemoneyghana',
         customization: Customization(
           title: 'HomeLinkGH Services',
@@ -257,108 +90,226 @@ class PaymentService {
         isTestMode: _flutterwavePublicKey!.contains('TEST'),
       );
 
-      // Initiate payment
-      developer.log('📱 [Payment] Launching Flutterwave MoMo UI...');
-      final ChargeResponse response = await flutterwave.charge(context);
+      final response = await flutterwave.charge(context);
 
-      // Process response
       if (response.success == true) {
-        developer.log('✅ [Payment] MoMo payment successful: ${response.transactionId}');
-
-        // Verify payment
-        final bool verified = await verifyFlutterwavePayment(
-          response.transactionId ?? '',
-        );
-
+        final verified = await _verifyFlutterwave(response.transactionId ?? '');
         if (verified) {
           await _recordBooking(
             transactionId: response.transactionId ?? txRef,
-            txRef: txRef,
-            amount: amount,
-            currency: 'GHS',
-            paymentMethod: 'mobile_money',
-            customerEmail: customerEmail,
-            customerName: customerName ?? '',
-            serviceRequestId: serviceRequestId,
-            quoteId: quoteId,
-            providerId: providerId,
-            providerName: providerName,
+            amount: amount, currency: 'GHS', method: 'momo',
+            serviceRequestId: serviceRequestId, quoteId: quoteId,
+            providerId: providerId, providerName: providerName,
             serviceType: serviceType,
           );
-
           return PaymentResult.success(
             transactionId: response.transactionId ?? txRef,
-            message: 'Mobile Money payment completed successfully',
-            rawResponse: {
-              'tx_ref': response.txRef,
-              'transaction_id': response.transactionId,
-              'status': response.status,
-              'network': network,
-              'phone': phoneNumber,
-            },
-          );
-        } else {
-          return PaymentResult.failure(
-            message: 'Payment verification failed. Please contact support.',
-            rawResponse: {'tx_ref': response.txRef},
+            message: 'Mobile Money payment completed',
+            rawResponse: {'tx_ref': response.txRef, 'network': network},
           );
         }
-      } else {
-        developer.log('❌ [Payment] MoMo payment failed: ${response.status}');
-        return PaymentResult.failure(
-          message: 'Mobile Money payment ${response.status ?? "failed"}. Please try again.',
-          rawResponse: {
-            'tx_ref': response.txRef,
-            'status': response.status,
-          },
-        );
+        return PaymentResult.failure(message: 'Payment verification failed.');
       }
-    } catch (e) {
-      developer.log('❌ [Payment] MoMo payment error: $e');
       return PaymentResult.failure(
-        message: 'Mobile Money payment failed: ${e.toString()}',
-      );
+          message: 'MoMo payment ${response.status ?? "failed"}. Please try again.');
+    } catch (e) {
+      return PaymentResult.failure(message: 'MoMo payment failed: $e');
     }
   }
 
-  /// Process PayPal payment
-  ///
-  /// Opens PayPal checkout UI in webview
-  /// Supports USD and other international currencies
+  // ─────────────────────────────────────────────────────────────────────────
+  // CARD  (Visa, Mastercard, Verve via Flutterwave)
+  // ─────────────────────────────────────────────────────────────────────────
+  Future<PaymentResult> processCardPayment({
+    required BuildContext context,
+    required double amount,
+    required String currency,
+    required String customerEmail,
+    required String customerName,
+    String? customerPhone,
+    String? description,
+    String? transactionRef,
+    String? serviceRequestId,
+    String? quoteId,
+    String? providerId,
+    String? providerName,
+    String? serviceType,
+  }) async {
+    try {
+      if (!_isInitialized) await initialize();
+
+      if (_flutterwavePublicKey == null || _flutterwavePublicKey!.isEmpty) {
+        return PaymentResult.failure(message: 'Payment gateway not configured.');
+      }
+
+      final txRef = transactionRef ?? 'HLG-TXN-${DateTime.now().millisecondsSinceEpoch}';
+
+      final flutterwave = Flutterwave(
+        publicKey: _flutterwavePublicKey!,
+        currency: currency,
+        redirectUrl: 'https://homelinkgh.com/payment/callback',
+        txRef: txRef,
+        amount: amount.toString(),
+        customer: Customer(
+          name: customerName,
+          phoneNumber: customerPhone ?? '',
+          email: customerEmail,
+        ),
+        paymentOptions: 'card',
+        customization: Customization(
+          title: 'HomeLinkGH Services',
+          description: description ?? 'Service Payment',
+          logo: 'https://homelinkgh.com/logo.png',
+        ),
+        isTestMode: _flutterwavePublicKey!.contains('TEST'),
+      );
+
+      final response = await flutterwave.charge(context);
+
+      if (response.success == true) {
+        final verified = await _verifyFlutterwave(response.transactionId ?? '');
+        if (verified) {
+          await _recordBooking(
+            transactionId: response.transactionId ?? txRef,
+            amount: amount, currency: currency, method: 'card',
+            serviceRequestId: serviceRequestId, quoteId: quoteId,
+            providerId: providerId, providerName: providerName,
+            serviceType: serviceType,
+          );
+          return PaymentResult.success(
+            transactionId: response.transactionId ?? txRef,
+            message: 'Card payment completed',
+          );
+        }
+        return PaymentResult.failure(message: 'Payment verification failed.');
+      }
+      return PaymentResult.failure(
+          message: 'Card payment ${response.status ?? "failed"}. Please try again.');
+    } catch (e) {
+      return PaymentResult.failure(message: 'Card payment failed: $e');
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // STRIPE  (Card + Apple Pay + Google Pay + Link)
+  // ─────────────────────────────────────────────────────────────────────────
+  Future<PaymentResult> processStripePayment({
+    required BuildContext context,
+    required double amount,
+    required String currency,
+    required String customerEmail,
+    required String customerName,
+    String? description,
+    String? transactionRef,
+    String? serviceRequestId,
+    String? quoteId,
+    String? providerId,
+    String? providerName,
+    String? serviceType,
+  }) async {
+    try {
+      if (!_isInitialized) await initialize();
+
+      if (_stripeSecretKey == null || _stripeSecretKey!.isEmpty) {
+        return PaymentResult.failure(message: 'Stripe not configured.');
+      }
+
+      final amountInSmallestUnit = (amount * 100).round();
+
+      final response = await http.post(
+        Uri.parse('https://api.stripe.com/v1/payment_intents'),
+        headers: {
+          'Authorization': 'Bearer $_stripeSecretKey',
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: {
+          'amount': amountInSmallestUnit.toString(),
+          'currency': currency.toLowerCase(),
+          'receipt_email': customerEmail,
+          'description': description ?? 'HomeLinkGH Service Payment',
+          'automatic_payment_methods[enabled]': 'true',
+          'automatic_payment_methods[allow_redirects]': 'never',
+        },
+      );
+
+      if (response.statusCode != 200) {
+        return PaymentResult.failure(
+            message: 'Stripe error (${response.statusCode}). Please try again.');
+      }
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      final clientSecret = data['client_secret'] as String;
+      final paymentIntentId = clientSecret.split('_secret')[0];
+
+      await Stripe.instance.initPaymentSheet(
+        paymentSheetParameters: SetupPaymentSheetParameters(
+          paymentIntentClientSecret: clientSecret,
+          merchantDisplayName: 'HomeLinkGH',
+          applePay: const PaymentSheetApplePay(merchantCountryCode: 'GH'),
+          googlePay: PaymentSheetGooglePay(
+            merchantCountryCode: 'GH',
+            currencyCode: currency.toLowerCase(),
+            testEnv: (_stripeSecretKey ?? '').contains('test'),
+          ),
+          style: ThemeMode.system,
+        ),
+      );
+
+      await Stripe.instance.presentPaymentSheet();
+
+      await _recordBooking(
+        transactionId: paymentIntentId,
+        amount: amount, currency: currency, method: 'stripe',
+        serviceRequestId: serviceRequestId, quoteId: quoteId,
+        providerId: providerId, providerName: providerName,
+        serviceType: serviceType,
+      );
+
+      return PaymentResult.success(
+        transactionId: paymentIntentId,
+        message: 'Payment completed',
+        rawResponse: {'payment_intent_id': paymentIntentId},
+      );
+    } on StripeException catch (e) {
+      if (e.error.code == FailureCode.Canceled) {
+        return PaymentResult.failure(message: 'Payment cancelled.');
+      }
+      return PaymentResult.failure(
+          message: e.error.message ?? 'Stripe payment failed.');
+    } catch (e) {
+      return PaymentResult.failure(message: 'Payment failed: $e');
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // PAYPAL
+  // ─────────────────────────────────────────────────────────────────────────
   Future<PaymentResult> processPayPalPayment({
     required BuildContext context,
     required double amount,
     required String currency,
     required String description,
     String? transactionRef,
+    String? serviceRequestId,
+    String? quoteId,
+    String? providerId,
+    String? providerName,
+    String? serviceType,
   }) async {
     try {
-      developer.log('🅿️ [Payment] Processing PayPal payment: $currency $amount');
+      if (!_isInitialized) await initialize();
 
-      // Ensure initialized
-      if (!_isInitialized) {
-        await initialize();
-      }
-
-      // Validate API keys
       if (_paypalClientId == null || _paypalClientId!.isEmpty) {
-        return PaymentResult.failure(
-          message: 'PayPal not configured. Please contact support.',
-        );
+        return PaymentResult.failure(message: 'PayPal not configured.');
       }
 
-      // Generate transaction reference if not provided
-      final String txRef = transactionRef ??
-          'HLG-PP-${DateTime.now().millisecondsSinceEpoch}';
-
-      // PayPal will be implemented via a Completer to handle async navigation
+      final txRef = transactionRef ?? 'HLG-PP-${DateTime.now().millisecondsSinceEpoch}';
       PaymentResult? result;
 
-      // Navigate to PayPal checkout
       await Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (BuildContext context) => PaypalCheckoutView(
-            sandboxMode: _paypalClientId!.contains('sandbox'), // Auto-detect sandbox
+          builder: (_) => PaypalCheckoutView(
+            sandboxMode: _paypalClientId!.contains('sandbox'),
             clientId: _paypalClientId!,
             secretKey: _paypalSecret ?? '',
             transactions: [
@@ -369,292 +320,232 @@ class PaymentService {
                   "details": {
                     "subtotal": amount.toStringAsFixed(2),
                     "shipping": '0',
-                    "shipping_discount": 0
+                    "shipping_discount": 0,
                   }
                 },
                 "description": description,
                 "item_list": {
                   "items": [
                     {
-                      "name": "Donation to Beacon of New Beginnings",
+                      "name": description,
                       "quantity": 1,
                       "price": amount.toStringAsFixed(2),
-                      "currency": currency
+                      "currency": currency,
                     }
                   ],
                 }
               }
             ],
-            note: "Thank you for your generous donation!",
+            note: "Thank you for using HomeLinkGH!",
             onSuccess: (Map params) async {
-              developer.log('✅ [Payment] PayPal payment successful: ${params['paymentId']}');
+              final txId = params['paymentId'] ?? txRef;
+              await _recordBooking(
+                transactionId: txId,
+                amount: amount, currency: currency, method: 'paypal',
+                serviceRequestId: serviceRequestId, quoteId: quoteId,
+                providerId: providerId, providerName: providerName,
+                serviceType: serviceType,
+              );
               result = PaymentResult.success(
-                transactionId: params['paymentId'] ?? txRef,
-                message: 'PayPal payment completed successfully',
+                transactionId: txId,
+                message: 'PayPal payment completed',
                 rawResponse: Map<String, dynamic>.from(params),
               );
             },
             onError: (error) {
-              developer.log('❌ [Payment] PayPal payment error: $error');
-              result = PaymentResult.failure(
-                message: 'PayPal payment failed: $error',
-              );
+              result = PaymentResult.failure(message: 'PayPal failed: $error');
             },
             onCancel: () {
-              developer.log('⚠️ [Payment] PayPal payment cancelled by user');
-              result = PaymentResult.failure(
-                message: 'Payment cancelled',
-              );
+              result = PaymentResult.failure(message: 'Payment cancelled');
             },
           ),
         ),
       );
 
-      // Return result or default failure if null
-      return result ?? PaymentResult.failure(
-        message: 'Payment was cancelled or incomplete',
-      );
+      return result ?? PaymentResult.failure(message: 'Payment incomplete');
     } catch (e) {
-      developer.log('❌ [Payment] PayPal payment error: $e');
-      return PaymentResult.failure(
-        message: 'PayPal payment failed: ${e.toString()}',
-      );
+      return PaymentResult.failure(message: 'PayPal payment failed: $e');
     }
   }
 
-  /// Record a completed booking in Supabase after successful payment.
-  /// Silently no-ops if no serviceRequestId is provided.
-  Future<void> _recordBooking({
-    required String transactionId,
-    required String txRef,
+  // ─────────────────────────────────────────────────────────────────────────
+  // PAYSTACK  (Bank transfer + local Ghana cards)
+  // ─────────────────────────────────────────────────────────────────────────
+  Future<PaymentResult> processPaystackPayment({
     required double amount,
     required String currency,
-    required String paymentMethod,
     required String customerEmail,
     required String customerName,
+    String? description,
+    String? transactionRef,
     String? serviceRequestId,
     String? quoteId,
     String? providerId,
     String? providerName,
     String? serviceType,
   }) async {
-    if (serviceRequestId == null) return;
     try {
-      final supabase = SupabaseService();
-      final user = supabase.currentUser;
+      if (!_isInitialized) await initialize();
 
-      await supabase.supabase.from('bookings').insert({
-        'service_request_id': serviceRequestId,
-        'quote_id': quoteId,
-        'customer_id': user?.id,
-        'customer_name': customerName,
-        'customer_email': customerEmail,
-        'provider_id': providerId,
-        'provider_name': providerName,
-        'service_type': serviceType,
-        'amount': amount,
-        'currency': currency,
-        'payment_method': paymentMethod,
-        'transaction_id': transactionId,
-        'tx_ref': txRef,
-        'payment_status': 'paid',
-        'status': 'confirmed',
-        'created_at': DateTime.now().toIso8601String(),
-        'updated_at': DateTime.now().toIso8601String(),
-      });
-
-      // Mark the service request as booked so it disappears from the open list
-      await supabase.supabase
-          .from('service_requests')
-          .update({'status': 'booked', 'updated_at': DateTime.now().toIso8601String()})
-          .eq('id', serviceRequestId);
-
-      developer.log('✅ [Payment] Booking recorded in Supabase: $transactionId');
-    } catch (e) {
-      // Non-fatal — payment already succeeded; log and move on
-      developer.log('⚠️ [Payment] Could not record booking: $e');
-    }
-  }
-
-  /// Verify Flutterwave payment transaction
-  ///
-  /// SECURITY NOTE: This implementation calls Flutterwave API directly from the client.
-  /// For optimal security, verification should be done server-side (backend API).
-  /// However, this client-side verification is significantly better than no verification.
-  ///
-  /// Production-grade approach:
-  /// 1. Client initiates payment with Flutterwave
-  /// 2. Client receives transaction ID
-  /// 3. Client calls YOUR backend: POST /api/verify-payment { transaction_id }
-  /// 4. Backend verifies with Flutterwave using SECRET key (never exposed to client)
-  /// 5. Backend returns verification status to client
-  Future<bool> verifyFlutterwavePayment(String transactionId) async {
-    try {
-      developer.log('🔍 [Payment] Verifying transaction: $transactionId');
-
-      if (transactionId.isEmpty) {
-        developer.log('❌ [Payment] Invalid transaction ID');
-        return false;
+      final secretKey = dotenv.env['PAYSTACK_SECRET_KEY'] ?? '';
+      if (secretKey.isEmpty) {
+        return PaymentResult.failure(message: 'PayStack not configured.');
       }
 
-      // Validate secret key is available
-      if (_flutterwaveSecretKey == null || _flutterwaveSecretKey!.isEmpty) {
-        developer.log('❌ [Payment] Secret key not configured');
-        return false;
-      }
+      final txRef = transactionRef ?? 'HLG-PS-${DateTime.now().millisecondsSinceEpoch}';
+      final amountInPesewas = (amount * 100).round();
 
-      // Call Flutterwave verification endpoint
-      final url = Uri.parse(
-        'https://api.flutterwave.com/v3/transactions/$transactionId/verify',
-      );
-
-      developer.log('🔍 [Payment] Calling Flutterwave verification API...');
-
-      final response = await http.get(
-        url,
+      final response = await http.post(
+        Uri.parse('https://api.paystack.co/transaction/initialize'),
         headers: {
-          'Authorization': 'Bearer $_flutterwaveSecretKey',
+          'Authorization': 'Bearer $secretKey',
           'Content-Type': 'application/json',
         },
+        body: jsonEncode({
+          'email': customerEmail,
+          'amount': amountInPesewas,
+          'currency': currency,
+          'reference': txRef,
+          'callback_url': 'https://homelinkgh.com/payment/callback',
+          'metadata': {
+            'name': customerName,
+            'description': description ?? 'HomeLinkGH Service Payment',
+          },
+        }),
       );
-
-      developer.log('🔍 [Payment] Verification response status: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-
-        // Check response status
-        if (data['status'] == 'success') {
-          final transactionData = data['data'];
-          final status = transactionData['status'];
-          final amount = transactionData['amount'];
-          final currency = transactionData['currency'];
-
-          developer.log('🔍 [Payment] Transaction status: $status');
-          developer.log('🔍 [Payment] Amount: $currency $amount');
-
-          // Verify payment was successful
-          if (status == 'successful') {
-            developer.log('✅ [Payment] Payment verified successfully');
-            return true;
-          } else {
-            developer.log('❌ [Payment] Payment not successful: $status');
-            return false;
-          }
-        } else {
-          developer.log('❌ [Payment] Verification API returned error: ${data['message']}');
-          return false;
+        if (data['status'] == true) {
+          final authUrl = data['data']['authorization_url'] as String;
+          final reference = data['data']['reference'] as String;
+          await launchUrl(Uri.parse(authUrl), mode: LaunchMode.externalApplication);
+          return PaymentResult(
+            success: false,
+            isPending: true,
+            transactionId: reference,
+            message: 'Payment opened in browser. Tap "Verify Payment" when done.',
+          );
         }
-      } else {
-        developer.log('❌ [Payment] Verification failed with status ${response.statusCode}');
-        developer.log('❌ [Payment] Response: ${response.body}');
-        return false;
+        return PaymentResult.failure(
+            message: data['message'] ?? 'PayStack initialisation failed.');
       }
+      return PaymentResult.failure(
+          message: 'PayStack error (${response.statusCode}). Try again.');
     } catch (e) {
-      developer.log('❌ [Payment] Verification error: $e');
+      return PaymentResult.failure(message: 'PayStack payment failed: $e');
+    }
+  }
+
+  Future<PaymentResult> verifyPaystackPayment(
+    String reference, {
+    String? serviceRequestId,
+    String? quoteId,
+    String? providerId,
+    String? providerName,
+    String? serviceType,
+    double? amount,
+  }) async {
+    try {
+      final secretKey = dotenv.env['PAYSTACK_SECRET_KEY'] ?? '';
+      final response = await http.get(
+        Uri.parse('https://api.paystack.co/transaction/verify/$reference'),
+        headers: {'Authorization': 'Bearer $secretKey'},
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['status'] == true && data['data']['status'] == 'success') {
+          await _recordBooking(
+            transactionId: reference,
+            amount: amount ?? 0, currency: 'GHS', method: 'paystack',
+            serviceRequestId: serviceRequestId, quoteId: quoteId,
+            providerId: providerId, providerName: providerName,
+            serviceType: serviceType,
+          );
+          return PaymentResult.success(
+            transactionId: reference,
+            message: 'Bank transfer verified successfully',
+            rawResponse: Map<String, dynamic>.from(data['data']),
+          );
+        }
+        final status = data['data']?['status'] ?? 'failed';
+        return PaymentResult.failure(
+            message: 'Payment not completed (status: $status). Try again.');
+      }
+      return PaymentResult.failure(
+          message: 'Verification error (${response.statusCode}).');
+    } catch (e) {
+      return PaymentResult.failure(message: 'Verification failed: $e');
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // INTERNAL HELPERS
+  // ─────────────────────────────────────────────────────────────────────────
+
+  Future<bool> _verifyFlutterwave(String transactionId) async {
+    try {
+      if (transactionId.isEmpty || _flutterwaveSecretKey == null) return false;
+      final response = await http.get(
+        Uri.parse('https://api.flutterwave.com/v3/transactions/$transactionId/verify'),
+        headers: {'Authorization': 'Bearer $_flutterwaveSecretKey'},
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['status'] == 'success' &&
+            data['data']['status'] == 'successful';
+      }
+      return false;
+    } catch (_) {
       return false;
     }
   }
 
-  /// Charge a tokenized payment method (saved card/MoMo)
-  ///
-  /// Uses Flutterwave tokenization to charge a previously saved payment method
-  /// This is significantly faster than normal payment as it skips the UI flow
-  Future<Map<String, dynamic>> chargeTokenizedPayment({
-    required String token,
+  Future<void> _recordBooking({
+    required String transactionId,
     required double amount,
     required String currency,
-    required String description,
-    required String email,
+    required String method,
+    String? serviceRequestId,
+    String? quoteId,
+    String? providerId,
+    String? providerName,
+    String? serviceType,
   }) async {
     try {
-      developer.log('💳 [Payment] Charging tokenized payment: $currency $amount');
-
-      // Ensure initialized
-      if (!_isInitialized) {
-        await initialize();
-      }
-
-      // Validate API keys
-      if (_flutterwaveSecretKey == null || _flutterwaveSecretKey!.isEmpty) {
-        throw Exception('Flutterwave not configured');
-      }
-
-      // Generate transaction reference
-      final String txRef = 'HLG-TOKEN-${DateTime.now().millisecondsSinceEpoch}';
-
-      // Prepare request to Flutterwave tokenized charge API
-      final response = await http.post(
-        Uri.parse('https://api.flutterwave.com/v3/tokenized-charges'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $_flutterwaveSecretKey',
-        },
-        body: json.encode({
-          'token': token,
-          'currency': currency,
-          'country': 'GH',
-          'amount': amount,
-          'email': email,
-          'tx_ref': txRef,
-          'narration': description,
-        }),
-      );
-
-      final data = json.decode(response.body);
-
-      if (response.statusCode == 200 && data['status'] == 'success') {
-        developer.log('✅ [Payment] Tokenized payment successful');
-
-        return {
-          'success': true,
-          'transaction_id': data['data']['id']?.toString() ?? txRef,
-          'tx_ref': txRef,
-          'amount': amount,
-          'currency': currency,
-          'status': data['data']['status'],
-          'charged_amount': data['data']['charged_amount'],
-        };
-      } else {
-        developer.log('❌ [Payment] Tokenized payment failed: ${data['message']}');
-        throw Exception(data['message'] ?? 'Tokenized payment failed');
+      if (serviceRequestId == null && quoteId == null) return;
+      final supabase = SupabaseService();
+      await supabase.supabase.from('bookings').insert({
+        'transaction_id': transactionId,
+        'amount': amount,
+        'currency': currency,
+        'payment_method': method,
+        'service_request_id': serviceRequestId,
+        'quote_id': quoteId,
+        'provider_id': providerId,
+        'provider_name': providerName,
+        'service_type': serviceType,
+        'status': 'confirmed',
+        'created_at': DateTime.now().toIso8601String(),
+      });
+      if (serviceRequestId != null) {
+        await supabase.supabase
+            .from('service_requests')
+            .update({'status': 'booked'})
+            .eq('id', serviceRequestId);
       }
     } catch (e) {
-      developer.log('❌ [Payment] Tokenized payment error: $e');
-      throw Exception('Tokenized payment failed: ${e.toString()}');
+      developer.log('⚠️ [Payment] Booking record failed: $e');
     }
   }
 
-  /// Validate Ghana phone number format
   bool _isValidGhanaPhone(String phone) {
-    // Remove spaces and dashes
-    final cleaned = phone.replaceAll(RegExp(r'[\s\-]'), '');
-
-    // Ghana format: 10 digits starting with 0, or 12 digits starting with 233
-    final regex1 = RegExp(r'^0[2-5][0-9]{8}$'); // 0241234567
-    final regex2 = RegExp(r'^233[2-5][0-9]{8}$'); // 233241234567
-
-    return regex1.hasMatch(cleaned) || regex2.hasMatch(cleaned);
+    final cleaned = phone.replaceAll(RegExp(r'[\s\-\(\)]'), '');
+    return RegExp(r'^0[2-5][0-9]{8}$').hasMatch(cleaned) ||
+        RegExp(r'^233[2-5][0-9]{8}$').hasMatch(cleaned) ||
+        RegExp(r'^\+233[2-5][0-9]{8}$').hasMatch(cleaned);
   }
 
-  /// Get supported Mobile Money networks in Ghana
-  List<String> getSupportedMoMoNetworks() {
-    return ['MTN', 'VODAFONE', 'AIRTELTIGO'];
-  }
-
-  /// Check if payment service is ready
   bool get isInitialized => _isInitialized;
-
-  /// Check if Flutterwave is configured
-  bool get isFlutterwaveConfigured =>
-      _flutterwavePublicKey != null && _flutterwavePublicKey!.isNotEmpty;
-
-  /// Check if PayPal is configured
-  bool get isPayPalConfigured =>
-      _paypalClientId != null && _paypalClientId!.isNotEmpty;
-
-  /// Check if in test mode
-  bool get isTestMode =>
-      _flutterwavePublicKey?.contains('TEST') == true ||
-      _paypalClientId?.contains('sandbox') == true;
 }
