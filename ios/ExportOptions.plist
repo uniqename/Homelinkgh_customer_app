@@ -10,7 +10,9 @@
 	<string>U5JG38RBYM</string>
 	<key>uploadSymbols</key>
 	<true/>
-	<key>compileBitcode</key>
+	<key>stripSwiftSymbols</key>
 	<true/>
+	<key>destination</key>
+	<string>export</string>
 </dict>
 </plist>

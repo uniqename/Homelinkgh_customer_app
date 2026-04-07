@@ -3,22 +3,16 @@ import 'package:flutter/services.dart';
 import '../services/payment_service.dart';
 import '../models/payment_result.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Top-level helper — present the payment bottom sheet from anywhere.
-// Returns PaymentResult on completion, null if user dismisses.
-// ─────────────────────────────────────────────────────────────────────────────
+/// Show the HomeLinkGH payment bottom sheet.
+///
+/// Returns a [PaymentResult] on success/pending, or null if the user cancelled.
 Future<PaymentResult?> showPaymentSheet(
   BuildContext context, {
   required double amount,
-  required String currency,
-  required String customerEmail,
-  required String customerName,
-  String? description,
-  String? serviceRequestId,
-  String? quoteId,
+  required String serviceRequestId,
+  String? customerEmail,
+  String? customerName,
   String? providerId,
-  String? providerName,
-  String? serviceType,
 }) {
   return showModalBottomSheet<PaymentResult>(
     context: context,
@@ -26,525 +20,460 @@ Future<PaymentResult?> showPaymentSheet(
     backgroundColor: Colors.transparent,
     builder: (_) => _PaymentSheet(
       amount: amount,
-      currency: currency,
-      customerEmail: customerEmail,
-      customerName: customerName,
-      description: description,
       serviceRequestId: serviceRequestId,
-      quoteId: quoteId,
+      customerEmail: customerEmail ?? '',
+      customerName: customerName ?? 'Customer',
       providerId: providerId,
-      providerName: providerName,
-      serviceType: serviceType,
     ),
   );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Internal bottom-sheet widget
-// ─────────────────────────────────────────────────────────────────────────────
+
+enum _Method { momo, card, paypal, paystack }
+
 class _PaymentSheet extends StatefulWidget {
   final double amount;
-  final String currency;
+  final String serviceRequestId;
   final String customerEmail;
   final String customerName;
-  final String? description;
-  final String? serviceRequestId;
-  final String? quoteId;
   final String? providerId;
-  final String? providerName;
-  final String? serviceType;
 
   const _PaymentSheet({
     required this.amount,
-    required this.currency,
+    required this.serviceRequestId,
     required this.customerEmail,
     required this.customerName,
-    this.description,
-    this.serviceRequestId,
-    this.quoteId,
     this.providerId,
-    this.providerName,
-    this.serviceType,
   });
 
   @override
   State<_PaymentSheet> createState() => _PaymentSheetState();
 }
 
-enum _Method { momo, card, paypal, paystack }
-
 class _PaymentSheetState extends State<_PaymentSheet> {
-  _Method? _selected;
-  bool _processing = false;
-  String? _error;
+  _Method _selected = _Method.momo;
+  bool _loading = false;
+  bool _pendingVerify = false;
+  String _pendingRef = '';
 
   // MoMo fields
-  final _phoneController = TextEditingController();
-  String _momoNetwork = 'MTN';
-  static const _networks = ['MTN', 'Vodafone', 'AirtelTigo'];
+  final _phoneCtrl = TextEditingController();
+  String _network = 'MTN';
 
-  // PayStack pending verify
-  String? _paystackRef;
+  final _service = PaymentService();
 
-  final _paymentService = PaymentService();
+  static const _green = Color(0xFF006B3C);
+  static const _gold = Color(0xFFFCD116);
 
   @override
   void dispose() {
-    _phoneController.dispose();
+    _phoneCtrl.dispose();
     super.dispose();
   }
 
-  // ── Colours ─────────────────────────────────────────────────────────────────
-  static const _green = Color(0xFF006B3C);
-  static const _gold  = Color(0xFFFCD116);
-  static const _bg    = Color(0xFF0A1A10);
-  static const _card  = Color(0xFF0D2016);
+  Future<void> _pay() async {
+    if (!mounted) return;
+    setState(() => _loading = true);
 
-  // ── Tiles ───────────────────────────────────────────────────────────────────
-  Widget _tile(_Method method, String emoji, String title, String subtitle) {
-    final sel = _selected == method;
-    return GestureDetector(
-      onTap: _processing ? null : () => setState(() { _selected = method; _error = null; _paystackRef = null; }),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: sel ? _green.withValues(alpha: 0.15) : _card,
-          border: Border.all(
-            color: sel ? _green : Colors.white.withValues(alpha: 0.1),
-            width: sel ? 1.5 : 1,
+    try {
+      PaymentResult result;
+
+      switch (_selected) {
+        case _Method.momo:
+          if (_phoneCtrl.text.trim().isEmpty) {
+            _snack('Enter your Mobile Money phone number.');
+            setState(() => _loading = false);
+            return;
+          }
+          result = await _service.processMomoPayment(
+            context: context,
+            amount: widget.amount,
+            phoneNumber: _phoneCtrl.text.trim(),
+            network: _network,
+            customerName: widget.customerName,
+            customerEmail: widget.customerEmail,
+            description: 'HomeLinkGH Service Payment',
+          );
+          break;
+
+        case _Method.card:
+          result = await _service.processCardPayment(
+            context: context,
+            amount: widget.amount,
+            currency: 'GHS',
+            customerName: widget.customerName,
+            customerEmail: widget.customerEmail,
+            description: 'HomeLinkGH Service Payment',
+          );
+          break;
+
+        case _Method.paypal:
+          result = await _service.processPayPalPayment(
+            context: context,
+            amount: widget.amount,
+            currency: 'USD',
+            description: 'HomeLinkGH Service Payment',
+          );
+          break;
+
+        case _Method.paystack:
+          result = await _service.processPaystackPayment(
+            amount: widget.amount,
+            email: widget.customerEmail,
+            serviceRequestId: widget.serviceRequestId,
+          );
+          if (result.isPending && mounted) {
+            setState(() {
+              _pendingVerify = true;
+              _pendingRef = result.transactionId ?? '';
+              _loading = false;
+            });
+            return;
+          }
+          break;
+      }
+
+      if (!mounted) return;
+
+      if (result.success) {
+        Navigator.pop(context, result);
+      } else {
+        _snack(result.message ?? 'Payment failed. Please try again.');
+        setState(() => _loading = false);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      _snack('Payment error: $e');
+      setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _verify() async {
+    if (!mounted) return;
+    setState(() => _loading = true);
+    final result = await _service.verifyPaystackPayment(
+      reference: _pendingRef,
+      serviceRequestId: widget.serviceRequestId,
+      amount: widget.amount,
+      providerId: widget.providerId,
+    );
+    if (!mounted) return;
+    if (result.success) {
+      Navigator.pop(context, result);
+    } else {
+      _snack(result.message ?? 'Not verified yet. Please wait a moment.');
+      setState(() => _loading = false);
+    }
+  }
+
+  void _snack(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg), backgroundColor: Colors.red[700]),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Color(0xFF1A1A2E),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      padding: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 20,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.white24,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
           ),
-          borderRadius: BorderRadius.circular(14),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Pay for Service',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                'GH₵ ${widget.amount.toStringAsFixed(2)}',
+                style: const TextStyle(
+                  color: _gold,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Secured by Flutterwave · PayPal · PayStack',
+            style: TextStyle(color: Colors.white38, fontSize: 12),
+          ),
+          const SizedBox(height: 20),
+
+          if (_pendingVerify) ...[
+            _pendingBanner(),
+          ] else ...[
+            // Method picker
+            _methodRow(_Method.momo, 'Mobile Money', 'MTN · Vodafone · AirtelTigo'),
+            _methodRow(_Method.card, 'Debit / Credit Card', 'Visa · Mastercard · Verve'),
+            _methodRow(_Method.paystack, 'Bank Transfer', 'Any Ghana bank account'),
+            _methodRow(_Method.paypal, 'PayPal (USD)', 'For diaspora payments'),
+            const SizedBox(height: 16),
+
+            // MoMo extra fields
+            if (_selected == _Method.momo) ...[
+              _networkPicker(),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _phoneCtrl,
+                keyboardType: TextInputType.phone,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  labelText: 'Mobile Money Number',
+                  labelStyle: const TextStyle(color: Colors.white54),
+                  hintText: '0241234567',
+                  hintStyle: const TextStyle(color: Colors.white24),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: Colors.white24),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: _green),
+                  ),
+                  prefixIcon: const Icon(Icons.phone, color: Colors.white54),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+
+            // PayStack info
+            if (_selected == _Method.paystack)
+              Container(
+                padding: const EdgeInsets.all(12),
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white10,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.info_outline, color: Colors.white54, size: 18),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'You will be taken to your bank\'s page to complete the transfer. Come back and tap "Verify Payment" when done.',
+                        style: TextStyle(color: Colors.white54, fontSize: 12),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton(
+                onPressed: _loading ? null : _pay,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _green,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: _loading
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : Text(
+                        _selected == _Method.paystack
+                            ? 'Open Bank Transfer'
+                            : 'Pay GH₵ ${widget.amount.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _methodRow(_Method method, String title, String subtitle) {
+    final selected = _selected == method;
+    return GestureDetector(
+      onTap: () => setState(() => _selected = method),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: selected ? _green.withValues(alpha: 0.15) : Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: selected ? _green : Colors.white12,
+            width: selected ? 1.5 : 1,
+          ),
         ),
         child: Row(
           children: [
-            Text(emoji, style: const TextStyle(fontSize: 26)),
-            const SizedBox(width: 14),
+            Icon(
+              selected ? Icons.radio_button_checked : Icons.radio_button_off,
+              color: selected ? _gold : Colors.white38,
+              size: 20,
+            ),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title,
+                  Text(
+                    title,
                     style: TextStyle(
-                      color: sel ? Colors.white : Colors.white.withValues(alpha: 0.87),
-                      fontWeight: FontWeight.w600, fontSize: 15)),
-                  Text(subtitle,
-                    style: const TextStyle(color: Colors.white38, fontSize: 12)),
+                      color: selected ? Colors.white : Colors.white70,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(color: Colors.white38, fontSize: 11),
+                  ),
                 ],
               ),
             ),
-            if (sel)
-              const Icon(Icons.check_circle, color: _green, size: 20)
-            else
-              const Icon(Icons.radio_button_off, color: Colors.white24, size: 20),
           ],
         ),
       ),
     );
   }
 
-  Widget _momoExtra() {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: _card,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('Mobile Network', style: TextStyle(color: Colors.white54, fontSize: 12)),
-          const SizedBox(height: 8),
-          Row(
-            children: _networks.map((n) {
-              final sel = _momoNetwork == n;
-              return GestureDetector(
-                onTap: () => setState(() => _momoNetwork = n),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 120),
-                  margin: const EdgeInsets.only(right: 8),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: sel ? _green : Colors.white.withValues(alpha: 0.07),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: sel ? _green : Colors.white.withValues(alpha: 0.12)),
-                  ),
-                  child: Text(n,
-                    style: TextStyle(
-                      color: sel ? Colors.white : Colors.white60,
-                      fontSize: 13, fontWeight: sel ? FontWeight.w600 : FontWeight.normal)),
+  Widget _networkPicker() {
+    return Row(
+      children: ['MTN', 'VODAFONE', 'AIRTELTIGO'].map((n) {
+        final sel = _network == n;
+        return Expanded(
+          child: GestureDetector(
+            onTap: () => setState(() => _network = n),
+            child: Container(
+              margin: const EdgeInsets.only(right: 6),
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              decoration: BoxDecoration(
+                color: sel ? _gold.withValues(alpha: 0.2) : Colors.white.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: sel ? _gold : Colors.white12),
+              ),
+              child: Text(
+                n == 'AIRTELTIGO' ? 'AirtelTigo' : n,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: sel ? _gold : Colors.white38,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
                 ),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 14),
-          const Text('Phone Number', style: TextStyle(color: Colors.white54, fontSize: 12)),
-          const SizedBox(height: 6),
-          TextField(
-            controller: _phoneController,
-            keyboardType: TextInputType.phone,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            style: const TextStyle(color: Colors.white, fontSize: 15),
-            decoration: InputDecoration(
-              hintText: '024 000 0000',
-              hintStyle: const TextStyle(color: Colors.white24),
-              prefixText: '+233  ',
-              prefixStyle: const TextStyle(color: Colors.white54, fontSize: 14),
-              filled: true,
-              fillColor: Colors.white.withValues(alpha: 0.05),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.15))),
-              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.15))),
-              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: _green)),
+              ),
             ),
           ),
-        ],
-      ),
+        );
+      }).toList(),
     );
   }
 
-  Widget _infoBox(String text) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: _gold.withValues(alpha: 0.07),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: _gold.withValues(alpha: 0.2)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.info_outline, color: _gold, size: 15),
-          const SizedBox(width: 8),
-          Expanded(child: Text(text, style: const TextStyle(color: _gold, fontSize: 12))),
-        ],
-      ),
-    );
-  }
-
-  // ── Payment dispatch ─────────────────────────────────────────────────────────
-  Future<void> _pay() async {
-    if (_selected == null) {
-      setState(() => _error = 'Please select a payment method');
-      return;
-    }
-    if (_selected == _Method.momo && _phoneController.text.length < 9) {
-      setState(() => _error = 'Enter a valid Ghana phone number');
-      return;
-    }
-
-    setState(() { _processing = true; _error = null; });
-
-    try {
-      PaymentResult result;
-
-      switch (_selected!) {
-        case _Method.momo:
-          result = await _paymentService.processMomoPayment(
-            context: context,
-            amount: widget.amount,
-            phoneNumber: '+233${_phoneController.text.replaceAll(RegExp(r'[^0-9]'), '')}',
-            network: _momoNetwork,
-            customerEmail: widget.customerEmail,
-            customerName: widget.customerName,
-            description: widget.description,
-            serviceRequestId: widget.serviceRequestId,
-            quoteId: widget.quoteId,
-            providerId: widget.providerId,
-            providerName: widget.providerName,
-            serviceType: widget.serviceType,
-          );
-
-        case _Method.card:
-          result = await _paymentService.processCardPayment(
-            context: context,
-            amount: widget.amount,
-            currency: widget.currency,
-            customerEmail: widget.customerEmail,
-            customerName: widget.customerName,
-            description: widget.description,
-            serviceRequestId: widget.serviceRequestId,
-            quoteId: widget.quoteId,
-            providerId: widget.providerId,
-            providerName: widget.providerName,
-            serviceType: widget.serviceType,
-          );
-
-        case _Method.paypal:
-          result = await _paymentService.processPayPalPayment(
-            context: context,
-            amount: widget.amount,
-            currency: widget.currency == 'GHS' ? 'USD' : widget.currency,
-            description: widget.description ?? 'HomeLinkGH Payment',
-            serviceRequestId: widget.serviceRequestId,
-            quoteId: widget.quoteId,
-            providerId: widget.providerId,
-            providerName: widget.providerName,
-            serviceType: widget.serviceType,
-          );
-
-        case _Method.paystack:
-          result = await _paymentService.processPaystackPayment(
-            amount: widget.amount,
-            currency: widget.currency,
-            customerEmail: widget.customerEmail,
-            customerName: widget.customerName,
-            description: widget.description,
-          );
-          // PayStack opens a browser — show verify button
-          if (result.isPending) {
-            setState(() {
-              _paystackRef = result.transactionId;
-              _processing = false;
-            });
-            return;
-          }
-      }
-
-      if (!mounted) return;
-      if (result.success) {
-        Navigator.pop(context, result);
-      } else {
-        setState(() { _processing = false; _error = result.message ?? 'Payment failed. Try again.'; });
-      }
-    } catch (e) {
-      if (!mounted) return;
-      setState(() { _processing = false; _error = 'Payment error: $e'; });
-    }
-  }
-
-  Future<void> _verifyPaystack() async {
-    if (_paystackRef == null) return;
-    setState(() { _processing = true; _error = null; });
-
-    final result = await _paymentService.verifyPaystackPayment(
-      _paystackRef!,
-      serviceRequestId: widget.serviceRequestId,
-      quoteId: widget.quoteId,
-      providerId: widget.providerId,
-      providerName: widget.providerName,
-      serviceType: widget.serviceType,
-      amount: widget.amount,
-    );
-
-    if (!mounted) return;
-    if (result.success) {
-      Navigator.pop(context, result);
-    } else {
-      setState(() { _processing = false; _error = result.message ?? 'Verification failed. Try again.'; });
-    }
-  }
-
-  // ── Build ─────────────────────────────────────────────────────────────────
-  @override
-  Widget build(BuildContext context) {
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-    final symbol = widget.currency == 'GHS' ? 'GH₵' : widget.currency;
-
-    return Container(
-      padding: EdgeInsets.only(bottom: bottomInset),
-      decoration: const BoxDecoration(
-        color: _bg,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _pendingBanner() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.amber.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+          ),
+          child: const Row(
             children: [
-              // Handle bar
-              Center(
-                child: Container(width: 40, height: 4,
-                  decoration: BoxDecoration(color: Colors.white24,
-                    borderRadius: BorderRadius.circular(2))),
-              ),
-              const SizedBox(height: 18),
-
-              // Amount summary
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF003D1F), Color(0xFF0A1A10)]),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: _green.withValues(alpha: 0.35)),
-                ),
+              Icon(Icons.hourglass_top, color: Colors.amber),
+              SizedBox(width: 10),
+              Expanded(
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Total Amount',
-                      style: TextStyle(color: Colors.white54, fontSize: 13)),
-                    const SizedBox(height: 6),
-                    Text('$symbol ${widget.amount.toStringAsFixed(2)}',
-                      style: const TextStyle(color: Colors.white, fontSize: 32,
-                        fontWeight: FontWeight.bold, letterSpacing: -0.5)),
-                    if (widget.description != null) ...[
-                      const SizedBox(height: 4),
-                      Text(widget.description!,
-                        style: const TextStyle(color: Colors.white38, fontSize: 12)),
-                    ],
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              const Text('Choose Payment Method',
-                style: TextStyle(color: Colors.white, fontSize: 17,
-                  fontWeight: FontWeight.bold)),
-              const SizedBox(height: 14),
-
-              // ── MoMo ──
-              _tile(_Method.momo, '📱', 'Mobile Money (MoMo)',
-                'MTN, Vodafone Cash, AirtelTigo'),
-              if (_selected == _Method.momo) _momoExtra(),
-
-              // ── Flutterwave card ──
-              _tile(_Method.card, '💳', 'Debit / Credit Card',
-                'Visa, Mastercard, Verve  via Flutterwave'),
-
-              // ── PayPal ──
-              _tile(_Method.paypal, '🌐', 'PayPal',
-                'International payments in USD'),
-
-              // ── PayStack bank transfer ──
-              _tile(_Method.paystack, '🏦', 'Bank Transfer (GHS)',
-                'Local Ghana bank accounts via PayStack'),
-              if (_selected == _Method.paystack)
-                _infoBox('PayStack will open in your browser. Come back and tap '
-                    '"Verify Payment" after completing the transfer.'),
-
-              // PayStack pending verify button
-              if (_paystackRef != null) ...[
-                const SizedBox(height: 4),
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: OutlinedButton.icon(
-                    onPressed: _processing ? null : _verifyPaystack,
-                    icon: const Icon(Icons.verified_outlined, color: _green),
-                    label: const Text('Verify Payment',
-                      style: TextStyle(color: _green, fontWeight: FontWeight.w600)),
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: _green),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14))),
-                  ),
-                ),
-                const SizedBox(height: 10),
-              ],
-
-              // Error
-              if (_error != null) ...[
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.red.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.error_outline, color: Colors.red, size: 16),
-                      const SizedBox(width: 8),
-                      Expanded(child: Text(_error!,
-                        style: const TextStyle(color: Colors.red, fontSize: 13))),
-                    ],
-                  ),
-                ),
-              ],
-
-              const SizedBox(height: 20),
-
-              // Pay button (hidden when PayStack pending)
-              if (_paystackRef == null)
-                SizedBox(
-                  width: double.infinity,
-                  height: 54,
-                  child: ElevatedButton(
-                    onPressed: _processing ? null : _pay,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _green,
-                      foregroundColor: Colors.white,
-                      disabledBackgroundColor: _green.withValues(alpha: 0.4),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14)),
-                      elevation: 0,
+                    Text(
+                      'Waiting for bank transfer',
+                      style: TextStyle(
+                        color: Colors.amber,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                    child: _processing
-                      ? const SizedBox(width: 22, height: 22,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.5, color: Colors.white))
-                      : Text('Pay $symbol ${widget.amount.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold)),
-                  ),
-                ),
-
-              const SizedBox(height: 12),
-
-              SizedBox(
-                width: double.infinity, height: 44,
-                child: TextButton(
-                  onPressed: _processing ? null : () => Navigator.pop(context, null),
-                  child: const Text('Cancel',
-                    style: TextStyle(color: Colors.white38, fontSize: 14)),
-                ),
-              ),
-
-              Center(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.lock_outline, size: 11, color: Colors.white24),
-                    const SizedBox(width: 4),
-                    const Text('Flutterwave · PayPal · PayStack',
-                      style: TextStyle(color: Colors.white24, fontSize: 11)),
+                    Text(
+                      'Complete the transfer in your browser, then tap Verify Payment below.',
+                      style: TextStyle(color: Colors.white54, fontSize: 12),
+                    ),
                   ],
                 ),
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Kept for backward compatibility
-// ─────────────────────────────────────────────────────────────────────────────
-class PaymentMethodSelector extends StatelessWidget {
-  final String userId;
-  final Function(dynamic) onMethodSelected;
-  final bool allowAddNew;
-
-  const PaymentMethodSelector({
-    super.key,
-    required this.userId,
-    required this.onMethodSelected,
-    this.allowAddNew = true,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF0D2016),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: const Text(
-        'Use showPaymentSheet() to present the payment UI.',
-        style: TextStyle(color: Colors.white54, fontSize: 13),
-      ),
+        const SizedBox(height: 16),
+        SizedBox(
+          width: double.infinity,
+          height: 52,
+          child: ElevatedButton(
+            onPressed: _loading ? null : _verify,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _green,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: _loading
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  )
+                : const Text(
+                    'Verify Payment',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+          ),
+        ),
+      ],
     );
   }
 }

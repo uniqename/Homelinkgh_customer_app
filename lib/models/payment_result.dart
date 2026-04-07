@@ -1,17 +1,17 @@
 class PaymentResult {
   final bool success;
-  final bool isPending;
   final String? transactionId;
   final String? message;
   final String? receiptUrl;
+  final bool isPending;
   final Map<String, dynamic>? rawResponse;
 
   const PaymentResult({
     required this.success,
-    this.isPending = false,
     this.transactionId,
     this.message,
     this.receiptUrl,
+    this.isPending = false,
     this.rawResponse,
   });
 
@@ -38,6 +38,18 @@ class PaymentResult {
       success: false,
       message: message,
       rawResponse: rawResponse,
+    );
+  }
+
+  factory PaymentResult.pending({
+    required String transactionId,
+    required String message,
+  }) {
+    return PaymentResult(
+      success: false,
+      isPending: true,
+      transactionId: transactionId,
+      message: message,
     );
   }
 
