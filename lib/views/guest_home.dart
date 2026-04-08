@@ -3,11 +3,11 @@ import '../services/standalone_service.dart';
 import '../services/app_tracking_service.dart';
 import '../models/provider.dart';
 import '../constants/app_constants.dart';
-import '../widgets/payment_method_selector.dart';
 import 'auth_screen.dart';
 import 'role_selection.dart';
 import 'food_delivery_screen.dart';
 import 'smart_service_booking.dart';
+import 'donation_screen.dart';
 
 /// Real guest home screen without demo data
 class GuestHomeScreen extends StatefulWidget {
@@ -72,9 +72,9 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
           children: [
             _buildHeroSection(),
             _buildQuickActions(),
+            _buildDonationBanner(),
             _buildServiceCategories(),
             _buildProvidersComingSoon(),
-            _buildDonateWidget(),
             _buildFooter(),
           ],
         ),
@@ -278,6 +278,82 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildDonationBanner() {
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const DonationScreen()),
+      ),
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF006B3C), Color(0xFF008F50)],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF006B3C).withValues(alpha: 0.35),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.favorite, color: Color(0xFFFCD116), size: 24),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Support HomeLinkGH',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                  ),
+                  Text(
+                    'Help us connect more families with skilled professionals',
+                    style: TextStyle(color: Colors.white70, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFCD116),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Text(
+                'Donate',
+                style: TextStyle(
+                  color: Color(0xFF006B3C),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -603,164 +679,6 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
     );
   }
 
-  Widget _buildDonateWidget() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF003D1F), Color(0xFF001F10)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0xFFFCD116).withValues(alpha: 0.3)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFCD116).withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Text('🇬🇭', style: TextStyle(fontSize: 20)),
-                ),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Text(
-                    'Support HomeLinkGH',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              'Help us connect more Ghanaian families with trusted home service providers.',
-              style: TextStyle(color: Colors.white54, fontSize: 13, height: 1.5),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                _DonateChip(
-                  label: 'GH₵ 20',
-                  amount: 20,
-                  onTap: (amt) => _donate(amt),
-                ),
-                const SizedBox(width: 8),
-                _DonateChip(
-                  label: 'GH₵ 50',
-                  amount: 50,
-                  onTap: (amt) => _donate(amt),
-                ),
-                const SizedBox(width: 8),
-                _DonateChip(
-                  label: 'GH₵ 100',
-                  amount: 100,
-                  onTap: (amt) => _donate(amt),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => _donate(null),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF006B3C),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Center(
-                        child: Text('Other',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                          )),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _donate(double? fixedAmount) async {
-    double amount = fixedAmount ?? 10.0;
-    if (fixedAmount == null) {
-      // Ask for custom amount
-      final controller = TextEditingController(text: '');
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          backgroundColor: const Color(0xFF0D2016),
-          title: const Text('Enter Donation Amount',
-            style: TextStyle(color: Colors.white)),
-          content: TextField(
-            controller: controller,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            autofocus: true,
-            style: const TextStyle(color: Colors.white),
-            decoration: const InputDecoration(
-              prefixText: 'GH₵ ',
-              prefixStyle: TextStyle(color: Colors.white54),
-              hintText: '0.00',
-              hintStyle: TextStyle(color: Colors.white24),
-              enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Color(0xFF006B3C))),
-              focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Color(0xFF006B3C), width: 2)),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel', style: TextStyle(color: Colors.white38))),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF006B3C)),
-              child: const Text('Continue')),
-          ],
-        ),
-      );
-      if (confirmed != true) return;
-      amount = double.tryParse(controller.text) ?? 10.0;
-      if (amount <= 0) return;
-    }
-
-    final result = await showPaymentSheet(
-      context,
-      amount: amount,
-      currency: 'GHS',
-      customerEmail: 'donor@homelinkgh.com',
-      customerName: 'HomeLinkGH Supporter',
-      description: 'Donation to HomeLinkGH',
-    );
-
-    if (result != null && result.success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Thank you for your donation of GH₵ ${amount.toStringAsFixed(2)}! 🙏'),
-          backgroundColor: const Color(0xFF006B3C),
-          duration: const Duration(seconds: 4),
-        ),
-      );
-    }
-  }
-
   Widget _buildFooter() {
     return Container(
       padding: const EdgeInsets.all(24),
@@ -959,37 +877,6 @@ class _OutlineButton extends StatelessWidget {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _DonateChip extends StatelessWidget {
-  final String label;
-  final double amount;
-  final void Function(double) onTap;
-
-  const _DonateChip({required this.label, required this.amount, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => onTap(amount),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: const Color(0xFFFCD116).withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFFFCD116).withValues(alpha: 0.4)),
-        ),
-        child: Text(
-          label,
-          style: const TextStyle(
-            color: Color(0xFFFCD116),
-            fontWeight: FontWeight.w600,
-            fontSize: 13,
-          ),
         ),
       ),
     );

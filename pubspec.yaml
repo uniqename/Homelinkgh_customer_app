@@ -2,7 +2,7 @@ name: homelinkgh_customer
 description: "HomeLinkGH - Connecting Ghanaians worldwide with trusted home services, food delivery, and essential support."
 publish_to: 'none'
 
-version: 4.1.8+55
+version: 4.1.9+56
 
 environment:
   sdk: ^3.8.1

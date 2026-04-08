@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/local_data_service.dart';
 import '../services/ai_recommendations_service.dart';
 import '../services/smart_personalization_service.dart';
 import 'role_selection.dart';
@@ -8,6 +9,7 @@ import 'enhanced_food_delivery_screen.dart';
 import 'enhanced_grocery_screen.dart';
 import 'quote_request_screen.dart';
 import 'data_privacy.dart';
+import 'donation_screen.dart';
 
 class CustomerHomeScreen extends StatefulWidget {
   const CustomerHomeScreen({super.key});
@@ -309,8 +311,12 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                     ),
                   ),
                 ),
+                const SizedBox(height: 16),
+
+                // Donation Banner
+                _buildDonationBanner(),
                 const SizedBox(height: 24),
-                
+
                 // Personalized Recommendations
                 if (_personalizedRecommendations.isNotEmpty) ...[
                   Row(
@@ -425,6 +431,81 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
         ),
         const SliverToBoxAdapter(child: SizedBox(height: 20)),
       ],
+    );
+  }
+
+  Widget _buildDonationBanner() {
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const DonationScreen()),
+      ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF006B3C), Color(0xFF008F50)],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF006B3C).withValues(alpha: 0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.favorite, color: Color(0xFFFCD116), size: 24),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Support HomeLinkGH',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                  ),
+                  Text(
+                    'Help us connect more families with skilled professionals',
+                    style: TextStyle(color: Colors.white70, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFCD116),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Text(
+                'Donate',
+                style: TextStyle(
+                  color: Color(0xFF006B3C),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
