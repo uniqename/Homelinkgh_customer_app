@@ -26,7 +26,7 @@ void main() async {
 
   // Load environment variables
   try {
-    await dotenv.load(fileName: ".env");
+    await dotenv.load(fileName: "assets/.env");
     print('✅ Environment variables loaded');
   } catch (e) {
     print('⚠️  No .env file found, payment features may not work: $e');
