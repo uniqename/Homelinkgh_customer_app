@@ -6,6 +6,7 @@ import 'services/supabase_service.dart';
 import 'services/notification_service.dart';
 import 'services/pricing_api_service.dart';
 import 'services/push_notification_service.dart';
+import 'services/payment_service.dart';
 
 /// Firebase Cloud Messaging background handler
 /// Handles notifications when app is in background or terminated
@@ -55,6 +56,9 @@ void main() async {
     // Initialize pricing API
     PricingApiService().initialize();
     print('✅ Pricing API service initialized');
+
+    await PaymentService().initialize();
+    print('✅ Payment service initialized');
 
   } catch (e) {
     print('⚠️  Advanced services initialization warning: $e');

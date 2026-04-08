@@ -338,7 +338,7 @@ class PaymentService {
                 "item_list": {
                   "items": [
                     {
-                      "name": "Donation to Beacon of New Beginnings",
+                      "name": "HomeLinkGH Service Payment",
                       "quantity": 1,
                       "price": amount.toStringAsFixed(2),
                       "currency": currency
